@@ -1,25 +1,43 @@
 # Folio
 
-A shared project with a published page and Git revision history.
+Your story, carried forward. A care transition prototype for GBDA 402, Team 9.
 
-## Publish
+Young patients build skills level by level (1 to 10). Paediatric teams sign them off in person. When a patient arrives at an adult clinic or ER, tapping their Folio card opens a clear, current picture of them.
 
-In Settings → Pages, choose **Deploy from a branch**, select **main** and **/docs**, and Save. The expected address is https://jtq03.github.io/Folio/ after the first successful deployment. Subsequent pushes affecting `docs/` on `main` automatically update the page, usually after a short build delay. Check the Actions tab if a deployment fails.
+Three surfaces share one design system and one data layer:
 
-## Share and collaborate
+| Surface | Path | For |
+|---|---|---|
+| Web portal (main) | `docs/index.html` + `docs/portal/` | Paediatric teams: Home, Patients, Patient profile, Visit mode, Add patient, Cards, Levels and skills, Access log, Insights, Resources, Team, Settings |
+| Patient app (PWA) | `docs/app/` (URL `/app/`) | Patients: Home, Levels, Resources, About me. Installable, works offline |
+| Adult care view | `docs/card/` (URL `/card/?t=TOKEN`) | ER and adult clinics. Only reachable from a card's private link. `?demo=1` is the team's labelled demo entry |
 
-The owner can invite GitHub usernames in Settings → Collaborators → Add people. Invited people must accept before pushing. A public repository is readable by anyone; only authorized collaborators can push. Everyone should use their own account so commits retain individual attribution.
+Everything is fictional demo data kept in the browser (`localStorage`). A sign-off in the portal shows up in the patient app and the adult view on the same device. Reset it from Portal > Settings > Reset demo data.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for editing and restoration instructions. The website lives in `docs/index.html`; place images and other website assets in `docs/` and use relative links.
+## Run it
 
-## Revision history
+No build step.
 
-Every committed update records its author, date, message and changes. Use the repository’s **Commits** link to browse revisions; select a commit and **Browse files** to inspect the entire project at that point. A file’s **History** button shows its earlier revisions.
+```sh
+cd docs
+python3 -m http.server 8000
+```
 
-GitHub Pages serves the current deployment. Old commits remain inspectable as source; they do not automatically get separate live website URLs. To see an old page visually, check out that revision locally and open `docs/index.html`, or restore it to main to republish it.
+Open http://localhost:8000 (portal), /app/ (patient app), /card/?demo=1 (adult view). It also runs on GitHub Pages (Settings > Pages > Deploy from a branch > `main` and `/docs`), expected at https://jtq03.github.io/Folio/.
 
-Restore by adding a new commit rather than rewriting history. Avoid force-pushes and deleting the repository, which can remove access to revisions. Keep an independent clone as a backup.
+Install the patient app on a phone: open `/app/` on the published site, then use "Add to Home Screen" (iOS Safari) or "Install app" (Android Chrome). Service workers need https or localhost.
 
-## Local preview
+## Try the story
 
-Open `docs/index.html` in your browser. This starter has no dependencies or build step.
+1. Portal > Patients > Maya R. Start visit, review skills, decide, write one note, sign off. The red star stamp lands.
+2. Open the patient app in another tab. Maya sees the level-up celebration.
+3. Portal > Cards > Open tap view. That is what an ER sees. It is logged in Access log and times out.
+
+## Design rules (from the Figma brand package)
+
+- Colour: three blues, two greens, one red, warm beige instead of white. Red is for the star, alerts and one call to action per screen. Never a background.
+- Type: Fraunces for headlines (sentence case, italic on one or two words), Prompt for UI and body (16px minimum).
+- Paper is for structure and motion (binder tabs, sheets, tape, stamps). Data stays flat and readable.
+- Accessibility first: text scales (Settings), high contrast mode, reduced motion respected, full keyboard use, visible focus, status never shown by colour alone.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how the four of us work in it, and [CLAUDE.md](CLAUDE.md) for the technical map.

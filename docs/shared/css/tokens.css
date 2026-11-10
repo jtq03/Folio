@@ -1,0 +1,48 @@
+/* Folio design tokens. Source: Figma "Folio Brand Package", Colour + Typography pages.
+   Change values here and the whole prototype follows. */
+:root {
+  /* Colour */
+  --blue-100: #C5D1EB;   /* soft wash, tints, ribbons. Too pale for text */
+  --blue-300: #92AFD7;   /* sheets, highlights, secondary shapes */
+  --blue-500: #5A7684;   /* icons, lines, large secondary text (4.2:1, not small text) */
+  --green-500: #395B50;  /* primary brand: panels, buttons */
+  --green-900: #1F2F16;  /* text, wordmark, deep backgrounds */
+  --red-500: #CE3B3B;    /* the star, alerts, ONE call to action at most. Never a background */
+  --beige-100: #F7F0E2;  /* page background */
+  --beige-200: #F0E3CE;  /* default light neutral. Used instead of white */
+  --beige-300: #E9DCC3;  /* dividers, pressed states */
+
+  /* Semantic */
+  --bg: var(--beige-100);
+  --surface: var(--beige-200);
+  --line: var(--beige-300);
+  --text: var(--green-900);
+  --text-muted: var(--green-500);
+  --accent: var(--red-500);
+  --primary: var(--green-500);
+  --on-primary: var(--beige-100);
+
+  /* Type */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-ui: "Prompt", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Shape + space */
+  --r-sm: 10px; --r-md: 16px; --r-lg: 24px; --r-pill: 999px;
+  --shadow-paper: 0 1px 0 rgba(31,47,22,.06), 0 6px 18px -8px rgba(31,47,22,.18);
+  --shadow-lift: 0 1px 0 rgba(31,47,22,.06), 0 14px 28px -12px rgba(31,47,22,.28);
+
+  /* Motion: soft, paper-like. Nothing bounces hard. */
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --ease-spring: cubic-bezier(.34,1.4,.5,1);
+  --t-fast: 140ms; --t-med: 280ms; --t-slow: 560ms;
+}
+
+/* Derived: a slightly deeper green so secondary text clears ~7:1 on Beige 100 (Green 500 is ~6.3:1). */
+:root { --text-muted: #2D493E; --focus: #1F2F16; --border-strong: rgba(31,47,22,.28); }
+:root[data-contrast="high"] {
+  --text-muted: #1F2F16; --line: #1F2F16; --border-strong: #1F2F16; --blue-500: #1F2F16; --bg: #FFFBF2; --surface: #F7F0E2;
+}
+:root[data-text="sm"] { font-size: 93.75%; }
+:root[data-text="md"] { font-size: 100%; }
+:root[data-text="lg"] { font-size: 118%; }
+:root[data-text="xl"] { font-size: 137.5%; }
