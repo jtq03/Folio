@@ -3,38 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Folio · Your story, carried forward</title>
-  <meta name="description" content="Folio prototype hub: the paediatric web portal, the patient app and the adult care view.">
+  <meta name="robots" content="noindex">
+  <title>Folio Portal</title>
   <link rel="icon" href="shared/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Prompt:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shared/css/tokens.css">
   <link rel="stylesheet" href="shared/css/base.css">
   <link rel="stylesheet" href="shared/css/paper.css">
-  <style>
-    .hub{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:3rem 1.5rem 4rem}
-    .hub h1{font-size:clamp(2.6rem,7vw,5rem);line-height:1.05;margin:1rem 0 1rem;max-width:14ch}
-    .hub .lead{font-size:1.2rem;color:var(--text-muted);max-width:52ch}
-    .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem;margin-top:2.5rem}
-    @media(max-width:860px){.tiles{grid-template-columns:1fr}}
-    .tile{display:flex;flex-direction:column;gap:.6rem;padding:1.6rem;text-decoration:none;color:inherit;min-height:230px}
-    .tile h2{font-size:1.6rem}.tile p{margin:0;color:var(--text-muted)}.tile .go{margin-top:auto;font-weight:700}
-    .tile:nth-child(1){border-top:8px solid var(--green-500)}.tile:nth-child(2){border-top:8px solid var(--blue-300)}.tile:nth-child(3){border-top:8px solid var(--green-900)}
-    .foot{margin-top:2.5rem;display:grid;gap:.5rem;color:var(--text-muted);font-size:.95rem}
-  </style>
+  <link rel="stylesheet" href="shared/css/card.css">
+  <link rel="stylesheet" href="portal/portal.css">
 </head>
 <body>
-  <main class="hub" id="main">
-    <div class="row" style="gap:.6rem"><span class="wordmark" id="wm" style="font-size:2.4rem" aria-label="Folio">folio</span></div>
-    <div class="eyebrow red" style="margin-top:1.5rem">Prototype · GBDA 402 Team 9</div>
-    <h1>Your story, <em class="it">carried forward</em></h1>
-    <p class="lead">Folio helps young patients build the skills to run their own care, and gives every clinic a clear picture the moment a card is tapped. Three surfaces, one shared set of data.</p>
-    <div class="tiles">
-      <a class="sheet pad lift tile" href="portal/"><div class="eyebrow">For paediatric teams</div><h2>Web portal</h2><p>Roster, patient profiles, visit mode and sign-off, cards, levels, access log, insights, team and settings.</p><span class="go">Open the portal →</span></a>
-      <a class="sheet pad lift tile" href="app/"><div class="eyebrow">For patients</div><h2>Patient app</h2><p>Levels, skills, resources and My Folio card. Installs on a phone as a PWA and works offline.</p><span class="go">Open the app →</span></a>
-      <a class="sheet pad lift tile" href="card/?demo=1"><div class="eyebrow">For ER and adult clinics</div><h2>Adult care view</h2><p>What opens when a card is tapped. Real cards use a private token link. This is the team demo entry.</p><span class="go">Open the demo →</span></a>
-    </div>
-    <div class="foot"><span>Everything is fictional demo data stored in your browser. Changes in one surface show up in the others on the same device.</span><span>Team: edit files in <code>docs/</code> and commit. See CONTRIBUTING.md.</span></div>
-  </main>
+  <a class="skip" href="#main">Skip to content</a>
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <noscript><p style="padding:2rem">Folio needs JavaScript to run.</p></noscript>
+  <script src="shared/js/data.js"></script>
+  <script src="shared/js/store.js"></script>
+  <script src="shared/js/ui.js"></script>
+  <script src="portal/pages/home.js"></script>
+  <script src="portal/pages/patients.js"></script>
+  <script src="portal/pages/profile.js"></script>
+  <script src="portal/pages/visit.js"></script>
+  <script src="portal/pages/add.js"></script>
+  <script src="portal/pages/cards.js"></script>
+  <script src="portal/pages/program.js"></script>
+  <script src="portal/pages/admin.js"></script>
+  <script src="portal/portal.js"></script>
 </body>
 </html>

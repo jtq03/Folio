@@ -34,8 +34,8 @@
         <div class="clinic"><strong>${st.clinic.org}</strong><span>${st.clinic.team}</span></div>
         <div class="grow"></div>
         <nav class="demo-links" aria-label="Prototype surfaces">
-          <a href="../app/" target="_blank" rel="noopener">Patient app ${ic('ext', 14)}</a>
-          <a href="../card/?demo=1" target="_blank" rel="noopener">Adult card view (demo) ${ic('ext', 14)}</a>
+          <a href="app/" target="_blank" rel="noopener">Patient app ${ic('ext', 14)}</a>
+          <a href="card/?demo=1" target="_blank" rel="noopener">Adult card view (demo) ${ic('ext', 14)}</a>
         </nav>
         <div class="me">${F.UI.avatar(me, 36)}<div><strong>${me.name}</strong><span>${me.role}</span></div></div>
       </div>

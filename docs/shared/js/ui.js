@@ -1,5 +1,6 @@
 /* Folio UI kit: safe templating, icons, small components, modal, toast and a tiny hash-router app. */
 (function (F) {
+  var ROOT_SRC = document.currentScript ? document.currentScript.src : location.href;
   /* ---------- Safe templating: interpolations are escaped unless they came from h`` ---------- */
   function Safe(s) { this.s = s; }
   Safe.prototype.toString = function () { return this.s; };
@@ -225,5 +226,6 @@
     if (side === 'front') return h`<div class="${cls}"><div><div class="fc-tag">Your story, carried forward</div><div class="fc-brand" style="margin-top:.4rem">${wordmark()}</div></div><div><div class="fc-tag">Folio ID</div><div class="fc-id">${F.Store.sel.fid(p.folioId)}</div><div class="fc-name">${p.first} ${p.last}</div></div><span class="fc-stack">${mark(54)}</span></div>`;
     return h`<div class="${cls}"><div class="qrbox">${qr(c.token || p.folioId, 200)}</div><div class="fc-right"><h4>Tap or scan</h4><p><b>TAP</b> Hold the card to a phone (NFC chip inside)</p><p><b>SCAN</b> Point a camera at the code</p><p><b>TYPE</b> folio.example/id and the number on the front</p></div></div>`;
   };
-  F.cardUrl = function (token) { return new URL('../card/?t=' + encodeURIComponent(token), location.href).href; };
+  F.root = new URL('../../', ROOT_SRC).href;
+  F.cardUrl = function (token) { return F.root + 'card/?t=' + encodeURIComponent(token); };
 })(window.Folio);

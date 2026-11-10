@@ -8,10 +8,9 @@ Three surfaces share one design system and one data layer:
 
 | Surface | Path | For |
 |---|---|---|
-| Hub | `docs/index.html` | Team launcher |
-| Web portal | `docs/portal/` | Paediatric teams: Home, Patients, Patient profile, Visit mode, Add patient, Cards, Levels and skills, Access log, Insights, Resources, Team, Settings |
-| Patient app (PWA) | `docs/app/` | Patients: Home, Levels, Resources, About me. Installable, works offline |
-| Adult care view | `docs/card/?t=TOKEN` | ER and adult clinics. Only reachable from a card's private link. `?demo=1` is the team's labelled demo entry |
+| Web portal (main) | `docs/index.html` + `docs/portal/` | Paediatric teams: Home, Patients, Patient profile, Visit mode, Add patient, Cards, Levels and skills, Access log, Insights, Resources, Team, Settings |
+| Patient app (PWA) | `docs/app/` (URL `/app/`) | Patients: Home, Levels, Resources, About me. Installable, works offline |
+| Adult care view | `docs/card/` (URL `/card/?t=TOKEN`) | ER and adult clinics. Only reachable from a card's private link. `?demo=1` is the team's labelled demo entry |
 
 Everything is fictional demo data kept in the browser (`localStorage`). A sign-off in the portal shows up in the patient app and the adult view on the same device. Reset it from Portal > Settings > Reset demo data.
 
@@ -24,7 +23,7 @@ cd docs
 python3 -m http.server 8000
 ```
 
-Open http://localhost:8000. It also runs on GitHub Pages (Settings > Pages > Deploy from a branch > `main` and `/docs`), expected at https://jtq03.github.io/Folio/.
+Open http://localhost:8000 (portal), /app/ (patient app), /card/?demo=1 (adult view). It also runs on GitHub Pages (Settings > Pages > Deploy from a branch > `main` and `/docs`), expected at https://jtq03.github.io/Folio/.
 
 Install the patient app on a phone: open `/app/` on the published site, then use "Add to Home Screen" (iOS Safari) or "Install app" (Android Chrome). Service workers need https or localhost.
 

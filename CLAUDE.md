@@ -11,7 +11,7 @@ Plain static site, no build, no framework. Reason: the repo deploys `docs/` stra
 ## Map
 - `docs/shared/css`: tokens.css (brand tokens, a11y modes), base.css (type, forms, buttons, flat tables, motion), paper.css (sheets, stamp, tape), card.css (Folio ID card)
 - `docs/shared/js`: data.js (levels, skills, seed data), store.js (state, actions, a11y settings, localStorage + cross-tab sync), ui.js (`h` safe templating, icons, modal, toast, hash-router `createApp`)
-- `docs/portal`: `portal.js` is the binder-tab shell and route table. `pages/*.js` each set `F.Pages.x` returning `{title, html}`
+- `docs/index.html` is the portal entry (the main site). `docs/portal/`: `portal.js` is the binder-tab shell and route table. `pages/*.js` each set `F.Pages.x` returning `{title, html}`
 - `docs/app`: patient PWA (manifest.webmanifest, sw.js, icons, app.js)
 - `docs/card`: adult care view (token query, demo mode, session timeout, access logging)
 
