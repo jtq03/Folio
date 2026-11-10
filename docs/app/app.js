@@ -37,7 +37,7 @@
     book: ['<path d="M4 5.500A1.500 1.500 0 0 1 5.500 4H12v16H5.500A1.500 1.500 0 0 1 4 18.500z"/><path d="M12 4h6.500A1.500 1.500 0 0 1 20 5.500v13a1.500 1.500 0 0 1-1.500 1.500H12z"/>'],
     user: ['<circle cx="12" cy="8" r="4"/><path d="M4 20.500c0-4.400 3.600-6.500 8-6.500s8 2.100 8 6.500z"/>']
   };
-  function tabIcon(n, on) { return raw('<svg width="26" height="26" viewBox="0 0 24 24" fill="' + (on ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.700" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + TAB_SVG[n][0] + (on && n === 'book' ? '<path d="M12 4v16" stroke="var(--paper)" stroke-width="1.8"/>' : '') + '</svg>'); }
+  function tabIcon(n, on) { return raw('<svg width="24" height="24" viewBox="0 0 24 24" fill="' + (on ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.700" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + TAB_SVG[n][0] + (on && n === 'book' ? '<path d="M12 4v16" stroke="var(--paper)" stroke-width="1.8"/>' : '') + '</svg>'); }
   var TABS = [['/', 'Home', 'home'], ['/levels', 'Levels', 'levels'], ['/resources', 'Resources', 'book'], ['/about', 'About me', 'user']];
   function rootOf(path) { return '/' + (path.split('/')[1] || ''); }
   function depth(path) { return path.split('/').filter(Boolean).length; }
@@ -71,6 +71,7 @@
         <div class="ios-nav-r">${out.navRight || ''}</div>
       </header>
       <main id="main" class="ios-scroll" data-keep="scr" tabindex="-1"><div class="ios-screen ${an ? F.ui._dir || '' : ''}">${out.html}</div></main>
+      <div class="ios-tabfade" aria-hidden="true"></div>
       <nav class="ios-tabs glass" aria-label="Main"><span class="ios-bubble" data-i="${idx}" style="--i:${prev}" aria-hidden="true"></span>${TABS.map(function (t) { var on = root === t[0]; return h`<a href="#${t[0]}" ${on ? h`aria-current="page"` : ''}><span class="ios-ti">${tabIcon(t[2], on)}${t[0] === '/' && dot ? h`<i class="ios-tabdot" aria-label="New note">${U.star(11)}</i>` : ''}</span><span>${t[1]}</span></a>`; })}</nav>
       ${c ? celebrate(p, c) : ''}</div>`;
   }

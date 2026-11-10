@@ -139,7 +139,7 @@
   /* ---------- Keyboard avoidance ---------- */
   (function () {
     var vv = window.visualViewport; if (!vv) return;
-    function upd() { var kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)); var d = document.getElementById('device'); if (d) d.style.setProperty('--kb', kb > 80 ? kb + 'px' : '0px'); }
+    function upd() { var kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)); var d = document.getElementById('device'); if (d) { d.style.setProperty('--kb', kb > 80 ? kb + 'px' : '0px'); d.classList.toggle('kbd', kb > 80); } }
     vv.addEventListener('resize', upd); vv.addEventListener('scroll', upd); upd();
   })();
 
