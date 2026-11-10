@@ -2,7 +2,7 @@
    Built to Apple's iOS Human Interface Guidelines: large-title navigation, translucent tab bar,
    inset grouped lists, bottom sheets, action sheets. Entrance animations run on navigation only. */
 (function (F) {
-  var h = F.UI.h, raw = F.UI.raw, esc = F.UI.esc, ic = F.UI.ic, S = F.Store, sel = S.sel, U = F.UI, A = S.act;
+  var h = F.UI.h, raw = F.UI.raw, esc = F.UI.esc, ic = F.UI.ic, S = F.Store, sel = S.sel, U = F.UI, A = S.act, N = F.native;
   var PKEY = 'folio.app.pid';
   function pid() { try { var v = localStorage.getItem(PKEY); if (v && sel.patient(v)) return v; } catch (e) {} return 'p1'; }
   function me() { return sel.patient(pid()); }
@@ -18,7 +18,8 @@
     heart: '<path d="M12 20s-7-4.400-7-10a4 4 0 0 1 7-2.500A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/>',
     pencil: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
     sparkle: '<path d="M12 3l1.800 5.200L19 10l-5.200 1.800L12 17l-1.800-5.200L5 10l5.200-1.800z"/>',
-    updown: '<path d="M8 10l4-4 4 4M8 14l4 4 4-4"/>'
+    updown: '<path d="M8 10l4-4 4 4M8 14l4 4 4-4"/>',
+    calendar: '<rect x="4" y="5" width="16" height="15" rx="2.500"/><path d="M4 10h16M8 3v4M16 3v4"/>'
   };
   function xi(n, s) { return svg(X[n], s || 22); }
   var CHEV = raw('<svg class="ios-chev" width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.500 1.500l6 6-6 6"/></svg>');
@@ -41,24 +42,36 @@
   function rootOf(path) { return '/' + (path.split('/')[1] || ''); }
   function depth(path) { return path.split('/').filter(Boolean).length; }
 
-  /* Direction of the next navigation, set before the router renders. Cleared after the render. */
-  F.ui._anim = true; F.ui._dir = '';
+  /* Direction of the next navigation, set before the router renders. Cleared after the render.
+     When a view transition drives the motion (F.ui._vt), the CSS fallback animations stay off. */
+  F.ui._anim = true; F.ui._dir = ''; F.ui._vt = false;
   var prevPath = (location.hash.replace(/^#/, '').split('?')[0]) || '/';
   window.addEventListener('hashchange', function () {
     var np = (location.hash.replace(/^#/, '').split('?')[0]) || '/', d = depth(np), o = depth(prevPath);
-    F.ui._dir = d > o ? 'push' : d < o ? 'pop' : 'tab'; F.ui._anim = true; prevPath = np;
+    F.ui._dir = d > o ? 'push' : d < o ? 'pop' : 'tab'; F.ui._anim = !F.ui._vt; prevPath = np;
   });
 
+  /* Unread care-team notes drive the tab dot and the app badge */
+  function seenSet() { try { return JSON.parse(localStorage.getItem('folio.seen.' + pid()) || '[]'); } catch (e) { return []; } }
+  function unread() { var seen = seenSet(); return sel.notesFor(me()).filter(function (n) { return n.role === 'peds' && seen.indexOf(n.id) < 0; }).length; }
+  function updateBadge() { try { N.badge(unread() + (me().celebrate ? 1 : 0)); } catch (e) {} }
+  function markSeen() { var p = me(); try { localStorage.setItem('folio.seen.' + p.id, JSON.stringify(p.notes.map(function (n) { return n.id; }))); } catch (e) {} updateBadge(); }
+
+  var shareSvg = raw('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15V3M8 7l4-4 4 4M7 11H5.500a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H17"/></svg>');
+  function gbtn(action, label, glyph, id) { return h`<button class="ios-gbtn glass" data-action="${action}" data-id="${id || ''}" aria-label="${label}">${glyph}</button>`; }
+
   function shell(out, loc) {
-    var p = me(), c = p.celebrate, root = rootOf(loc.path), back = out.back;
-    return h`<div class="ios-app ${F.ui._anim ? 'anim' : ''}">
+    var p = me(), c = p.celebrate, root = rootOf(loc.path), back = out.back, idx = 0;
+    TABS.forEach(function (t, i) { if (t[0] === root) idx = i; });
+    var prev = F.ui._tabPrev == null ? idx : F.ui._tabPrev, dot = unread() > 0 && root !== '/', an = F.ui._anim && !F.ui._vt;
+    return h`<div class="ios-app ${an ? 'anim' : ''}">
       <header class="ios-nav" id="ios-nav">
-        <div>${back ? h`<a class="ios-back" href="${back.href}" aria-label="Back to ${back.label}"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>${back.label}</a>` : ''}</div>
+        <div class="ios-nav-l">${back ? h`<a class="ios-back" href="${back.href}" aria-label="Back to ${back.label}"><span class="ios-gbtn glass"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg></span><span class="ios-back-l">${back.label}</span></a>` : ''}</div>
         <div class="ios-nav-t" aria-hidden="true">${out.navTitle || out.title}</div>
         <div class="ios-nav-r">${out.navRight || ''}</div>
       </header>
-      <main id="main" class="ios-scroll" data-keep="scr" tabindex="-1"><div class="ios-screen ${F.ui._anim ? F.ui._dir || '' : ''}">${out.html}</div></main>
-      <nav class="ios-tabs" aria-label="Main">${TABS.map(function (t) { var on = root === t[0]; return h`<a href="#${t[0]}" ${on ? h`aria-current="page"` : ''}>${tabIcon(t[2], on)}<span>${t[1]}</span></a>`; })}</nav>
+      <main id="main" class="ios-scroll" data-keep="scr" tabindex="-1"><div class="ios-screen ${an ? F.ui._dir || '' : ''}">${out.html}</div></main>
+      <nav class="ios-tabs glass" aria-label="Main"><span class="ios-bubble" data-i="${idx}" style="--i:${prev}" aria-hidden="true"></span>${TABS.map(function (t) { var on = root === t[0]; return h`<a href="#${t[0]}" ${on ? h`aria-current="page"` : ''}><span class="ios-ti">${tabIcon(t[2], on)}${t[0] === '/' && dot ? h`<i class="ios-tabdot" aria-label="New note">${U.star(11)}</i>` : ''}</span><span>${t[1]}</span></a>`; })}</nav>
       ${c ? celebrate(p, c) : ''}</div>`;
   }
 
@@ -75,7 +88,13 @@
       var out = fn(params, q, loc), inner = out.after;
       out.after = function (root, loc2, isNav) {
         var sc = root.querySelector('.ios-scroll');
-        if (isNav) { if (sc) sc.scrollTop = 0; F.ui._anim = false; F.ui._dir = ''; var b = root.querySelector('.ios-lvlup button'); if (b) b.focus(); }
+        if (isNav) { if (sc) sc.scrollTop = 0; F.ui._anim = false; F.ui._dir = ''; var b = root.querySelector('.ios-lvlup button'); if (b) { b.focus(); N.haptic('success'); } }
+        /* Glide the tab bubble and segmented thumbs from their previous position */
+        var bub = root.querySelector('.ios-bubble');
+        if (bub) { var to = bub.dataset.i; F.ui._tabPrev = +to; if (bub.style.getPropertyValue('--i') !== to) requestAnimationFrame(function () { requestAnimationFrame(function () { bub.style.setProperty('--i', to); }); }); }
+        root.querySelectorAll('.ios-seg[data-i]').forEach(function (sg) { var t2 = sg.dataset.i; if (sg.style.getPropertyValue('--i') !== t2) requestAnimationFrame(function () { requestAnimationFrame(function () { sg.style.setProperty('--i', t2); }); }); });
+        updateBadge();
+        if (isNav && rootOf(loc2.path) === '/' && loc2.path === '/') setTimeout(function () { if (!location.hash.replace(/^#/, '').split('?')[0].replace('/', '')) markSeen(); }, 2500);
         updateNav(); if (inner) inner(root, loc2, isNav);
       };
       return out;
@@ -92,24 +111,66 @@
 
   /* ---------- Home ---------- */
   F.actions.practise = function () {
-    var p = me(), r = A.practise(p.id);
+    var p = me(), r = A.practise(p.id); N.haptic(r ? 'success' : 'light');
     U.toast(r ? 'Nice. ' + r.name + ' moved to With help. Your doctor will see it.' : 'Your care team signs skills off at your next visit.');
   };
   F.actions.showQR = function () {
-    var p = me();
-    U.modal(h`<h2>Your Folio card</h2><div class="ios-qrbox">${U.qr(p.card.token || p.folioId, 230)}</div><p>Sample code for the prototype. It is not scannable.<br>Folio ID ${sel.fid(p.folioId)}</p><button class="ios-btn" data-close>Done</button>`, { label: 'Folio card QR code' });
+    var p = me(); N.wakeWanted = true; N.wake.on();
+    U.modal(h`<div class="ios-qrbox">${U.qr(p.card.token || p.folioId, 230)}</div><p>Sample code for the prototype. It is not scannable.<br>Folio ID ${sel.fid(p.folioId)}</p><button class="ios-btn sec" data-action="shareCard">${shareSvg} Share card as image</button>`, { label: 'Folio card QR code', head: 'Your Folio card', onClose: function () { N.wakeWanted = false; N.wake.off(); } });
   };
   F.actions.tapShare = function () {
     var p = me();
     if (p.card.status !== 'active') { U.toast('Your card is not active. Ask your clinic.'); return; }
-    U.modal(h`<h2>Tap to share</h2><p>On a real phone, holding your card to a clinic tablet opens your care team view. For the demo, preview what the clinic sees.</p><a class="ios-btn" href="${F.cardUrl(p.card.token)}" target="_blank" rel="noopener">${ic('ext', 18)} Preview clinic view</a><button class="ios-btn sec" data-close>Not now</button>`, { label: 'Tap to share' });
+    U.modal(h`<p>On a real phone, holding your card to a clinic tablet opens your care team view. For the demo, preview what the clinic sees.</p><a class="ios-btn" href="${F.cardUrl(p.card.token)}" target="_blank" rel="noopener">${ic('ext', 18)} Preview clinic view</a>`, { label: 'Tap to share', head: 'Tap to share' });
   };
 
-  function home() {
+  /* ---------- Sharing (Web Share with clipboard fallback). Only the Folio ID is shared, never the private tap link. ---------- */
+  F.actions.shareCard = function () {
+    var p = me(); N.haptic('light');
+    N.cardImage(p, sel.fid(p.folioId)).then(function (f) { if (!f) { U.toast('Could not make the image'); return; } return N.shareFile(f, { title: 'My Folio card', text: 'My Folio ID is ' + sel.fid(p.folioId) + '.' }); });
+  };
+  F.actions.shareResource = function (el) {
+    var r = S.get().resources.filter(function (x) { return x.id === el.dataset.id; })[0]; if (!r) return; N.haptic('light');
+    N.shareText({ title: r.title, text: r.title + '\n\n' + r.body + '\n\nFrom Folio' });
+  };
+  F.actions.shareProfile = function () {
+    var p = me(), own = F.SKILLS.filter(function (s2) { return p.skills[s2.id] === 'own'; }).map(function (s2) { return s2.name; }), L = sel.level(p.level); N.haptic('light');
+    var t = 'Folio summary for ' + sel.full(p) + ' (age ' + p.age + ')\nCondition: ' + p.condition + '\nLevel ' + p.level + ' of 10: ' + L.name + '\nSkills on my own: ' + (own.length ? own.join(', ') : 'still building') + '\n\nWhat I want my doctor to know:\n' + p.wantDoctorKnow + (p.questions.length ? '\n\nQuestions for my next visit:\n' + p.questions.map(function (q) { return '- ' + q; }).join('\n') : '') + '\n\nFolio ID ' + sel.fid(p.folioId);
+    N.shareText({ title: p.first + ' on Folio', text: t });
+  };
+  F.actions.shareLevel = function (el) {
+    var p = me(), n = el && el.dataset && +el.dataset.id ? +el.dataset.id : p.level, L = sel.level(n); N.haptic('light');
+    N.achievementImage(p, L).then(function (f) { if (!f) { U.toast('Could not make the image'); return; } return N.shareFile(f, { title: 'I reached Level ' + L.n, text: 'I reached Level ' + L.n + ': ' + L.name + ' on Folio.' }); });
+  };
+
+  /* ---------- Next visit (ticket card, calendar file with a 1 day reminder) ---------- */
+  var MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], DAY3 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function timeStr(d) { var hr = d.getHours(); return ((hr % 12) || 12) + ':' + ('0' + d.getMinutes()).slice(-2) + (hr < 12 ? ' am' : ' pm'); }
+  function countdown(d) { var days = Math.ceil((d.getTime() - Date.now()) / 864e5); return d.getTime() < Date.now() ? 'Past visit' : days <= 0 ? 'Today' : days === 1 ? 'Tomorrow' : 'in ' + days + ' days'; }
+  F.actions.editVisit = function () {
+    var p = me(), v = p.nextVisit || {};
+    U.formModal({ title: v.iso ? 'Edit next visit' : 'Next visit', lead: 'Your saved questions are added to the calendar event.', cta: 'Save',
+      fields: [{ name: 'iso', label: 'Date and time', type: 'datetime-local', value: v.iso || '', req: true }, { name: 'where', label: 'Clinic or doctor', value: v.where, req: true, ph: 'Dr. Okafor, Sample Children\'s Hospital' }, { name: 'note', label: 'Anything to remember', type: 'textarea', value: v.note }],
+      destructive: v.iso ? { label: 'Remove visit', body: 'This clears it from Home.', run: function () { A.updatePatient(p.id, { nextVisit: null }); } } : null,
+      onSubmit: function (d) { A.updatePatient(p.id, { nextVisit: { iso: d.iso, where: d.where, note: d.note || '' } }); N.haptic('success'); U.toast('Next visit saved'); } });
+  };
+  F.actions.addToCal = function () { var p = me(); if (!p.nextVisit) return; N.haptic('light'); N.openCalendar(N.ics(p.nextVisit, p.questions)); };
+  function ticket(p) {
+    var v = p.nextVisit;
+    if (!v || !v.iso) return h`<section class="ios-sec" data-rise style="--d:2"><button class="ios-add" data-action="editVisit">${xi('calendar', 20)} Add your next visit</button></section>`;
+    var d = new Date(v.iso);
+    return h`<section class="ios-sec" data-rise style="--d:2" aria-label="Next visit"><article class="ios-ticket"><div class="stub" aria-hidden="true"><span class="m">${MON3[d.getMonth()]}</span><span class="d">${d.getDate()}</span><span class="w">${DAY3[d.getDay()]}</span></div>
+      <div class="main"><div class="ios-eyebrow">Next visit · ${countdown(d)}</div><h3>${v.where}</h3><p>${timeStr(d)}${v.note ? ' · ' + v.note : ''}</p>
+        <div class="ios-ticket-btns"><button class="ios-btn sm glass-btn" data-action="addToCal">${xi('calendar', 18)} Add to Calendar</button><button class="ios-gbtn glass" data-action="editVisit" aria-label="Edit next visit">${xi('pencil', 20)}</button></div></div></article></section>`;
+  }
+
+  function home(params, q) {
     var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p);
     var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
     var note = sel.notesFor(p).filter(function (n) { return n.role === 'peds'; })[0];
-    return { title: 'Hi ' + p.first, html: h`
+    return { title: 'Hi ' + p.first, navRight: gbtn('shareCard', 'Share my Folio card as an image', shareSvg),
+      after: function (root, loc, isNav) { if (isNav && q && q.show === 'card') setTimeout(F.actions.showQR, 350); },
+      html: h`
       ${large(h`Hi <em>${p.first}</em>`, 'You are building your own health team.')}
       <div class="ios-body">
         <section class="ios-index" data-rise style="--d:1" aria-label="Your level"><span class="ios-tape" aria-hidden="true"></span>
@@ -118,6 +179,7 @@
           <span class="ios-sr">Level ${p.level} of 10, ${L.name}</span>
           ${stairs(p.level)}
           <p class="ios-cap">${p.transferred ? 'You have moved to adult care.' : L.leads + '. ' + own + ' of 5 skills on your own.'}</p></section>
+        ${ticket(p)}
         ${nx && todo.length ? h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="wk">${h`<h2 class="ios-gh" id="wk">${tile(ic('levels', 18), 4, true)}Working toward Level ${nx.n}: ${nx.name}</h2>`}
           <div class="ios-list">${todo.map(function (s, i) { return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" aria-label="${s.name}, ${F.SKILL_STATUS[p.skills[s.id]]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>
           <p class="ios-gf">Tap a skill to learn how.</p>
@@ -125,7 +187,7 @@
         ${note ? h`<section data-rise style="--d:3" aria-label="Note from your care team"><article class="ios-sticky"><span class="ios-tape b" aria-hidden="true"></span><div class="ios-eyebrow">From ${note.author} · ${U.monthYear(note.date)}</div><p>${note.text}</p><p class="ios-cap">${note.shared ? 'Shown to future care teams.' : 'Only you and your paediatric team see this.'}</p></article></section>` : ''}
         <section class="ios-pocket" data-rise style="--d:4" aria-labelledby="pk"><div class="ios-eyebrow" id="pk">My Folio card</div>
           <div class="ios-cardwrap">${U.cardFace(p, 'front')}</div>
-          <div class="ios-pbtns"><button class="ios-btn light" data-action="showQR">${ic('qr', 20)} Show QR</button><button class="ios-btn light" data-action="tapShare">${ic('nfc', 20)} Tap to share</button></div>
+          <div class="ios-pbtns"><button class="ios-btn glass-btn" data-action="showQR">${ic('qr', 20)} Show QR</button><button class="ios-btn glass-btn" data-action="tapShare">${ic('nfc', 20)} Tap to share</button></div>
           <p class="ios-pcap">Folio ID ${sel.fid(p.folioId)}</p></section>
       </div>` };
   }
@@ -134,7 +196,7 @@
   function levels() {
     var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p), li = '';
     for (var i = 1; i <= 10; i++) li += '<li class="' + (i < p.level ? 'done' : i === p.level ? 'cur' : '') + '" style="--h:' + (30 + i * 14) + 'px;--n:' + i + '"><span>' + i + '</span>' + (i === p.level ? U.star(20).s : '') + '</li>';
-    return { title: 'Levels', navTitle: 'Level ' + p.level, html: h`
+    return { title: 'Levels', navTitle: 'Level ' + p.level, navRight: gbtn('shareLevel', 'Share my level as an image', shareSvg, p.level), html: h`
       ${large(h`Level ${p.level}: <em>${L.name}</em>`, nx ? 'Here is what gets you to Level ' + nx.n + '.' : 'You are at the top level.')}
       <div class="ios-body">
         <section class="ios-stairwrap" data-rise style="--d:1" aria-label="All ten levels"><span class="ios-tape" aria-hidden="true"></span><div class="ios-eyebrow" style="color:#2D493E">Your staircase</div>
