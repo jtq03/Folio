@@ -46,3 +46,11 @@
 :root[data-text="md"] { font-size: 100%; }
 :root[data-text="lg"] { font-size: 118%; }
 :root[data-text="xl"] { font-size: 137.5%; }
+
+/* Textures (inline SVG, no image files). Paper grain + fibres, and green cloth for the binder cover. */
+:root {
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='a'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .36  0 0 0 0 .27  0 0 0 0 .14  0 0 0 .17 0'/></filter><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='.012 .5' numOctaves='2' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .34  0 0 0 0 .2  0 0 0 .08 0'/></filter><rect width='100%' height='100%' filter='url(%23a)'/><rect width='100%' height='100%' filter='url(%23b)'/></svg>");
+  --linen: repeating-linear-gradient(0deg, rgba(0,0,0,.09) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 1px, transparent 1px 3px), radial-gradient(120% 90% at 30% 10%, rgba(255,255,255,.1), transparent 60%);
+  --edge-stack: 1px 1px 0 #e6d9be, 2px 2px 0 #f3ead7, 3px 3px 0 #e1d3b6, 4px 4px 0 #f0e6d1, 5px 6px 0 #dccdae, 8px 12px 22px rgba(10,20,8,.45);
+  --metal: linear-gradient(180deg, #f7f8f4 0%, #aab2ac 38%, #eef1ee 52%, #7c867f 100%);
+}

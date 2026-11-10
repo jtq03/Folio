@@ -166,12 +166,14 @@ window.Folio = window.Folio || {};
 
   /* ---------- v2 additions: program settings, team, cards, access log, resources ---------- */
   F.SEED.v = 2;
+  var AVP = { p1: 'a3', p2: 'a5', p3: 'a2', p4: 'a7', p5: 'a1', p6: 'a4', p7: 'a6' };
+  F.SEED.patients.forEach(function (p) { p.avatar = AVP[p.id] || 'a1'; p.photo = ''; });
   F.SEED.program = { requiredSkills: 4, minMonths: 3, inPerson: true };
   F.SEED.me = 'u1';
   F.SEED.team = [
-    { id: 'u1', name: 'Dr. A. Okafor', email: 'a.okafor@sample-childrens.example', role: 'Admin', title: 'Paediatrician', active: true, invited: false },
-    { id: 'u2', name: 'Dr. L. Marsh', email: 'l.marsh@sample-childrens.example', role: 'Clinician', title: 'Endocrinologist', active: true, invited: false },
-    { id: 'u3', name: 'Nina Park', email: 'n.park@sample-childrens.example', role: 'Nurse', title: 'Diabetes nurse educator', active: true, invited: false },
+    { id: 'u1', name: 'Dr. A. Okafor', email: 'a.okafor@sample-childrens.example', role: 'Admin', title: 'Paediatrician', active: true, invited: false, avatar: 'a8' },
+    { id: 'u2', name: 'Dr. L. Marsh', email: 'l.marsh@sample-childrens.example', role: 'Clinician', title: 'Endocrinologist', active: true, invited: false, avatar: 'a4' },
+    { id: 'u3', name: 'Nina Park', email: 'n.park@sample-childrens.example', role: 'Nurse', title: 'Diabetes nurse educator', active: true, invited: false, avatar: 'a6' },
     { id: 'u4', name: 'Sam Ortiz', email: 's.ortiz@sample-childrens.example', role: 'Coordinator', title: 'Clinic coordinator', active: true, invited: false },
     { id: 'u5', name: 'Jo Bell', email: 'j.bell@sample-childrens.example', role: 'Clinician', title: 'Registrar', active: false, invited: true }
   ];

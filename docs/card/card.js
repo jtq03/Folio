@@ -29,7 +29,7 @@
   function bar(p, how) {
     var sz = S.a11y.get().text;
     return h`<div class="bar"><div class="in"><span>${U.wordmark()}</span><span class="tag">Care team view</span>
-      <div class="sess">${p ? h`<span class="via">${how}${demo ? '' : ' · just now'}</span><span>Session ends in <b id="sess-left" aria-live="off">${minutes()}:00</b></span><button class="btn btn-sm" style="border-color:var(--blue-100);color:var(--beige-100)" data-action="extend">Keep open</button>` : ''}
+      <div class="sess">${p ? h`<span class="via">${how}${demo ? '' : ' · just now'}</span><span>Session ends in <b id="sess-left" aria-live="off">${minutes()}:00</b></span><button class="btn btn-sm" data-action="extend">Keep open</button>` : ''}
       <div class="tsz" role="group" aria-label="Text size">${[['md', 'A'], ['lg', 'A+'], ['xl', 'A++']].map(function (t) { return h`<button data-action="textSize" data-v="${t[0]}" aria-pressed="${String(sz === t[0])}" aria-label="Text size ${t[1]}">${t[1]}</button>`; })}</div></div></div></div>${demo && p ? h`<div class="demo-banner" role="note">Demo mode for the Folio team. This is not a real card tap.</div>` : ''}`;
   }
 
@@ -43,7 +43,7 @@
     var L = sel.level(p.level);
     var contact = function (c, role) { return h`<div class="who"><span class="rl">${role}</span><div><b>${c.name}</b></div>${c.phone ? h`<div class="muted">${c.phone}</div><div class="acts"><a class="btn btn-sm btn-primary" href="tel:${c.phone.replace(/[^\d+]/g, '')}">${ic('phone', 16)} Call</a><a class="btn btn-sm" href="sms:${c.phone.replace(/[^\d+]/g, '')}">${ic('message', 16)} Message</a></div>` : h`<div class="muted">No phone on file</div>`}</div>`; };
     return h`${bar(p, how)}<main id="main" class="wrap">
-      <section class="sheetc" style="--d:0"><div class="pt-head">${U.avatar(p, 84)}<div class="grow"><h1>${sel.full(p)}</h1><div class="row wrap gap-s muted"><span>Age ${p.age}</span><span>·</span><span>Folio ID ${sel.fid(p.folioId)}</span></div><div class="chips" style="margin-top:.6rem">${U.pill(p.condition, 'blue')}</div></div></div>
+      <section class="sheetc" style="--d:0"><div class="pt-head"><div class="polaroid">${U.avatar(p, 96)}<span class="cap">${p.first}</span></div><div class="grow"><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span><span aria-hidden="true">·</span><span>Folio ID ${sel.fid(p.folioId)}</span></div><div>${U.pill(p.condition, 'blue')}</div></div></div>
         <div style="margin-top:1rem" class="row wrap"><span class="eyebrow">Level ${p.level} of 10 · ${L.name}</span>${U.lvbar(p.level)}</div>
         ${p.levelSignoff ? h`<p class="small muted" style="margin:.5rem 0 0">Signed off Level ${p.levelSignoff.level} by ${p.levelSignoff.by}, ${U.monthYear(p.levelSignoff.date)}.</p>` : ''}</section>
       <section class="sheetc" style="--d:1"><h2>How to work with ${p.first}</h2><p class="small muted">Things that change how your team should interact</p>
@@ -65,7 +65,9 @@
     </main>`;
   }
 
+  var first = true;
   function render() {
+    app.classList.toggle('enter', first); first = false;
     var p = pid ? sel.patient(pid) : null, how = demo ? 'Demo entry' : via;
     if (ended) { app.innerHTML = msgPage('This session has ended', 'For privacy, the profile closes after ' + minutes() + ' minutes. Tap or scan the card again to reopen it.', demo ? h`<p><a class="btn btn-primary" href="?demo=1">Back to demo entry</a></p>` : '').s; return; }
     if (p && p.card.status === 'active' || (demo && p)) { app.innerHTML = view(p, how).s; return; }

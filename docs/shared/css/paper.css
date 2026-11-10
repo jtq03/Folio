@@ -1,27 +1,79 @@
-/* The paper layer. Paper is for STRUCTURE and MOTION: sheets, tabs, tape, stamps.
-   Data inside a sheet stays flat on a plain surface. */
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;mix-blend-mode:multiply;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .42  0 0 0 0 .3  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-:root[data-contrast="high"] body::before{display:none}
-.sheet{position:relative;background:var(--beige-100);border-radius:6px 14px 14px 6px;box-shadow:var(--shadow-paper);border:1px solid var(--line)}
+/* THE PAPER LAYER (skeuomorphic skin). Paper is for structure and motion: cloth cover, rings, dividers,
+   index cards, sticky notes, tape, stamps. Clinical data inside stays flat and high contrast. */
+
+/* Desk */
+body{background:var(--beige-300) var(--grain);background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(130% 100% at 50% 0%,transparent 40%,rgba(60,42,14,.28) 100%)}
+:root[data-contrast="high"] body,:root[data-contrast="high"] body::before{background-image:none}
+h1,h2,h3{text-shadow:0 1px 0 rgba(255,251,240,.85)}
+.panel-green h1,.panel-green h2,.panel-green h3,.panel-dark h1,.panel-dark h2,.panel-dark h3,.bar h1,.bar h2{text-shadow:0 -1px 0 rgba(0,0,0,.35)}
+
+/* Paper surfaces */
+.sheet{position:relative;background:var(--beige-100) var(--grain);border-radius:3px;box-shadow:var(--edge-stack);border:0}
 .sheet.pad{padding:clamp(1.1rem,2.2vw,2rem)}
 .sheet.lift{transition:transform var(--t-med) var(--ease),box-shadow var(--t-med) var(--ease)}
-.sheet.lift:hover{transform:translateY(-3px) rotate(-.15deg);box-shadow:var(--shadow-lift)}
-.sheet.stack-paper::after{content:"";position:absolute;inset:6px -5px -6px 5px;background:var(--beige-300);border-radius:inherit;z-index:-1;transform:rotate(.6deg)}
-.sheet.flat{box-shadow:none}
-.panel{background:var(--surface);border-radius:var(--r-md);padding:1.25rem}
-.panel-green{background:var(--green-500);color:var(--beige-100);border-radius:var(--r-md);padding:1.25rem}
+.sheet.lift:hover{transform:translateY(-4px) rotate(-.3deg)}
+.panel{background:var(--beige-200) var(--grain);border-radius:4px;padding:1.25rem;box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 2px 6px rgba(60,42,14,.18)}
+.panel-green,.panel-dark{position:relative;color:var(--beige-100);border-radius:6px;padding:1.25rem;background:var(--linen),var(--green-500);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),0 3px 8px rgba(10,20,8,.35)}
+.panel-dark{background:var(--linen),var(--green-900)}
 .panel-green .eyebrow{color:var(--blue-100)}
-.panel-dark{background:var(--green-900);color:var(--beige-100);border-radius:var(--r-md);padding:1.25rem}
-.tape{position:absolute;top:-11px;left:50%;width:84px;height:22px;margin-left:-42px;background:rgba(233,220,195,.85);border:1px solid rgba(31,47,22,.08);transform:rotate(-2.5deg);box-shadow:0 1px 2px rgba(31,47,22,.12)}
-.rings{position:absolute;left:14px;top:0;bottom:0;width:16px;display:flex;flex-direction:column;justify-content:space-evenly;pointer-events:none}
-.rings i{display:block;height:16px;width:16px;border-radius:50%;background:var(--beige-300);box-shadow:inset 0 2px 4px rgba(31,47,22,.5)}
-.stamp{display:inline-flex;align-items:center;gap:.6rem;border:3px solid var(--red-500);border-radius:12px;padding:.45rem .8rem;color:#8E2323;transform:rotate(-4deg);font-size:.85rem;line-height:1.2;background:transparent;mix-blend-mode:multiply}
+
+/* Tape, clips, stitches, stamps */
+.tape{position:absolute;top:-12px;left:50%;width:92px;height:24px;margin-left:-46px;background:linear-gradient(90deg,rgba(197,209,235,.85),rgba(197,209,235,.7));border-left:2px dotted rgba(31,47,22,.15);border-right:2px dotted rgba(31,47,22,.15);transform:rotate(-2.5deg);box-shadow:0 1px 2px rgba(31,47,22,.2);backdrop-filter:blur(1px)}
+.clip::before{content:"";position:absolute;top:-14px;left:1.6rem;width:20px;height:54px;z-index:3;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 54' fill='none' stroke='%23778079' stroke-width='2.4' stroke-linecap='round'><path d='M4 36V10a6 6 0 0 1 12 0v32a9 9 0 0 1-18 0V14' transform='translate(1 3)'/></svg>") center/contain no-repeat;filter:drop-shadow(1px 2px 1px rgba(31,47,22,.35))}
+.stamp{display:inline-flex;align-items:center;gap:.6rem;border:3px solid var(--red-500);border-radius:10px;padding:.45rem .8rem;color:#8E2323;transform:rotate(-4deg);font-size:.85rem;line-height:1.2;mix-blend-mode:multiply;box-shadow:inset 0 0 0 2px rgba(206,59,59,.18);background:var(--grain)}
 .stamp strong{display:block;font:700 .8rem var(--font-ui);letter-spacing:.14em;text-transform:uppercase}.stamp span{font-size:.78rem}
 .stamp.slam{animation:slam .7s var(--ease-spring) both}
 @keyframes slam{0%{opacity:0;transform:scale(2.2) rotate(-18deg)}55%{opacity:1;transform:scale(.94) rotate(-4deg)}75%{transform:scale(1.04) rotate(-4deg)}100%{transform:scale(1) rotate(-4deg)}}
-.pageturn{animation:pageturn .55s var(--ease) both;transform-origin:left center}
-@keyframes pageturn{from{opacity:0;transform:translateX(28px) rotate(.4deg)}to{opacity:1;transform:none}}
+.pageturn{transform-origin:left center}
 .enter .pageturn{animation:pageturn .55s var(--ease) both}
+@keyframes pageturn{from{opacity:0;transform:translateX(26px) rotate(.4deg)}to{opacity:1;transform:none}}
 .star.spin{animation:spin 1.2s var(--ease) both}@keyframes spin{from{transform:rotate(-120deg) scale(.2);opacity:0}}
-.divider-label{display:flex;align-items:center;gap:.75rem;margin:1.5rem 0 .75rem}.divider-label::after{content:"";flex:1;border-top:1px dashed var(--border-strong)}
+.divider-label{display:flex;align-items:center;gap:.75rem;margin:1.5rem 0 .75rem}.divider-label::after{content:"";flex:1;border-top:2px dotted var(--border-strong)}
+
+/* Dymo-style label tape for eyebrows on page headers */
+.page-head .eyebrow,.label-tape{display:inline-block;background:var(--green-900);color:var(--beige-100);padding:.28rem .7rem;border-radius:2px;transform:rotate(-1.2deg);box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 2px 3px rgba(31,47,22,.35);text-shadow:0 -1px 0 rgba(0,0,0,.5);margin-bottom:.6rem}
+
+/* Physical buttons: pressable keys */
+.btn{border:2px solid var(--green-900);border-radius:12px;background:var(--beige-200) var(--grain);color:var(--green-900);box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 3px 0 var(--green-900);transform:translateY(0);transition:transform 90ms var(--ease),box-shadow 90ms var(--ease),background-color var(--t-fast);font-weight:700}
+.btn:hover{background:var(--beige-300) var(--grain)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 0 0 var(--green-900)}
+.btn-primary{background:var(--linen),var(--green-500);color:var(--beige-100);text-shadow:0 -1px 0 rgba(0,0,0,.35);box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 3px 0 var(--green-900)}
+.btn-primary:hover{background:var(--linen),var(--green-900);border-color:var(--green-900)}
+.btn-cta{background:var(--red-500) var(--grain);border-color:#7d1f1f;color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 3px 0 #7d1f1f;text-shadow:0 -1px 0 rgba(0,0,0,.3)}
+.btn-cta:hover{background:#b53030;border-color:#7d1f1f}
+.btn-quiet{background:transparent;border-color:transparent;box-shadow:none}.btn-quiet:hover{background:rgba(233,220,195,.7)}.btn-quiet:active{transform:none;box-shadow:none;background:var(--beige-300)}
+.btn-danger{border-color:#8E2323;color:#8E2323;box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 3px 0 #8E2323}
+.btn-sm{border-radius:9px;box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 2px 0 var(--green-900)}.btn-sm:active{transform:translateY(2px)}
+.btn-sm.btn-quiet{box-shadow:none}
+.bar .btn,.topbar .btn{box-shadow:none}
+
+/* Fields: inset into the paper */
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=search],input[type=url],select,textarea{border:1.5px solid rgba(31,47,22,.45);border-radius:6px;background:var(--beige-100) var(--grain);box-shadow:inset 0 2px 4px rgba(31,47,22,.16),0 1px 0 rgba(255,255,255,.6)}
+.search input{border-radius:99px}
+.switch .track{box-shadow:inset 0 2px 4px rgba(31,47,22,.35)}
+.chip{border-radius:8px;border:1.5px solid rgba(31,47,22,.4);background:var(--beige-200) var(--grain);box-shadow:0 2px 0 rgba(31,47,22,.35)}
+.chip:active{transform:translateY(2px);box-shadow:none}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:var(--green-900);color:var(--beige-100);box-shadow:inset 0 2px 4px rgba(0,0,0,.45);transform:translateY(1px)}
+.seg{border-radius:10px;box-shadow:0 2px 0 var(--green-900);background:var(--beige-200)}
+.seg button[aria-pressed="true"]{box-shadow:inset 0 2px 4px rgba(0,0,0,.35)}
+
+/* Pills as paper tags */
+.pill{border-radius:4px 9px 9px 4px;padding:.15rem .7rem .15rem .6rem;box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 1px 1px rgba(31,47,22,.25)}
+.pill-attn{background:var(--beige-100);border:1.5px solid var(--red-500);color:#8E2323;box-shadow:none}
+
+/* Ledger tables: flat and readable */
+table.data{background:transparent}
+table.data th{border-bottom:3px double var(--green-900);color:var(--green-900)}
+table.data td{border-bottom:1px solid rgba(90,118,132,.35)}
+table.data tr:hover td{background:rgba(197,209,235,.35)}
+
+/* Modal = a sheet of paper dropped on the desk */
+dialog.modal::backdrop{background:rgba(24,36,16,.6)}
+.modal-sheet{position:relative;background:var(--beige-100) var(--grain);border-radius:3px;box-shadow:var(--edge-stack);padding:1.9rem 1.75rem 1.5rem}
+.modal-sheet::before{content:"";position:absolute;top:-12px;left:50%;width:92px;height:24px;margin-left:-46px;background:rgba(197,209,235,.85);border-left:2px dotted rgba(31,47,22,.15);border-right:2px dotted rgba(31,47,22,.15);transform:rotate(-2deg);box-shadow:0 1px 2px rgba(31,47,22,.2)}
+.toast{border-radius:6px;background:var(--green-900) var(--grain);box-shadow:var(--shadow-lift)}
+.lvbar i{border-radius:1px;height:9px}
+.lvbar i.on{background:var(--green-900);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.avatar{box-shadow:0 0 0 3px var(--beige-100),0 2px 5px rgba(31,47,22,.35)}
+.wordmark{text-shadow:0 1px 0 rgba(255,251,240,.7)}

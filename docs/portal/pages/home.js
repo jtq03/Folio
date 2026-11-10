@@ -33,11 +33,11 @@
         <a class="stat" href="#/levels" data-rise style="--d:4"><span class="eyebrow">Average level</span><b>${avg}</b><span>of 10</span></a>
       </div>
       <div class="grid2">
-        <section class="sec" data-rise style="--d:5" aria-labelledby="h-attn">
+        <section class="sec clip" data-rise style="--d:5" aria-labelledby="h-attn">
           <div class="sec-head"><h2 id="h-attn">Needs attention</h2><a class="small" href="#/patients?f=attention">See all</a></div>
           ${attn.length ? h`<ul class="card-list">${attn.map(function (p) { return h`<li>${U.avatar(p)}<div class="grow"><a class="title" href="#/patients/${p.id}">${sel.full(p)}</a><div class="small muted">${p.attentionReason}</div></div><a class="btn btn-sm" href="#/patients/${p.id}">Open</a></li>`; })}</ul>` : U.empty('Everyone is on track', 'Nothing needs a check-in right now.')}
         </section>
-        <section class="sec" data-rise style="--d:6" aria-labelledby="h-ready">
+        <section class="sec taped" data-rise style="--d:6" aria-labelledby="h-ready">
           <div class="sec-head"><h2 id="h-ready">Ready to advance</h2><a class="small" href="#/visit">Visit mode</a></div>
           ${ready.length ? h`<ul class="card-list">${ready.map(function (p) { return h`<li>${U.avatar(p)}<div class="grow"><a class="title" href="#/patients/${p.id}">${sel.full(p)}</a><div class="small muted">Level ${p.level} to ${Math.min(p.level + 1, 10)} · ${sel.ownCount(p)} of 5 skills on their own</div></div><a class="btn btn-sm btn-primary" href="#/visit/${p.id}">Start visit</a></li>`; })}</ul>` : U.empty('No one is ready yet', 'Skills still being practised.')}
         </section>
