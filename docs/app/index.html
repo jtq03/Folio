@@ -1,30 +1,37 @@
 <!doctype html>
-<html lang="en" data-text="md" data-contrast="normal" data-motion="auto" data-spacing="normal">
+<html lang="en" data-contrast="normal" data-motion="auto">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F7F0E2">
+  <meta name="theme-color" content="#F7F0E2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#131B10" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Folio">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
   <title>Folio</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Prompt:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared/css/tokens.css">
-  <link rel="stylesheet" href="../shared/css/base.css">
-  <link rel="stylesheet" href="../shared/css/paper.css">
   <link rel="stylesheet" href="../shared/css/card.css">
-  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="ios.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <div id="app"></div>
-  <div id="modal-root"></div>
-  <div id="toasts" aria-live="polite"></div>
+  <div class="ios-device" id="device">
+    <div class="ios-statusmock" aria-hidden="true"><span>9:41</span><span class="ios-island"></span><span class="ios-sicons">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.500" width="3" height="9.500" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"><path d="M1.500 4.200a10 10 0 0 1 14 0M4 6.800a6.500 6.500 0 0 1 9 0"/><circle cx="8.500" cy="10" r="1.200" fill="currentColor" stroke="none"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="22" height="12" rx="3.500" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="19" height="9" rx="2.200" fill="currentColor"/><rect x="24" y="4.500" width="2" height="4" rx="1" fill="currentColor" opacity=".45"/></svg></span></div>
+    <div id="app"></div>
+    <div id="modal-root"></div>
+    <div id="toasts" aria-live="polite"></div>
+  </div>
   <noscript><p style="padding:2rem">Folio needs JavaScript to run.</p></noscript>
   <script src="../shared/js/data.js"></script>
   <script src="../shared/js/store.js"></script>
