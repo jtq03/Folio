@@ -1,6 +1,6 @@
 /* Folio patient app service worker. Caches the app shell so it opens offline. Bump VERSION when files change. */
-var VERSION = 'folio-app-v2';
-var SHELL = ['./', 'index.html', 'ios.css', 'app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
+var VERSION = 'folio-app-v3';
+var SHELL = ['./', 'index.html', 'ios.css', 'app.js', 'native.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   '../shared/css/tokens.css', '../shared/css/card.css',
   '../shared/js/data.js', '../shared/js/store.js', '../shared/js/ui.js', '../shared/favicon.svg'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); })); });

@@ -98,6 +98,16 @@
     var l = (p.first || p.name || '?').charAt(0).toUpperCase(), tone = ['blue-100', 'blue-300', 'beige-300'][(l.charCodeAt(0)) % 3];
     return h`<span class="avatar" style="--s:${size}px;background:var(--${tone})" aria-hidden="true">${l}</span>`;
   }
+  function tile(icon, n, sm) { return h`<span class="tile t${n || 1} ${sm ? 'sm' : ''}" aria-hidden="true">${ic(icon, sm ? 18 : 22)}</span>`; }
+  /* Ten paper steps. cur highlights a level (with the star); counts shows patients per step. */
+  function stairs(cur, counts) {
+    var s = '';
+    for (var i = 1; i <= 10; i++) {
+      var cls = cur ? (i < cur ? 'done' : i === cur ? 'cur' : '') : '', c = counts ? counts[i - 1] : null;
+      s += '<li class="' + cls + '" style="--h:' + (26 + i * 7) + '%;--n:' + i + '">' + (c ? '<b class="cnt">' + c + '</b>' : '') + '<span>' + i + '</span>' + (i === cur ? star(20, 'stair-star').s : '') + '</li>';
+    }
+    return raw('<ol class="stairs" role="img" aria-label="' + (cur ? 'Level ' + cur + ' of 10' : 'Patients by level') + '">' + s + '</ol>');
+  }
   function pill(text, tone) { return h`<span class="pill pill-${tone || 'neutral'}">${text}</span>`; }
   var STATUS = { track: ['On track', 'neutral'], attention: ['Needs attention', 'attn'], ready: ['Ready to advance', 'ready'], transferred: ['Transferred', 'done'] };
   function statusPill(p) { var s = STATUS[F.Store.sel.status(p)]; return pill(s[0], s[1]); }
@@ -239,7 +249,7 @@
     return { render: render, go: function (p) { location.hash = p; } };
   }
 
-  F.UI = { h: h, raw: raw, esc: esc, ic: ic, star: star, mark: mark, wordmark: wordmark, lvbar: lvbar, avatar: avatar, avatarSvg: avatarSvg, pill: pill, statusPill: statusPill, skillPill: skillPill,
+  F.UI = { h: h, raw: raw, esc: esc, ic: ic, star: star, mark: mark, wordmark: wordmark, lvbar: lvbar, tile: tile, stairs: stairs, avatar: avatar, avatarSvg: avatarSvg, pill: pill, statusPill: statusPill, skillPill: skillPill,
     empty: empty, eyebrow: eyebrow, qr: qr, stamp: stamp, fmt: fmt, fmtFull: fmtFull, fmtTime: fmtTime, monthYear: monthYear, toast: toast, modal: modal, closeModal: closeModal,
     formModal: formModal, confirmModal: confirmModal, createApp: createApp };
 

@@ -344,3 +344,168 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 .wm-i { position: relative; display: inline-block; }
 .wm-star { position: absolute; left: 50%; top: -.22em; transform: translateX(-50%) scale(.9); width: .5em; height: .5em; }
 .ios-pbtns .ios-btn { font-size: .94rem; padding: 0 10px; white-space: nowrap; }
+
+/* =====================================================================
+   Liquid glass (iOS 26 style). Glass is the chrome: bars, buttons, menus.
+   Paper stays the content. Falls back to solid paper when transparency is reduced.
+   ===================================================================== */
+:root {
+  --paper-70: rgba(247, 240, 226, .72);
+  --g-bg: linear-gradient(180deg, rgba(255, 252, 245, .6), rgba(247, 240, 226, .42));
+  --g-blur: blur(22px) saturate(180%);
+  --g-edge: linear-gradient(135deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .28) 36%, rgba(255, 255, 255, .06) 60%, rgba(255, 255, 255, .65));
+  --g-hi: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 -1px 0 rgba(31, 47, 22, .06);
+  --g-shadow: 0 10px 26px -10px rgba(31, 47, 22, .42), 0 2px 6px rgba(31, 47, 22, .12);
+  --bubble: rgba(57, 91, 80, .17);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper-70: rgba(19, 27, 16, .72);
+    --g-bg: linear-gradient(180deg, rgba(76, 102, 70, .5), rgba(26, 38, 24, .55));
+    --g-edge: linear-gradient(135deg, rgba(240, 227, 206, .6), rgba(240, 227, 206, .1) 40%, rgba(240, 227, 206, .05) 60%, rgba(240, 227, 206, .34));
+    --g-hi: inset 0 1px 0 rgba(240, 227, 206, .22), inset 0 -1px 0 rgba(0, 0, 0, .25);
+    --g-shadow: 0 10px 26px -10px rgba(0, 0, 0, .7), 0 2px 6px rgba(0, 0, 0, .3);
+    --bubble: rgba(156, 196, 177, .22);
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --g-bg: linear-gradient(var(--paper), var(--paper)); --g-blur: none; }
+}
+@media (prefers-reduced-transparency: reduce) { :root { --g-bg: linear-gradient(var(--sheet), var(--sheet)); --g-blur: none; --paper-70: var(--paper); } }
+@media (prefers-contrast: more) { :root { --g-bg: linear-gradient(var(--sheet), var(--sheet)); --g-blur: none; --paper-70: var(--paper); --g-edge: linear-gradient(var(--line2), var(--line2)); } }
+:root[data-contrast="high"] { --g-bg: linear-gradient(var(--sheet), var(--sheet)); --g-blur: none; --paper-70: var(--paper); --g-edge: linear-gradient(var(--line2), var(--line2)); }
+
+.glass { background-color: transparent; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); box-shadow: var(--g-hi), var(--g-shadow); color: var(--ink); }
+.glass::after, .ios-nbtn::after, .ios-btn.glass-btn::after, .ios-actionsheet .ios-list::after { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--g-edge); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events: none; }
+
+/* Floating glass tab bar with a sliding selection bubble */
+.ios-tabs { left: 14px; right: 14px; bottom: calc(var(--sb) + 10px); height: 64px; padding: 4px; border-radius: 32px; grid-template-columns: repeat(4, 1fr); }
+.ios-tabs a { position: relative; z-index: 1; min-height: 56px; gap: 1px; border-radius: 28px; }
+.ios-tabs a:active { opacity: 1; transform: scale(.94); }
+.ios-bubble { position: absolute; z-index: 0; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / 4); border-radius: 28px; transform: translateX(calc(var(--i, 0) * 100%)); transition: transform .55s var(--spring); background-color: var(--bubble); background-image: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, .06)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .3), 0 4px 10px -4px rgba(31, 47, 22, .3); }
+@media (prefers-color-scheme: dark) { .ios-bubble { background-image: linear-gradient(180deg, rgba(240, 227, 206, .22), rgba(240, 227, 206, .03)); box-shadow: inset 0 1px 0 rgba(240, 227, 206, .4), 0 4px 10px -4px rgba(0, 0, 0, .5); } }
+.ios-ti { position: relative; display: grid; place-items: center; }
+.ios-tabdot { position: absolute; top: -5px; right: -9px; display: block; line-height: 0; animation: dotPop .5s var(--spring) both; }
+@keyframes dotPop { from { transform: scale(0) rotate(-90deg); } }
+.ios-scroll { padding-bottom: calc(64px + 10px + var(--sb) + 28px); }
+#toasts { bottom: calc(64px + 10px + var(--sb) + 14px); }
+.toast { background-image: var(--grain), var(--g-bg); background-color: transparent; -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); box-shadow: var(--g-hi), var(--g-shadow); }
+
+/* Scroll-edge nav bar: content softly blurs and fades under the status area */
+.ios-nav.col { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+.ios-nav::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: calc(100% + 20px); z-index: -1; pointer-events: none; opacity: 0; transition: opacity .3s; background: linear-gradient(180deg, var(--paper) 0%, var(--paper-70) 52%, transparent); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+.ios-nav.col::before { opacity: 1; }
+.ios-nav-l { padding-left: 8px; }
+.ios-nav-r { justify-self: end; display: flex; gap: 8px; padding-right: 8px; }
+.ios-gbtn { position: relative; display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; min-width: 44px; border-radius: 50%; color: var(--tint); }
+button.ios-gbtn:active, a.ios-back:active .ios-gbtn { transform: scale(.92); }
+.ios-back { gap: 10px; padding: 0 12px 0 0; }
+.ios-back:active { opacity: 1; }
+.ios-back-l { color: var(--tint); font-size: 1.0625rem; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Segmented control with a sliding glass thumb */
+.ios-seg { display: grid; grid-template-columns: repeat(var(--n, 4), 1fr); position: relative; padding: 3px; gap: 0; overflow: visible; border-radius: 14px; }
+.ios-seg::before { content: ""; position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--n, 4)); border-radius: 11px; transform: translateX(calc(var(--i, 0) * 100%)); transition: transform .5s var(--spring); background-color: rgba(255, 255, 255, .16); background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); box-shadow: var(--g-hi), 0 3px 8px -3px rgba(31, 47, 22, .34); }
+.ios-seg button { position: relative; z-index: 1; flex: none; padding: 0 4px; font-size: .82rem; }
+.ios-seg button[aria-pressed="true"] { background: none; box-shadow: none; }
+
+/* Sheets: glass grabber, header and buttons */
+.ios-grab { background: var(--line2); box-shadow: inset 0 1px 0 var(--hi); }
+.ios-sheet-head { position: sticky; top: 0; z-index: 3; margin: 0 -16px 12px; padding: 4px 12px; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); }
+.ios-nbtn { position: relative; padding: 0 16px; border-radius: 22px; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); box-shadow: var(--g-hi), 0 4px 10px -6px rgba(31, 47, 22, .35); color: var(--ink); font-size: 1rem; }
+.ios-nbtn.bold { color: var(--tint); background-color: var(--bubble); font-weight: 600; justify-self: end; }
+.ios-sheet-wrap { padding-bottom: var(--kb, 0px); }
+.ios-sheet { max-height: calc(100% - var(--st) - 8px - var(--kb, 0px)); }
+.ios-sheet-wrap.action .ios-sheet { background: transparent; background-image: none; box-shadow: none; padding: 0 12px calc(var(--sb) + 12px); }
+.ios-sheet-wrap.action .ios-grab { display: none; }
+.ios-actionsheet .ios-list { background-color: transparent; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); border: 0; border-radius: 22px; box-shadow: var(--g-hi), var(--g-shadow); }
+.ios-actionsheet .ios-as-msg strong { color: var(--ink); }
+
+/* Glass buttons (secondary actions). Primary stays physical paper-cut. */
+.ios-btn.glass-btn { position: relative; margin-bottom: 0; background-color: transparent; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); color: var(--ink); box-shadow: var(--g-hi), var(--g-shadow); }
+.ios-btn.glass-btn:active { transform: scale(.97); box-shadow: var(--g-hi), 0 3px 8px -4px rgba(31, 47, 22, .3); }
+.ios-lv-share { position: absolute; top: calc(var(--st) + 10px); right: 16px; }
+
+/* Context menu (long press / right click) */
+.ios-ctx { position: absolute; inset: 0; z-index: 110; }
+.ios-ctx-scrim { position: absolute; inset: 0; background: rgba(12, 18, 9, .3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: fadeIn .2s both; }
+.ios-ctx.out { opacity: 0; transition: opacity .2s; }
+.ios-ctx-row { position: absolute; pointer-events: none; transform-origin: center; animation: liftRow .38s var(--spring) both; filter: drop-shadow(0 18px 22px rgba(0, 0, 0, .35)); }
+@keyframes liftRow { to { transform: scale(1.035); } }
+.ios-ctx-menu { position: absolute; width: 240px; padding: 5px; border-radius: 20px; overflow: hidden; animation: menuIn .38s var(--spring) both; transform-origin: top right; }
+@keyframes menuIn { from { opacity: 0; transform: scale(.82); } }
+.ios-ctx-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 46px; padding: 0 14px; border-radius: 14px; font-size: 1.0625rem; color: var(--ink); text-align: left; }
+.ios-ctx-item:active { background: rgba(31, 47, 22, .12); }
+.ios-ctx-item.danger { color: #B23131; }
+@media (prefers-color-scheme: dark) { .ios-ctx-item.danger { color: #F08A82; } }
+[data-ctx] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+/* Swipe-left rows */
+.ios-swipe { position: relative; overflow: hidden; }
+.ios-list > .ios-swipe + .ios-swipe::before, .ios-list > .ios-row + .ios-swipe::before, .ios-list > .ios-swipe + .ios-row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--line2); z-index: 3; }
+.ios-swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; width: 176px; display: flex; }
+.ios-swipe-actions button { flex: 1; min-width: 44px; color: #F7F0E2; font-weight: 600; font-size: .94rem; }
+.ios-swipe-actions .edit { background: #3F6076; } .ios-swipe-actions .rm { background: #B23131; }
+.ios-swipe > .ios-row { position: relative; z-index: 2; background-color: var(--sheet); background-image: var(--grain); transition: transform .38s var(--spring); }
+.ios-swipe > .ios-row:active { background-color: var(--sheet); }
+
+/* Native switches (Safari 17.4+): let the system draw them, tinted brand green */
+html.nsw .ios-sw { -webkit-appearance: auto; appearance: auto; width: auto; height: auto; background: none; box-shadow: none; border-radius: 0; accent-color: var(--tint); }
+html.nsw .ios-sw::before, html.nsw .ios-sw::after { display: none; }
+
+/* Next visit ticket */
+.ios-ticket-sh { filter: drop-shadow(0 12px 12px rgba(31, 47, 22, .22)) drop-shadow(0 1px 1px rgba(31, 47, 22, .2)); }
+.ios-ticket { display: flex; border-radius: 14px; overflow: hidden; background-color: var(--obj); background-image: var(--grain); color: var(--obj-ink);
+  -webkit-mask-image: radial-gradient(circle at 92px 0, transparent 11px, #000 11.5px), radial-gradient(circle at 92px 100%, transparent 11px, #000 11.5px); -webkit-mask-composite: source-in;
+  mask-image: radial-gradient(circle at 92px 0, transparent 11px, #000 11.5px), radial-gradient(circle at 92px 100%, transparent 11px, #000 11.5px); mask-composite: intersect; }
+.ios-ticket .stub { flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 16px 6px; border-right: 2px dashed rgba(31, 47, 22, .28); background: rgba(146, 175, 215, .28); }
+.ios-ticket .stub .m { font: 700 .706rem var(--font-ui); letter-spacing: .18em; text-transform: uppercase; color: #2D493E; }
+.ios-ticket .stub .d { font: 600 2.4rem/1 var(--font-display); text-shadow: 0 1px 0 rgba(255, 255, 255, .8); }
+.ios-ticket .stub .w { font-size: .78rem; color: #2D493E; }
+.ios-ticket .main { flex: 1; min-width: 0; padding: 16px 16px 14px; }
+.ios-ticket .main .ios-eyebrow { color: #2D493E; }
+.ios-ticket h3 { font: 600 1.18rem/1.25 var(--font-display); margin: 6px 0 2px; }
+.ios-ticket p { font-size: .9rem; color: #2D493E; }
+.ios-ticket-btns { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.ios-ticket-btns .ios-btn { flex: 1; min-width: 0; font-size: .9rem; padding: 0 10px; }
+.ios-field input[type="datetime-local"] { -webkit-appearance: auto; appearance: auto; min-height: 32px; }
+
+/* View transitions for tab, push and pop (fallback animations stay in place when unsupported) */
+.ios-scroll { view-transition-name: screen; }
+.ios-nav { view-transition-name: navbar; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-group(navbar) { animation-duration: .3s; }
+html.vt-push::view-transition-old(screen) { animation: vtOutL .42s var(--out) both; }
+html.vt-push::view-transition-new(screen) { animation: vtInR .42s var(--out) both; }
+html.vt-pop::view-transition-old(screen) { animation: vtOutR .42s var(--out) both; }
+html.vt-pop::view-transition-new(screen) { animation: vtInL .42s var(--out) both; }
+html.vt-tab::view-transition-old(screen) { animation: fadeOut .14s both; }
+html.vt-tab::view-transition-new(screen) { animation: fadeIn .26s both; }
+@keyframes vtOutL { to { transform: translateX(-24%); opacity: .5; } }
+@keyframes vtInR { from { transform: translateX(100%); } }
+@keyframes vtOutR { to { transform: translateX(100%); } }
+@keyframes vtInL { from { transform: translateX(-24%); opacity: .6; } }
+
+/* ---------- Real bottom tab bar: floating glass capsule, legible over any content ---------- */
+:root {
+  --tab-h: 64px; --tab-gap: calc(max(var(--sb), 8px) + 8px);
+  --bar-bg: linear-gradient(180deg, rgba(252, 248, 238, .74), rgba(244, 236, 220, .64));
+  --bar-blur: blur(28px) saturate(180%);
+}
+@media (prefers-color-scheme: dark) { :root { --bar-bg: linear-gradient(180deg, rgba(62, 86, 58, .7), rgba(22, 32, 20, .72)); } }
+@media (prefers-reduced-transparency: reduce) { :root { --bar-bg: linear-gradient(var(--sheet), var(--sheet)); --bar-blur: none; } }
+@media (prefers-contrast: more) { :root { --bar-bg: linear-gradient(var(--sheet), var(--sheet)); --bar-blur: none; } }
+:root[data-contrast="high"] { --bar-bg: linear-gradient(var(--sheet), var(--sheet)); --bar-blur: none; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { :root { --bar-bg: linear-gradient(var(--sheet), var(--sheet)); --bar-blur: none; } }
+.ios-tabs { left: 14px; right: 14px; bottom: var(--tab-gap); height: var(--tab-h); padding: 4px; border-radius: 32px; z-index: 40; background-image: var(--grain), var(--bar-bg); -webkit-backdrop-filter: var(--bar-blur); backdrop-filter: var(--bar-blur); box-shadow: var(--g-hi), 0 14px 30px -12px rgba(31, 47, 22, .5), 0 3px 8px rgba(31, 47, 22, .14); transition: transform .35s var(--spring), opacity .25s; }
+.ios-tabs a { gap: 2px; }
+.ios-tabs a span:last-child { font-size: .625rem; font-weight: 600; }
+.ios-tabfade { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--tab-h) + var(--tab-gap) + 26px); z-index: 35; pointer-events: none; background: linear-gradient(180deg, transparent 0%, var(--paper-70) 48%, var(--paper) 100%); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 55%); mask-image: linear-gradient(180deg, transparent 0%, #000 55%); }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .ios-tabfade { -webkit-backdrop-filter: none; backdrop-filter: none; } }
+.ios-scroll { padding-bottom: calc(var(--tab-h) + var(--tab-gap) + 32px); }
+#toasts { bottom: calc(var(--tab-h) + var(--tab-gap) + 14px); }
+.kbd .ios-tabs, .kbd .ios-tabfade { transform: translateY(calc(100% + 60px)); opacity: 0; pointer-events: none; }
+.ios-nav::before { height: calc(100% + 22px); background: linear-gradient(180deg, var(--paper) 0%, var(--paper) 58%, var(--paper-70) 82%, transparent); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%); -webkit-mask-image: linear-gradient(#000 76%, transparent); mask-image: linear-gradient(#000 76%, transparent); }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) { .ios-nav::before { -webkit-backdrop-filter: none; backdrop-filter: none; } }
+.ios-swipe-actions button { text-align: center; display: grid; place-items: center; }
+.ios-nav::before { background: linear-gradient(180deg, var(--paper) 0%, var(--paper) 76%, var(--paper-70) 92%, transparent); -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }

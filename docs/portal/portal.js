@@ -3,45 +3,32 @@
   var h = F.UI.h, ic = F.UI.ic, S = F.Store;
   F.Pages = F.Pages || {};
 
-  var TABS = [
-    { k: 'home', href: '#/', label: 'Home', icon: 'home', tone: 'beige-200' },
-    { k: 'patients', href: '#/patients', label: 'Patients', icon: 'users', tone: 'blue-300' },
-    { k: 'visit', href: '#/visit', label: 'Visit mode', icon: 'visit', tone: 'beige-200' },
-    { k: 'add', href: '#/add', label: 'Add patient', icon: 'plus', tone: 'blue-300' },
-    { k: 'cards', href: '#/cards', label: 'Cards', icon: 'card', tone: 'beige-200' },
-    { k: 'levels', href: '#/levels', label: 'Levels and skills', icon: 'levels', tone: 'blue-300' },
-    { k: 'access', href: '#/access', label: 'Access log', icon: 'log', tone: 'beige-200' },
-    { k: 'insights', href: '#/insights', label: 'Insights', icon: 'chart', tone: 'blue-300' },
-    { k: 'resources', href: '#/resources', label: 'Resources', icon: 'book', tone: 'beige-200' },
-    { k: 'team', href: '#/team', label: 'Team', icon: 'team', tone: 'blue-300' },
-    { k: 'settings', href: '#/settings', label: 'Settings', icon: 'settings', tone: 'beige-200' }
+  var GROUPS = [
+    ['Care', [['home', '#/', 'Home', 'home'], ['patients', '#/patients', 'Patients', 'users'], ['visit', '#/visit', 'Visit mode', 'visit'], ['add', '#/add', 'Add patient', 'plus']]],
+    ['Program', [['cards', '#/cards', 'Cards', 'card'], ['levels', '#/levels', 'Levels and skills', 'levels'], ['access', '#/access', 'Access log', 'log'], ['insights', '#/insights', 'Insights', 'chart'], ['resources', '#/resources', 'Resources', 'book']]],
+    ['Admin', [['team', '#/team', 'Team', 'team'], ['settings', '#/settings', 'Settings', 'settings']]]
   ];
 
-  function activeKey(path) {
-    var seg = path.split('/')[1] || 'home';
-    return seg;
-  }
-
   function shell(out, loc) {
-    var me = S.sel.me(), k = activeKey(loc.path), st = S.get();
-    var tabs = TABS.map(function (t, i) {
-      var on = t.k === k;
-      return h`<a class="tab ${on ? 'on' : ''}" href="${t.href}" style="--tone:var(--${['blue-100', 'blue-300', 'beige-200', 'beige-300'][i % 4]});--i:${i}" ${on ? h`aria-current="page"` : ''}>${ic(t.icon, 20)}<span>${t.label}</span></a>`;
+    var me = S.sel.me(), k = loc.path.split('/')[1] || 'home', st = S.get(), n = 0;
+    var nav = GROUPS.map(function (g) {
+      return h`<div class="nav-group"><div class="nav-h">${g[0]}</div>${g[1].map(function (t) {
+        n++; var on = t[0] === k;
+        return h`<a class="nav-i ${on ? 'on' : ''}" href="${t[1]}" ${on ? h`aria-current="page"` : ''}>${F.UI.tile(t[3], ((n - 1) % 5) + 1, true)}<span>${t[2]}</span></a>`;
+      })}</div>`;
     });
     return h`
-      <div class="topbar">
-        <a class="brand" href="#/" aria-label="Folio home">${F.UI.wordmark()}</a>
-        <div class="clinic"><strong>${st.clinic.org}</strong><span>${st.clinic.team}</span></div>
-        <div class="grow"></div>
-        <nav class="demo-links" aria-label="Prototype surfaces">
-          <a href="app/" target="_blank" rel="noopener">Patient app ${ic('ext', 14)}</a>
-          <a href="card/?demo=1" target="_blank" rel="noopener">Adult card view (demo) ${ic('ext', 14)}</a>
-        </nav>
-        <div class="me">${F.UI.avatar(me, 36)}<div><strong>${me.name}</strong><span>${me.role}</span></div></div>
-      </div>
-      <div class="binder">
-        <nav class="tabs" aria-label="Main">${tabs}</nav>
-        <main id="main" class="page" data-keep="page"><div class="rings" aria-hidden="true"><i></i><i></i><i></i></div><div class="page-in pageturn">${out.html}</div></main>
+      <div class="shell">
+        <aside class="side">
+          <a class="brand" href="#/" aria-label="Folio home">${F.UI.wordmark()}</a>
+          <div class="clinic"><strong>${st.clinic.org}</strong><span>${st.clinic.team}</span></div>
+          <nav class="nav" aria-label="Main">${nav}</nav>
+          <div class="side-foot">
+            <div class="me">${F.UI.avatar(me, 40)}<div><strong>${me.name}</strong><span>${me.role}</span></div></div>
+            <div class="demo-links"><a href="app/" target="_blank" rel="noopener">Patient app ${ic('ext', 13)}</a><a href="card/?demo=1" target="_blank" rel="noopener">Adult view demo ${ic('ext', 13)}</a></div>
+          </div>
+        </aside>
+        <main id="main" class="page" data-keep="page"><div class="page-in pageturn">${out.html}</div></main>
       </div>`;
   }
 

@@ -43,9 +43,9 @@
     var L = sel.level(p.level);
     var contact = function (c, role) { return h`<div class="who"><span class="rl">${role}</span><div><b>${c.name}</b></div>${c.phone ? h`<div class="muted">${c.phone}</div><div class="acts"><a class="btn btn-sm btn-primary" href="tel:${c.phone.replace(/[^\d+]/g, '')}">${ic('phone', 16)} Call</a><a class="btn btn-sm" href="sms:${c.phone.replace(/[^\d+]/g, '')}">${ic('message', 16)} Message</a></div>` : h`<div class="muted">No phone on file</div>`}</div>`; };
     return h`${bar(p, how)}<main id="main" class="wrap">
-      <section class="sheetc" style="--d:0"><div class="pt-head"><div class="polaroid">${U.avatar(p, 96)}<span class="cap">${p.first}</span></div><div class="grow"><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span><span aria-hidden="true">·</span><span>Folio ID ${sel.fid(p.folioId)}</span></div><div>${U.pill(p.condition, 'blue')}</div></div></div>
-        <div style="margin-top:1rem" class="row wrap"><span class="eyebrow">Level ${p.level} of 10 · ${L.name}</span>${U.lvbar(p.level)}</div>
-        ${p.levelSignoff ? h`<p class="small muted" style="margin:.5rem 0 0">Signed off Level ${p.levelSignoff.level} by ${p.levelSignoff.by}, ${U.monthYear(p.levelSignoff.date)}.</p>` : ''}</section>
+      <section class="sheetc" style="--d:0"><div class="pt-head"><div class="pt-av">${U.avatar(p, 104)}</div><div class="grow"><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span><span aria-hidden="true">·</span><span>Folio ID ${sel.fid(p.folioId)}</span></div><div>${U.pill(p.condition, 'blue')}</div></div></div>
+        <div style="margin-top:1.1rem" class="facts"><span class="eyebrow">Level ${p.level} of 10 · ${L.name}</span>${U.lvbar(p.level)}</div>
+        ${p.levelSignoff ? h`<p class="small muted" style="margin:.4rem 0 0">Signed off Level ${p.levelSignoff.level} by ${p.levelSignoff.by}, ${U.monthYear(p.levelSignoff.date)}.</p>` : ''}</section>
       <section class="sheetc" style="--d:1"><h2>How to work with ${p.first}</h2><p class="small muted">Things that change how your team should interact</p>
         ${p.howToWork.map(function (w) { return h`<div class="work"><div class="by">${w.by}<span>${w.date}</span></div><p>${w.text}</p></div>`; })}</section>
       <div class="fold">Fold: below this line is context, reached by scrolling</div>

@@ -45,3 +45,12 @@ body{background:var(--bg)}#app{position:relative;z-index:1}
 .facts{display:flex;flex-wrap:wrap;align-items:center;gap:.2rem .6rem;color:var(--text-muted);font-size:1.05rem;height:auto}
 .bar .btn{background:transparent;color:var(--beige-100);border-color:var(--blue-100);box-shadow:none}.bar .btn:hover{background:rgba(247,240,226,.14)}.bar .btn:active{transform:none}
 .bar .tsz button{border-radius:8px}
+
+/* Align with the portal and app: clean paper cards, round avatar */
+body{background:var(--beige-100) var(--grain)}
+.bar{background:var(--green-900);box-shadow:0 8px 24px -12px rgba(10,20,8,.6)}
+.sheetc{border-radius:20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 1px 1px rgba(31,47,22,.14),0 18px 30px -18px rgba(60,42,14,.45)}
+.sheetc h2{border-bottom:1px solid rgba(31,47,22,.14);padding-bottom:.7rem}
+.work,.who,.sk2 .it2{border-radius:14px;background:rgba(240,227,206,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.pt-av .avatar{box-shadow:0 0 0 5px var(--beige-100),0 0 0 6px rgba(31,47,22,.15),0 10px 20px -8px rgba(31,47,22,.5)}
+.sheetc:first-of-type::after{background:rgba(146,175,215,.7);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 4px,transparent 4px 9px)}
