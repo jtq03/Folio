@@ -4,17 +4,17 @@
   F.Pages = F.Pages || {};
 
   var TABS = [
-    { k: 'home', href: '#/', label: 'Home', icon: 'home', tone: 'blue-100' },
+    { k: 'home', href: '#/', label: 'Home', icon: 'home', tone: 'beige-200' },
     { k: 'patients', href: '#/patients', label: 'Patients', icon: 'users', tone: 'blue-300' },
-    { k: 'visit', href: '#/visit', label: 'Visit mode', icon: 'visit', tone: 'blue-100' },
+    { k: 'visit', href: '#/visit', label: 'Visit mode', icon: 'visit', tone: 'beige-200' },
     { k: 'add', href: '#/add', label: 'Add patient', icon: 'plus', tone: 'blue-300' },
-    { k: 'cards', href: '#/cards', label: 'Cards', icon: 'card', tone: 'blue-100' },
+    { k: 'cards', href: '#/cards', label: 'Cards', icon: 'card', tone: 'beige-200' },
     { k: 'levels', href: '#/levels', label: 'Levels and skills', icon: 'levels', tone: 'blue-300' },
-    { k: 'access', href: '#/access', label: 'Access log', icon: 'log', tone: 'blue-100' },
+    { k: 'access', href: '#/access', label: 'Access log', icon: 'log', tone: 'beige-200' },
     { k: 'insights', href: '#/insights', label: 'Insights', icon: 'chart', tone: 'blue-300' },
-    { k: 'resources', href: '#/resources', label: 'Resources', icon: 'book', tone: 'blue-100' },
+    { k: 'resources', href: '#/resources', label: 'Resources', icon: 'book', tone: 'beige-200' },
     { k: 'team', href: '#/team', label: 'Team', icon: 'team', tone: 'blue-300' },
-    { k: 'settings', href: '#/settings', label: 'Settings', icon: 'settings', tone: 'blue-100' }
+    { k: 'settings', href: '#/settings', label: 'Settings', icon: 'settings', tone: 'beige-200' }
   ];
 
   function activeKey(path) {
@@ -26,7 +26,7 @@
     var me = S.sel.me(), k = activeKey(loc.path), st = S.get();
     var tabs = TABS.map(function (t, i) {
       var on = t.k === k;
-      return h`<a class="tab ${on ? 'on' : ''}" href="${t.href}" style="--tone:var(--${t.tone});--i:${i}" ${on ? h`aria-current="page"` : ''}>${ic(t.icon, 20)}<span>${t.label}</span></a>`;
+      return h`<a class="tab ${on ? 'on' : ''}" href="${t.href}" style="--tone:var(--${['blue-100', 'blue-300', 'beige-200', 'beige-300'][i % 4]});--i:${i}" ${on ? h`aria-current="page"` : ''}>${ic(t.icon, 20)}<span>${t.label}</span></a>`;
     });
     return h`
       <div class="topbar">
@@ -41,7 +41,7 @@
       </div>
       <div class="binder">
         <nav class="tabs" aria-label="Main">${tabs}</nav>
-        <main id="main" class="page sheet" data-keep="page"><div class="rings" aria-hidden="true">${[1,2,3,4,5,6,7].map(function(){return h`<i></i>`;})}</div><div class="page-in pageturn">${out.html}</div></main>
+        <main id="main" class="page" data-keep="page"><div class="rings" aria-hidden="true"><i></i><i></i><i></i></div><div class="page-in pageturn">${out.html}</div></main>
       </div>`;
   }
 

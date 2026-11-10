@@ -88,7 +88,7 @@
     addPatient: function (d) {
       return commit(function (s) {
         var p = {
-          id: uid('p'), first: d.first, last: d.last, age: +d.age, folioId: randFolioId(), condition: d.condition, level: +d.level || 1,
+          id: uid('p'), avatar: 'a' + (1 + Math.floor(Math.random() * 8)), photo: '', first: d.first, last: d.last, age: +d.age, folioId: randFolioId(), condition: d.condition, level: +d.level || 1,
           skills: { know: 'learning', manage: 'learning', speak: 'learning', run: 'learning', support: 'learning' },
           lastNote: today(), attention: false, attentionReason: '', optedIn: true, transferred: false, celebrate: null,
           levelSignoff: { level: +d.level || 1, by: sel.me().name, date: today() }, shareNotes: true,

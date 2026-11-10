@@ -72,9 +72,31 @@
     for (var i = 1; i <= total; i++) s += '<i class="' + (i <= n ? 'on' : '') + '" style="--i:' + i + '"></i>';
     return raw('<span class="lvbar" role="img" aria-label="Level ' + n + ' of ' + total + '">' + s + '</span>');
   }
+  /* Illustrated paper-cut style avatars (8 presets) and photo support */
+  var AV = {
+    a1: ['#C5D1EB', '#F1C9A5', '#6B3F23', 'short', '#395B50'], a2: ['#E9DCC3', '#D9A47C', '#2B1B12', 'curly', '#92AFD7'],
+    a3: ['#92AFD7', '#F6D9BE', '#C98B4D', 'long', '#395B50'], a4: ['#C5D1EB', '#B97A57', '#2B1B12', 'bun', '#F0E3CE'],
+    a5: ['#395B50', '#8A5A3C', '#1F2F16', 'short', '#C5D1EB'], a6: ['#E9DCC3', '#F1C9A5', '#2B1B12', 'bob', '#5A7684'],
+    a7: ['#92AFD7', '#5C3B28', '#1F2F16', 'curly', '#F0E3CE'], a8: ['#C5D1EB', '#D9A47C', '#6B3F23', 'buzz', '#395B50']
+  };
+  F.AVATARS = Object.keys(AV);
+  function avatarSvg(id, size) {
+    var c = AV[id] || AV.a1, hair = c[2], head = c[1], hs = '', back = '';
+    if (c[3] === 'long') back = '<rect x="18" y="20" width="28" height="34" rx="13" fill="' + hair + '"/>';
+    if (c[3] === 'bob') back = '<rect x="18.5" y="20" width="27" height="22" rx="10" fill="' + hair + '"/>';
+    if (c[3] === 'bun') back = '<circle cx="32" cy="13" r="6" fill="' + hair + '"/>';
+    if (c[3] === 'curly') back = '<g fill="' + hair + '"><circle cx="22" cy="24" r="6"/><circle cx="32" cy="18" r="7"/><circle cx="42" cy="24" r="6"/><circle cx="24" cy="30" r="5"/><circle cx="40" cy="30" r="5"/></g>';
+    var cap = c[3] === 'buzz' ? '<path d="M21 28c0-8 5-12 11-12s11 4 11 12c-3-3-7-5-11-5s-8 2-11 5z" fill="' + hair + '" opacity=".85"/>' : '<path d="M19.5 31c0-11 5.5-16 12.5-16s12.5 5 12.5 16c-4-5-8.500-7.500-12.500-7.500S23.500 26 19.500 31z" fill="' + hair + '"/>';
+    return raw('<svg viewBox="0 0 64 64" width="' + (size || 64) + '" height="' + (size || 64) + '" aria-hidden="true" focusable="false"><rect width="64" height="64" fill="' + c[0] + '"/><circle cx="52" cy="10" r="14" fill="rgba(255,255,255,.22)"/>' + back +
+      '<path d="M7 66c0-13 10-19 25-19s25 6 25 19z" fill="' + c[4] + '"/><rect x="28" y="39" width="8" height="9" rx="3" fill="' + head + '"/><circle cx="32" cy="31" r="11" fill="' + head + '"/>' + cap +
+      '<circle cx="27.800" cy="32" r="1.300" fill="#1F2F16"/><circle cx="36.200" cy="32" r="1.300" fill="#1F2F16"/><path d="M28.500 36.500q3.500 3 7 0" stroke="#1F2F16" stroke-width="1.200" fill="none" stroke-linecap="round"/><ellipse cx="25" cy="35" rx="2" ry="1.200" fill="#CE3B3B" opacity=".18"/><ellipse cx="39" cy="35" rx="2" ry="1.200" fill="#CE3B3B" opacity=".18"/></svg>');
+  }
   function avatar(p, size) {
+    size = size || 40;
+    if (p.photo) return h`<span class="avatar avatar-img" style="--s:${size}px"><img src="${p.photo}" alt="" width="${size}" height="${size}"></span>`;
+    if (p.avatar && AV[p.avatar]) return h`<span class="avatar avatar-svg" style="--s:${size}px">${avatarSvg(p.avatar, size)}</span>`;
     var l = (p.first || p.name || '?').charAt(0).toUpperCase(), tone = ['blue-100', 'blue-300', 'beige-300'][(l.charCodeAt(0)) % 3];
-    return h`<span class="avatar" style="--s:${size || 40}px;background:var(--${tone})" aria-hidden="true">${l}</span>`;
+    return h`<span class="avatar" style="--s:${size}px;background:var(--${tone})" aria-hidden="true">${l}</span>`;
   }
   function pill(text, tone) { return h`<span class="pill pill-${tone || 'neutral'}">${text}</span>`; }
   var STATUS = { track: ['On track', 'neutral'], attention: ['Needs attention', 'attn'], ready: ['Ready to advance', 'ready'], transferred: ['Transferred', 'done'] };
@@ -217,7 +239,7 @@
     return { render: render, go: function (p) { location.hash = p; } };
   }
 
-  F.UI = { h: h, raw: raw, esc: esc, ic: ic, star: star, mark: mark, wordmark: wordmark, lvbar: lvbar, avatar: avatar, pill: pill, statusPill: statusPill, skillPill: skillPill,
+  F.UI = { h: h, raw: raw, esc: esc, ic: ic, star: star, mark: mark, wordmark: wordmark, lvbar: lvbar, avatar: avatar, avatarSvg: avatarSvg, pill: pill, statusPill: statusPill, skillPill: skillPill,
     empty: empty, eyebrow: eyebrow, qr: qr, stamp: stamp, fmt: fmt, fmtFull: fmtFull, fmtTime: fmtTime, monthYear: monthYear, toast: toast, modal: modal, closeModal: closeModal,
     formModal: formModal, confirmModal: confirmModal, createApp: createApp };
 

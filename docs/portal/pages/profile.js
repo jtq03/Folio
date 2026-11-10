@@ -105,13 +105,15 @@
       after: function (root, loc, isNav) { if (isNav) setTimeout(function () { var last = S.get().access[0]; if (!(last && last.pid === p.id && last.how === 'Portal' && Date.now() - new Date(last.time) < 60000)) A.log(p.id, sel.me().name, 'Portal'); }, 50); },
       html: h`
       <a class="crumb" href="#/patients">${ic('back', 16)} All patients</a>
-      <div class="profile-head" data-rise>
-        ${U.avatar(p, 72)}
-        <div class="grow"><h1>${sel.full(p)}</h1><div class="row wrap gap-s muted"><span>Age ${p.age}</span><span>·</span><span>Folio ID ${sel.fid(p.folioId)}</span><span>·</span>${U.pill(p.condition, 'blue')}${U.statusPill(p)}</div></div>
-        <div class="row wrap"><button class="btn" data-action="editPatient" data-pid="${p.id}">${ic('edit', 16)} Edit info</button><a class="btn btn-primary" href="#/visit/${p.id}">${ic('visit', 16)} Start visit</a></div>
+      <div class="folder" data-rise><span class="folder-tab">Folio ID ${sel.fid(p.folioId)}</span>
+        <div class="profile-head">
+          <div class="polaroid">${U.avatar(p, 104)}<span class="cap">${p.first}</span></div>
+          <div class="grow"><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span>${U.pill(p.condition, 'blue')}${U.statusPill(p)}<span class="muted">Level ${p.level} · ${sel.level(p.level).name}</span></div></div>
+          <div class="row wrap"><button class="btn" data-action="editPatient" data-pid="${p.id}">${ic('edit', 16)} Edit info</button><a class="btn btn-primary" href="#/visit/${p.id}">${ic('visit', 16)} Start visit</a></div>
+        </div>
       </div>
       <div class="subtabs" role="tablist" aria-label="Patient sections">${tabs.map(function (t) { return h`<button role="tab" aria-selected="${String(F.ui.pt === t[0])}" data-action="ptab" data-v="${t[0]}">${t[1]}</button>`; })}</div>
-      <div role="tabpanel">${body}</div>`
+      <div role="tabpanel" class="tabpanel">${body}</div>`
     };
   };
 })(window.Folio);
