@@ -1,0 +1,16 @@
+{
+  "name": "Folio",
+  "short_name": "Folio",
+  "description": "Your story, carried forward. Build skills, track your level and carry your Folio card.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F0E2",
+  "theme_color": "#F7F0E2",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

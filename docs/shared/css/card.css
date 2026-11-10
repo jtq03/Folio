@@ -1,0 +1,21 @@
+/* Folio ID card. Front = paper, back = deep green with QR. Shapes: rounded, square, tab. */
+.fcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+@media(max-width:700px){.fcards{grid-template-columns:1fr}}
+.fcard{position:relative;aspect-ratio:1.586;border-radius:18px;padding:1.1rem 1.2rem;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:var(--shadow-paper);container-type:inline-size}
+.fcard.square{border-radius:4px}
+.fcard.tab{border-radius:18px 18px 18px 18px;clip-path:none}
+.fcard.tab::before{content:"";position:absolute;right:14px;top:14px;width:18px;height:18px;border-radius:50%;background:var(--bg);box-shadow:inset 0 1px 3px rgba(31,47,22,.4)}
+.fcard.front{background:var(--beige-200);color:var(--green-900)}
+.fcard.back{background:var(--green-900);color:var(--beige-100)}
+.fcard .fc-brand{font:600 clamp(1.1rem,9cqw,1.7rem)/1 var(--font-display)}
+.fcard .fc-tag{font:700 .6rem/1.2 var(--font-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--red-500)}
+.fcard .fc-id{font:600 clamp(1.3rem,11cqw,2rem)/1 var(--font-display);letter-spacing:.02em}
+.fcard .fc-name{font:700 .85rem var(--font-ui)}
+.fcard .fc-stack{position:absolute;right:1rem;bottom:1rem;opacity:.95}
+.fcard.back .fc-tag{color:var(--blue-100)}
+.fcard.back h4{font:600 clamp(1.1rem,7cqw,1.5rem)/1.1 var(--font-display);margin-bottom:.3rem}
+.fcard.back p{font-size:.72rem;line-height:1.4;margin:0 0 .2rem;color:var(--beige-200)}
+.fcard .qrbox{position:absolute;left:1rem;top:1rem;bottom:1rem;aspect-ratio:1;border-radius:8px;overflow:hidden}
+.fcard .qrbox svg{width:100%;height:100%;display:block}
+.fcard.back .fc-right{margin-left:calc(min(100%,0px) + 0px);padding-left:36%}
+.fcard.inactive{filter:grayscale(1) opacity(.55)}
