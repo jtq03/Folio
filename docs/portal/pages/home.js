@@ -13,7 +13,7 @@
     var ready = pts.filter(function (p) { return sel.status(p) === 'ready'; });
     var avg = (pts.reduce(function (a, p) { return a + p.level; }, 0) / pts.length).toFixed(1);
     var hr = new Date().getHours(), greet = hr < 12 ? 'morning' : hr < 18 ? 'afternoon' : 'evening';
-    var counts = F.LEVELS.map(function (l) { return pts.filter(function (p) { return p.level === l.n; }).length; }), max = Math.max.apply(null, counts) || 1;
+    var counts = F.LEVELS.map(function (l) { return pts.filter(function (p) { return p.level === l.n; }).length; });
 
     var feed = [];
     pts.forEach(function (p) {
@@ -27,23 +27,24 @@
       html: h`
       ${F.Pages.head(st.clinic.team, h`Good <em class="it">${greet}</em>, ${me.name}`, 'Here is your roster at a glance. Start with anyone who needs attention.', h`<a class="btn btn-primary" href="#/add">${ic('plus')} Add patient</a>`)}
       <div class="stats">
-        <a class="stat" href="#/patients" data-rise style="--d:1"><span class="eyebrow">Patients</span><b>${pts.length}</b><span>enrolled in Folio</span></a>
-        <a class="stat" href="#/patients?f=attention" data-rise style="--d:2"><span class="eyebrow red">Needs attention</span><b>${attn.length}</b><span>check in soon</span></a>
-        <a class="stat" href="#/patients?f=ready" data-rise style="--d:3"><span class="eyebrow">Ready to advance</span><b>${ready.length}</b><span>${S.get().program.requiredSkills}+ skills on their own</span></a>
-        <a class="stat" href="#/levels" data-rise style="--d:4"><span class="eyebrow">Average level</span><b>${avg}</b><span>of 10</span></a>
+        <a class="stat" href="#/patients" data-rise style="--d:1">${U.tile('users', 1)}<b>${pts.length}</b><span>Patients enrolled</span></a>
+        <a class="stat attn" href="#/patients?f=attention" data-rise style="--d:2">${U.tile('bell', 5)}<b>${attn.length}</b><span>Need attention</span></a>
+        <a class="stat" href="#/patients?f=ready" data-rise style="--d:3">${U.tile('check', 4)}<b>${ready.length}</b><span>Ready to advance</span></a>
+        <a class="stat" href="#/levels" data-rise style="--d:4">${U.tile('levels', 3)}<b>${avg}</b><span>Average level of 10</span></a>
       </div>
       <div class="grid2">
-        <section class="sec clip" data-rise style="--d:5" aria-labelledby="h-attn">
+        <section class="sec" data-rise style="--d:5" aria-labelledby="h-attn">
           <div class="sec-head"><h2 id="h-attn">Needs attention</h2><a class="small" href="#/patients?f=attention">See all</a></div>
           ${attn.length ? h`<ul class="card-list">${attn.map(function (p) { return h`<li>${U.avatar(p)}<div class="grow"><a class="title" href="#/patients/${p.id}">${sel.full(p)}</a><div class="small muted">${p.attentionReason}</div></div><a class="btn btn-sm" href="#/patients/${p.id}">Open</a></li>`; })}</ul>` : U.empty('Everyone is on track', 'Nothing needs a check-in right now.')}
         </section>
-        <section class="sec taped" data-rise style="--d:6" aria-labelledby="h-ready">
+        <section class="sec" data-rise style="--d:6" aria-labelledby="h-ready">
           <div class="sec-head"><h2 id="h-ready">Ready to advance</h2><a class="small" href="#/visit">Visit mode</a></div>
           ${ready.length ? h`<ul class="card-list">${ready.map(function (p) { return h`<li>${U.avatar(p)}<div class="grow"><a class="title" href="#/patients/${p.id}">${sel.full(p)}</a><div class="small muted">Level ${p.level} to ${Math.min(p.level + 1, 10)} · ${sel.ownCount(p)} of 5 skills on their own</div></div><a class="btn btn-sm btn-primary" href="#/visit/${p.id}">Start visit</a></li>`; })}</ul>` : U.empty('No one is ready yet', 'Skills still being practised.')}
         </section>
-        <section class="sec" data-rise style="--d:7" aria-labelledby="h-dist">
-          <div class="sec-head"><h2 id="h-dist">Where patients are</h2></div>
-          ${F.LEVELS.map(function (l, i) { return h`<div class="hbar"><span>${l.n} · ${l.name}</span><span class="t"><i style="width:${(counts[i] / max) * 100}%"></i></span><b>${counts[i]}</b></div>`; })}
+        <section class="sec taped" data-rise style="--d:7" aria-labelledby="h-dist">
+          <div class="sec-head"><h2 id="h-dist">Where patients are</h2><a class="small" href="#/levels">Levels</a></div>
+          ${U.stairs(0, counts)}
+          <p class="small muted" style="margin:.75rem 0 0">Each step is a level. The number above is how many patients are on it.</p>
         </section>
         <section class="sec" data-rise style="--d:8" aria-labelledby="h-act">
           <div class="sec-head"><h2 id="h-act">Recent activity</h2><a class="small" href="#/access">Access log</a></div>
