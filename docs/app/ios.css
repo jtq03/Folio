@@ -127,11 +127,12 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 /* ---------- Skeuomorphic objects ---------- */
 .ios-tape { position: absolute; top: -12px; left: 50%; width: 92px; height: 26px; margin-left: -46px; transform: rotate(-2deg); background: rgba(146, 175, 215, .7); background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .22) 0 4px, transparent 4px 9px); box-shadow: 0 1px 2px rgba(31, 47, 22, .22); z-index: 2; }
 .ios-tape.b { background-color: rgba(233, 220, 195, .92); transform: rotate(3deg); margin-left: -30px; }
-.ios-index { position: relative; isolation: isolate; margin: 8px 16px 0; padding: 30px 22px 22px; border-radius: 5px; color: var(--obj-ink); background-color: var(--obj); background-image: var(--grain), repeating-linear-gradient(transparent 0 29px, rgba(90, 118, 132, .22) 29px 30px); background-position: 0 0, 0 14px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 1px rgba(31, 47, 22, .2), 0 16px 26px -14px var(--shadow); }
-.ios-index::before { content: ""; position: absolute; inset: 7px -4px -9px 4px; z-index: -1; background: #E7D9BC; background-image: var(--grain); border-radius: 5px; transform: rotate(1.3deg); box-shadow: 0 8px 14px -10px var(--shadow); }
+.ios-index { position: relative; isolation: isolate; margin: 8px 16px 0; padding: 30px 22px 22px; color: var(--obj-ink); }
+.ios-index::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 5px; background-color: var(--obj); background-image: var(--grain), repeating-linear-gradient(transparent 0 29px, rgba(90, 118, 132, .22) 29px 30px); background-position: 0 0, 0 14px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 1px rgba(31, 47, 22, .2), 0 16px 26px -14px var(--shadow); }
+.ios-index::before { content: ""; position: absolute; inset: 7px -4px -9px 4px; z-index: -2; background: #E7D9BC; background-image: var(--grain); border-radius: 5px; transform: rotate(1.3deg); box-shadow: 0 8px 14px -10px var(--shadow); }
 .ios-index .ios-eyebrow { color: var(--obj2); }
 .ios-lvl { display: flex; align-items: center; gap: 18px; margin: 8px 0 0; }
-.ios-num { font: 600 5.6rem/.9 var(--font-display); color: var(--obj-ink); text-shadow: -1px -1px 0 rgba(31, 47, 22, .22), 1px 1px 0 rgba(255, 255, 255, .85); }
+.ios-num { font: 600 5.6rem/.9 var(--font-display); color: var(--obj-ink); text-shadow: 0 1px 0 rgba(255, 255, 255, .85), 0 -1px 0 rgba(31, 47, 22, .18); }
 .ios-lvl h2 { font: 600 1.6rem/1.1 var(--font-display); }
 .ios-lvl p { font-size: .88rem; color: var(--obj2); margin-top: 6px; }
 .ios-stairs { display: flex; align-items: flex-end; gap: 4px; height: 96px; margin: 24px 0 14px; position: relative; }
@@ -161,6 +162,7 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 .ios-tile.t1 { --c: #C5D1EB; --r: -3deg; } .ios-tile.t2 { --c: #E9DCC3; --r: 2deg; } .ios-tile.t3 { --c: #92AFD7; --r: -1.5deg; } .ios-tile.t4 { --c: #D8E3D2; --r: 3deg; } .ios-tile.t5 { --c: #F0DCC0; --r: -2deg; }
 
 /* Status marks (shape + word, never colour alone) */
+.ios-rt .ios-st { margin-top: 6px; }
 .ios-st { display: inline-flex; align-items: center; gap: 6px; font-size: .88rem; font-weight: 500; white-space: nowrap; }
 .ios-st i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; font-style: normal; font-size: 11px; line-height: 1; flex: none; }
 .ios-st.s-own { color: var(--tint); } .ios-st.s-own i { background: currentColor; }
@@ -190,13 +192,13 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 
 .ios-seg { display: flex; padding: 2px; border-radius: 10px; background: rgba(31, 47, 22, .09); overflow-x: auto; scrollbar-width: none; gap: 2px; }
 .ios-seg::-webkit-scrollbar { display: none; }
-.ios-seg button { flex: 1 0 auto; min-height: 40px; padding: 0 14px; border-radius: 8px; font-size: .88rem; font-weight: 500; white-space: nowrap; text-align: center; transition: background .2s, box-shadow .2s; }
+.ios-seg button { flex: 1 0 auto; min-height: 44px; padding: 0 14px; border-radius: 8px; font-size: .88rem; font-weight: 500; white-space: nowrap; text-align: center; transition: background .2s, box-shadow .2s; }
 .ios-seg button[aria-pressed="true"] { background: var(--paper); font-weight: 600; box-shadow: 0 1px 2px rgba(31, 47, 22, .22), 0 3px 6px -2px rgba(31, 47, 22, .2); }
 @media (prefers-color-scheme: dark) { .ios-seg { background: rgba(240, 227, 206, .1); } .ios-seg button[aria-pressed="true"] { background: #33452E; } }
 
 .ios-search { display: flex; align-items: center; gap: 8px; margin: 0 16px; }
 .ios-searchbox { flex: 1; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(31, 47, 22, .08); box-shadow: inset 0 1px 2px rgba(31, 47, 22, .15); color: var(--ink2); }
-.ios-searchbox input { flex: 1; min-width: 0; background: transparent; border: 0; font-size: 1.0625rem; color: var(--ink); padding: 0; -webkit-appearance: none; }
+.ios-searchbox input { flex: 1; min-width: 0; min-height: 44px; background: transparent; border: 0; font-size: 1.0625rem; color: var(--ink); padding: 0; -webkit-appearance: none; }
 .ios-searchbox input::-webkit-search-cancel-button { display: none; }
 .ios-cancel { color: var(--tint); font-size: 1.0625rem; min-height: 44px; padding: 0 4px; display: none; }
 .ios-search:focus-within .ios-cancel, .ios-search.has .ios-cancel { display: block; }
@@ -208,7 +210,7 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 .ios-field input, .ios-field select, .ios-field textarea { width: 100%; min-height: 28px; border: 0; background: transparent; font-size: 1.0625rem; color: var(--ink); padding: 2px 0; -webkit-appearance: none; appearance: none; border-radius: 0; }
 .ios-field textarea { resize: none; line-height: 1.4; }
 .ios-field input:focus-visible, .ios-field textarea:focus-visible, .ios-field select:focus-visible { outline: none; box-shadow: 0 2px 0 var(--tint); }
-.ios-select { background: transparent; border: 0; font-size: 1.0625rem; color: var(--ink2); text-align: right; padding: 8px 0; -webkit-appearance: none; appearance: none; }
+.ios-select { min-height: 44px; background: transparent; border: 0; font-size: 1.0625rem; color: var(--ink2); text-align: right; padding: 8px 0; -webkit-appearance: none; appearance: none; }
 
 /* ---------- Avatars (markup from F.UI.avatar) ---------- */
 .avatar { position: relative; display: inline-grid; place-items: center; overflow: hidden; width: var(--s, 40px); height: var(--s, 40px); border-radius: 50%; flex: none; font: 600 calc(var(--s, 40px) * .45)/1 var(--font-display); color: #1F2F16; box-shadow: 0 0 0 2px var(--paper), 0 2px 5px rgba(31, 47, 22, .35); }
@@ -236,7 +238,7 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 .ios-checks button:active { background: rgba(31, 47, 22, .08); }
 .ios-checks .box { width: 24px; height: 24px; flex: none; border-radius: 50%; border: 2px solid #5A7684; display: grid; place-items: center; }
 .ios-checks .done .box { background: #395B50; border-color: #395B50; color: #F7F0E2; }
-.ios-checks .done span.t { color: var(--obj2); text-decoration: line-through; text-decoration-color: rgba(31, 47, 22, .4); }
+.ios-checks .done span.t { color: var(--obj2); }
 .ios-checks .go { margin-left: auto; color: #5A7684; display: flex; }
 .ios-story { position: relative; margin: 0 16px; padding: 22px 18px 16px; border-radius: 4px; background-color: var(--obj); background-image: var(--grain); color: var(--obj-ink); transform: rotate(.4deg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 1px rgba(31, 47, 22, .2), 0 14px 22px -14px var(--shadow); }
 .ios-story textarea { display: block; width: 100%; min-height: 8.5rem; border: 0; resize: none; background-color: transparent; background-image: repeating-linear-gradient(transparent 0 calc(1.7rem - 1px), rgba(90, 118, 132, .3) calc(1.7rem - 1px) 1.7rem); background-attachment: local; line-height: 1.7rem; font: 400 1.0625rem/1.7rem var(--font-display); color: #1F2F16; padding: 0; -webkit-appearance: none; }
@@ -336,3 +338,9 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; } }
 :root[data-motion="reduce"] *, :root[data-motion="reduce"] *::before, :root[data-motion="reduce"] *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
 @media (hover: hover) { a.ios-row:hover, button.ios-row:hover { background: rgba(31, 47, 22, .05); } }
+
+/* ---------- Wordmark (used by F.UI.cardFace) ---------- */
+.wordmark { font-family: var(--font-display); font-weight: 600; letter-spacing: -.02em; font-size: 1.9rem; line-height: 1; }
+.wm-i { position: relative; display: inline-block; }
+.wm-star { position: absolute; left: 50%; top: -.22em; transform: translateX(-50%) scale(.9); width: .5em; height: .5em; }
+.ios-pbtns .ios-btn { font-size: .94rem; padding: 0 10px; white-space: nowrap; }
