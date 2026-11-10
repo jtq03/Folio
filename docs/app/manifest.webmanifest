@@ -1,13 +1,22 @@
 {
+  "id": "./",
   "name": "Folio",
   "short_name": "Folio",
   "description": "Your story, carried forward. Build skills, track your level and carry your Folio card.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F7F0E2",
   "theme_color": "#F7F0E2",
+  "categories": [
+    "health",
+    "medical",
+    "education"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -34,7 +43,6 @@
       "purpose": "any"
     }
   ],
-  "id": "./",
   "shortcuts": [
     {
       "name": "Show my card",

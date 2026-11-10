@@ -10,7 +10,8 @@
     try { var r = localStorage.getItem(KEY); if (r) { var s = JSON.parse(r); if (s && s.v === 2) return s; } } catch (e) {}
     return seed();
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  /* A failed write (usually storage full) used to vanish silently. Tell the page so it can roll back and explain. */
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch (e) { try { window.dispatchEvent(new CustomEvent('folio:savefail', { detail: { error: e } })); } catch (e2) {} return false; } }
   function emit() { subs.forEach(function (f) { f(); }); }
   function commit(fn) { var r = fn(state); save(); emit(); return r; }
   window.addEventListener('storage', function (e) { if (e.key === KEY) { state = load(); emit(); } });
