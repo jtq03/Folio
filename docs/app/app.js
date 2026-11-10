@@ -159,9 +159,9 @@
     var v = p.nextVisit;
     if (!v || !v.iso) return h`<section class="ios-sec" data-rise style="--d:2"><button class="ios-add" data-action="editVisit">${xi('calendar', 20)} Add your next visit</button></section>`;
     var d = new Date(v.iso);
-    return h`<section class="ios-sec" data-rise style="--d:2" aria-label="Next visit"><article class="ios-ticket"><div class="stub" aria-hidden="true"><span class="m">${MON3[d.getMonth()]}</span><span class="d">${d.getDate()}</span><span class="w">${DAY3[d.getDay()]}</span></div>
+    return h`<section class="ios-sec" data-rise style="--d:2" aria-label="Next visit"><div class="ios-ticket-sh"><article class="ios-ticket"><div class="stub" aria-hidden="true"><span class="m">${MON3[d.getMonth()]}</span><span class="d">${d.getDate()}</span><span class="w">${DAY3[d.getDay()]}</span></div>
       <div class="main"><div class="ios-eyebrow">Next visit · ${countdown(d)}</div><h3>${v.where}</h3><p>${timeStr(d)}${v.note ? ' · ' + v.note : ''}</p>
-        <div class="ios-ticket-btns"><button class="ios-btn sm glass-btn" data-action="addToCal">${xi('calendar', 18)} Add to Calendar</button><button class="ios-gbtn glass" data-action="editVisit" aria-label="Edit next visit">${xi('pencil', 20)}</button></div></div></article></section>`;
+        <div class="ios-ticket-btns"><button class="ios-btn sm glass-btn" data-action="addToCal">${xi('calendar', 18)} Add to Calendar</button><button class="ios-gbtn glass" data-action="editVisit" aria-label="Edit next visit">${xi('pencil', 20)}</button></div></div></article></div></section>`;
   }
 
   function home(params, q) {
@@ -212,7 +212,8 @@
   }
 
   /* ---------- Resources ---------- */
-  F.actions.rtag = function (el) { F.ui.rt = el.dataset.v; F.rerender(false); };
+  var TOPICS = ['All', 'Learn', 'Visits', 'Speaking up'];
+  F.actions.rtag = function (el) { F.ui._segPrev = Math.max(0, TOPICS.indexOf(F.ui.rt)); F.ui.rt = el.dataset.v; N.haptic('light'); F.rerender(false); };
   F.actions.clearSearch = function () { F.ui.rq = ''; F.rerender(false); };
   F.actions.editLink = function (el) {
     var p = me(), it = el.dataset.id ? p.links.filter(function (x) { return x.id === el.dataset.id; })[0] : {};
@@ -222,6 +223,7 @@
   };
   function resources(params, q) {
     var p = me(), ui = F.ui; if (q.t && ui._rq !== q.t) ui.rt = q.t; ui._rq = q.t || '';
+    var segIdx = Math.max(0, TOPICS.indexOf(ui.rt)), segPrev = ui._segPrev == null ? segIdx : ui._segPrev; ui._segPrev = segIdx;
     var term = (ui.rq || '').toLowerCase();
     var list = S.get().resources.filter(function (r) { return r.published && (ui.rt === 'All' || r.tags.indexOf(ui.rt) >= 0) && (!term || r.title.toLowerCase().indexOf(term) >= 0); });
     return { title: 'Resources', html: h`
@@ -229,11 +231,11 @@
       <div class="ios-body">
         <div data-rise style="--d:1;display:flex;flex-direction:column;gap:16px">
           <div class="ios-search ${ui.rq ? 'has' : ''}" role="search"><label class="ios-searchbox">${ic('search', 18)}<span class="ios-sr">Search resources</span><input type="search" placeholder="Search resources" value="${ui.rq}" data-bind="rq" data-rerender autocomplete="off" autocapitalize="off" enterkeyhint="search"></label><button class="ios-cancel" data-action="clearSearch">Cancel</button></div>
-          <div class="ios-sec" style="margin:0 16px"><div class="ios-seg" role="group" aria-label="Topic">${['All', 'Learn', 'Visits', 'Speaking up'].map(function (t) { return h`<button data-action="rtag" data-v="${t}" aria-pressed="${String(ui.rt === t)}">${t}</button>`; })}</div></div></div>
+          <div class="ios-sec" style="margin:0 16px"><div class="ios-seg" role="group" aria-label="Topic" style="--n:4;--i:${segPrev}" data-i="${segIdx}">${TOPICS.map(function (t) { return h`<button data-action="rtag" data-v="${t}" aria-pressed="${String(ui.rt === t)}">${t}</button>`; })}</div></div></div>
         <section class="ios-sec" data-rise style="--d:2" aria-label="Library">
-          ${list.length ? h`<div class="ios-list">${list.map(function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row has-tile">${tile(ic('search', 22), 2)}<span class="ios-rt"><b>Nothing found</b><small>Try another topic.</small></span></div></div>`}</section>
+          ${list.length ? h`<div class="ios-list">${list.map(function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}" data-ctx="resource:${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row has-tile">${tile(ic('search', 22), 2)}<span class="ios-rt"><b>Nothing found</b><small>Try another topic.</small></span></div></div>`}</section>
         <section class="ios-sec" data-rise style="--d:3" aria-labelledby="ml"><h2 class="ios-gh" id="ml">${tile(ic('link', 18), 3, true)}My links · doctors can open these</h2>
-          <div class="ios-list">${p.links.map(function (l, i) { return h`<button class="ios-row has-tile" data-action="editLink" data-id="${l.id}">${tile(ic('link', 22), (i % 5) + 1)}<span class="ios-rt"><b>${l.title}</b><small>${l.sub}</small></span>${CHEV}</button>`; })}
+          <div class="ios-list">${p.links.map(function (l, i) { return h`<div class="ios-swipe" data-ctx="link:${l.id}">${swipeTray()}<button class="ios-row has-tile" data-action="editLink" data-id="${l.id}">${tile(ic('link', 22), (i % 5) + 1)}<span class="ios-rt"><b>${l.title}</b><small>${l.sub}</small></span>${CHEV}</button></div>`; })}
             <button class="ios-row has-tile" data-action="editLink" style="color:var(--tint)">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add a link</b></span></button></div>
           <p class="ios-gf">Folio stores links, never health records.</p></section>
       </div>` };
@@ -243,7 +245,7 @@
     if (!r) return { title: 'Not found', back: { href: '#/resources', label: 'Resources' }, html: h`${large('Not found')}<div class="ios-body"><div class="ios-sec"><a class="ios-btn" href="#/resources">Back to resources</a></div></div>` };
     var paras = r.body.split('. ').map(function (t, i, a) { return i < a.length - 1 ? t + '.' : t; }); var mid = Math.ceil(paras.length / 2);
     var two = [paras.slice(0, mid).join(' '), paras.slice(mid).join(' ')].filter(Boolean);
-    return { title: r.title, navTitle: r.title, back: { href: '#/resources', label: 'Resources' }, html: h`
+    return { title: r.title, navTitle: r.title, back: { href: '#/resources', label: 'Resources' }, navRight: gbtn('shareResource', 'Share this resource', shareSvg, r.id), html: h`
       <header class="ios-large" data-rise><h1>${r.title}</h1></header>
       <div class="ios-body">
         <div class="ios-meta" data-rise style="--d:1">${kindTile(r)}<span><b>${r.kind}</b><br><span class="ios-detail">${r.mins}</span></span></div>
@@ -282,12 +284,13 @@
     var r = 32, len = Math.round(2 * Math.PI * r);
     return raw('<div class="ios-ring"><svg width="76" height="76" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="' + r + '" fill="none" stroke="rgba(31,47,22,.16)" stroke-width="8"/><circle class="ios-ring-fg" cx="38" cy="38" r="' + r + '" fill="none" stroke="#395B50" stroke-width="8" stroke-linecap="round" stroke-dasharray="' + len + '" stroke-dashoffset="' + Math.round(len * (1 - pct / 100)) + '" style="--len:' + len + '"/></svg><b>' + pct + '%</b></div>');
   }
+  function swipeTray() { return h`<div class="ios-swipe-actions" aria-hidden="true"><button type="button" tabindex="-1" class="edit" data-swipe-act="edit">Edit</button><button type="button" tabindex="-1" class="rm" data-swipe-act="remove">Remove</button></div>`; }
   function contactRow(c, list, rolekey, n) {
     var tel = c.phone ? c.phone.replace(/[^\d+]/g, '') : '';
-    return h`<div class="ios-row" style="flex-direction:column;align-items:stretch;gap:10px;min-height:0">
+    return h`<div class="ios-swipe" data-ctx="${list === 'contacts' ? 'contact' : 'team'}:${c.id}">${swipeTray()}<div class="ios-row" style="flex-direction:column;align-items:stretch;gap:10px;min-height:0">
       <div style="display:flex;align-items:center;gap:14px"><button class="ios-rowmain" data-action="${list === 'contacts' ? 'editContact' : 'editTeam'}" data-id="${c.id}" aria-label="Edit ${c.name}">${U.avatar(c, 48)}<span class="ios-rt"><b>${c.name}</b><small>${c[rolekey]}${c.phone ? ' · ' + c.phone : ''}</small></span></button>
         ${tel ? h`<span class="ios-rowtrail"><a class="ios-round" href="tel:${tel}" aria-label="Call ${c.name}">${ic('phone', 20)}</a><a class="ios-round" href="sms:${tel}" aria-label="Message ${c.name}">${ic('message', 20)}</a></span>` : ''}</div>
-      ${list === 'contacts' ? h`<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding-left:62px"><span class="ios-detail">Doctors can contact</span><input type="checkbox" role="switch" class="ios-sw" ${c.visible ? 'checked' : ''} data-change="vis" data-id="${c.id}" aria-label="Doctors can contact ${c.name}"></label>` : ''}</div>`;
+      ${list === 'contacts' ? h`<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding-left:62px"><span class="ios-detail">Doctors can contact</span><input type="checkbox" role="switch" switch class="ios-sw" ${c.visible ? 'checked' : ''} data-change="vis" data-id="${c.id}" aria-label="Doctors can contact ${c.name}"></label>` : ''}</div></div>`;
   }
   var HOW_ICON = { 'Card tap (NFC)': ['nfc', '#92AFD7'], 'Card tap (QR)': ['qr', '#92AFD7'], Portal: ['eye', '#C5D1EB'] };
 
@@ -303,7 +306,7 @@
       ['Link a record or resource', p.links.length > 0, 'editLink']
     ];
     var doneN = items.filter(function (x) { return x[1]; }).length, pct = Math.round(doneN / items.length * 100);
-    return { title: 'About me', navTitle: sel.full(p), html: h`
+    return { title: 'About me', navTitle: sel.full(p), navRight: gbtn('shareProfile', 'Share my profile summary', shareSvg), html: h`
       <div class="ios-profile" data-rise>
         <span class="ios-av-hero">${U.avatar(p, 116)}<button class="ios-av-badge" data-action="pickAvatar" aria-label="Change profile photo">${xi('camera', 22)}</button></span>
         <h1>${sel.full(p)}</h1>
@@ -325,13 +328,13 @@
         <section class="ios-sec" data-rise style="--d:5" aria-labelledby="c-h"><h2 class="ios-gh" id="c-h">${tile(ic('team', 18), 2, true)}Care team</h2>
           <div class="ios-list">${p.careTeam.map(function (c) { return contactRow(c, 'careTeam', 'role'); })}<button class="ios-row has-tile" data-action="editTeam" style="color:var(--tint);min-height:56px">${tile(ic('plus', 22), 4, true)}<span class="ios-rt"><b>Add care team member</b></span></button></div></section>
         <section class="ios-sec" data-rise style="--d:6" aria-labelledby="s-h"><h2 class="ios-gh" id="s-h">${tile(ic('shield', 18), 4, true)}Sharing and privacy</h2>
-          <div class="ios-list"><label class="ios-row has-tile">${tile(ic('lock', 22), 3)}<span class="ios-rt"><b>Share my notes with adult care</b><small>You can change this any time.</small></span><input type="checkbox" role="switch" class="ios-sw" ${p.shareNotes !== false ? 'checked' : ''} data-change="shareNotes" aria-label="Share my notes with adult care"></label></div></section>
+          <div class="ios-list"><label class="ios-row has-tile">${tile(ic('lock', 22), 3)}<span class="ios-rt"><b>Share my notes with adult care</b><small>You can change this any time.</small></span><input type="checkbox" role="switch" switch class="ios-sw" ${p.shareNotes !== false ? 'checked' : ''} data-change="shareNotes" aria-label="Share my notes with adult care"></label></div></section>
         <section class="ios-sec" data-rise style="--d:7" aria-labelledby="w-h"><h2 class="ios-gh" id="w-h">${tile(ic('eye', 18), 5, true)}Who has looked at my profile</h2>
           <div class="ios-list">${log.length ? h`<ol class="ios-timeline">${log.map(function (l) { var ho = HOW_ICON[l.how] || ['eye', '#C5D1EB']; return h`<li><span class="dot" style="--c:${ho[1]}">${ic(ho[0], 20)}</span><span class="ios-rt"><b>${l.who}</b><small>${l.how} · ${U.fmtTime(l.time)}</small></span></li>`; })}</ol>` : h`<div class="ios-row has-tile">${tile(ic('eye', 22), 2)}<span class="ios-rt"><b>No one yet</b><small>Opens are listed here.</small></span></div>`}</div></section>
         <section class="ios-sec" data-rise style="--d:8" aria-labelledby="a-h"><h2 class="ios-gh" id="a-h">${tile(ic('settings', 18), 2, true)}Display and motion</h2>
           <div class="ios-list">
-            <label class="ios-row"><span class="ios-rt"><b>Increase contrast</b></span><input type="checkbox" role="switch" class="ios-sw" ${a.contrast === 'high' ? 'checked' : ''} data-change="a11yApp" data-k="contrast" data-on="high" data-off="normal" aria-label="Increase contrast"></label>
-            <label class="ios-row"><span class="ios-rt"><b>Reduce motion</b></span><input type="checkbox" role="switch" class="ios-sw" ${a.motion === 'reduce' ? 'checked' : ''} data-change="a11yApp" data-k="motion" data-on="reduce" data-off="auto" aria-label="Reduce motion"></label></div>
+            <label class="ios-row"><span class="ios-rt"><b>Increase contrast</b></span><input type="checkbox" role="switch" switch class="ios-sw" ${a.contrast === 'high' ? 'checked' : ''} data-change="a11yApp" data-k="contrast" data-on="high" data-off="normal" aria-label="Increase contrast"></label>
+            <label class="ios-row"><span class="ios-rt"><b>Reduce motion</b></span><input type="checkbox" role="switch" switch class="ios-sw" ${a.motion === 'reduce' ? 'checked' : ''} data-change="a11yApp" data-k="motion" data-on="reduce" data-off="auto" aria-label="Reduce motion"></label></div>
           <p class="ios-gf">Text size follows your iPhone's Display and Text Size setting.</p></section>
         ${standalone ? '' : h`<section class="ios-sec" aria-labelledby="i-h"><h2 class="ios-gh" id="i-h">${tile(ic('plus', 18), 3, true)}Add Folio to your home screen</h2><div class="ios-list"><div class="ios-row has-tile">${tile(ic('ext', 22), 1)}<span class="ios-rt"><b>${ios ? 'Tap Share, then Add to Home Screen' : 'Install it like an app'}</b><small>It works offline too.</small></span></div>${deferred ? h`<button class="ios-row" data-action="install" style="color:var(--tint)"><b>Install Folio</b></button>` : ''}</div></section>`}
         <section class="ios-sec" aria-labelledby="d-h"><h2 class="ios-gh" id="d-h">Prototype</h2>
@@ -384,6 +387,7 @@
     var transfer = c === 'transfer', L = transfer ? sel.level(10) : sel.level(c), cols = ['#92AFD7', '#E9DCC3', '#F0E3CE', '#C5D1EB', '#5A7684'], bits = '';
     for (var i = 0; i < 22; i++) bits += '<i style="left:' + Math.round(Math.random() * 100) + '%;background:' + cols[i % 5] + ';animation-duration:' + (2.4 + Math.random() * 2.4).toFixed(1) + 's;animation-delay:' + (Math.random() * 1.4).toFixed(1) + 's"></i>';
     return h`<div class="ios-lvlup" role="dialog" aria-modal="true" aria-label="Level up"><div class="ios-confetti" aria-hidden="true">${raw(bits)}</div>
+      <button class="ios-gbtn glass ios-lv-share" data-action="shareLevel" data-id="${L.n}" aria-label="Share my achievement as an image">${shareSvg}</button>
       <div class="ios-stackviz" aria-hidden="true"><i></i><i></i><i></i>${U.star(34)}</div>
       <div class="ios-eyebrow" style="color:#C5D1EB">${transfer ? 'Final sign-off' : 'Level up'}</div>
       <h2>${transfer ? 'You own it' : 'Level ' + L.n + ': ' + L.name}</h2>
@@ -401,14 +405,14 @@
     wrap.className = 'ios-sheet-wrap ' + (cls || '');
     wrap.innerHTML = '<div class="ios-scrim" data-close></div><div class="ios-sheet" role="dialog" aria-modal="true" tabindex="-1" aria-label="' + esc(label || 'Sheet') + '"><div class="ios-grab" aria-hidden="true"></div>' + inner + '</div>';
     root.appendChild(wrap);
-    var rec = { wrap: wrap, sheet: wrap.querySelector('.ios-sheet'), closed: false, prev: document.activeElement };
-    sheets.push(rec); document.getElementById('app').setAttribute('inert', '');
+    var rec = { wrap: wrap, sheet: wrap.querySelector('.ios-sheet'), closed: false, prev: document.activeElement, onClose: null };
+    N.haptic('light'); sheets.push(rec); document.getElementById('app').setAttribute('inert', '');
     dragWire(rec);
     var first = rec.sheet.querySelector('input:not([type=file]),textarea,select'); (first && cls === 'form' ? first : rec.sheet).focus({ preventScroll: true });
     return rec;
   }
   function closeSheet(rec) {
-    if (!rec || rec.closed) return; rec.closed = true; rec.wrap.classList.add('out');
+    if (!rec || rec.closed) return; rec.closed = true; rec.wrap.classList.add('out'); if (rec.onClose) { try { rec.onClose(); } catch (e) {} }
     setTimeout(function () {
       rec.wrap.remove(); sheets = sheets.filter(function (r) { return r !== rec; });
       if (!sheets.length) { document.getElementById('app').removeAttribute('inert'); if (rec.prev && document.body.contains(rec.prev)) rec.prev.focus({ preventScroll: true }); }
@@ -421,7 +425,7 @@
       if (!(head || (sh.scrollTop <= 0 && !e.target.closest('input,textarea,select')))) return;
       y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0;
     }, { passive: true });
-    sh.addEventListener('touchmove', function (e) { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); if (dy > 0) { sh.style.animation = 'none'; sh.style.transform = 'translateY(' + dy + 'px)'; } }, { passive: true });
+    sh.addEventListener('touchmove', function (e) { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); if (dy > 0) { sh.style.animation = 'none'; sh.style.transform = 'translateY(' + dy + 'px)'; } if (dy > 110 && !rec.det) { rec.det = 1; N.haptic('light'); } if (dy < 110) rec.det = 0; }, { passive: true });
     sh.addEventListener('touchend', function () {
       if (y0 == null) return; var v = dy / Math.max(1, Date.now() - t0); y0 = null;
       if (dy > 110 || v > .6) { sh.style.animation = ''; sh.style.transform = ''; closeSheet(rec); } else { sh.style.transition = 'transform .25s'; sh.style.transform = ''; setTimeout(function () { sh.style.transition = ''; sh.style.animation = ''; }, 260); }
@@ -440,7 +444,10 @@
       if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
     }
   });
-  U.modal = function (content, opts) { var rec = mountSheet('<div class="ios-sheet-body">' + (content.s || '') + '</div>', (opts && opts.cls) || '', opts && opts.label); return rec.sheet; };
+  U.modal = function (content, opts) {
+    var head = opts && opts.head ? '<div class="ios-sheet-head"><span></span><h2>' + esc(opts.head) + '</h2><button type="button" class="ios-nbtn bold" data-close>Done</button></div>' : '';
+    var rec = mountSheet(head + '<div class="ios-sheet-body">' + (content.s || '') + '</div>', (opts && opts.cls) || '', opts && (opts.label || opts.head)); if (opts && opts.onClose) rec.onClose = opts.onClose; return rec.sheet;
+  };
   U.closeModal = function () { closeSheet(sheets[sheets.length - 1]); };
   function closeAll() { sheets.slice().forEach(closeSheet); }
   function fieldRow(x) {
@@ -462,7 +469,7 @@
   };
   U.confirmModal = function (o) {
     var rec = mountSheet(h`<div class="ios-actionsheet"><div class="ios-list"><div class="ios-as-msg"><strong>${o.title}</strong>${o.body ? h`<span>${o.body}</span>` : ''}</div><button class="ios-as-btn ${o.danger ? 'danger' : ''}" data-ok>${o.cta || 'Confirm'}</button></div><div class="ios-list"><button class="ios-as-btn bold" data-close>Cancel</button></div></div>`.s, 'action', o.title);
-    rec.sheet.querySelector('[data-ok]').addEventListener('click', function () { closeSheet(rec); o.onOk(); });
+    rec.sheet.querySelector('[data-ok]').addEventListener('click', function () { N.haptic(o.danger ? 'success' : 'light'); closeSheet(rec); o.onOk(); });
   };
 
   /* The shared binder re-renders on 'change' for data-rerender inputs. A blur-triggered change would fire mid-render, so skip it for search. */
@@ -482,7 +489,7 @@
   }, { passive: true });
   document.addEventListener('touchend', function () {
     if (!swipe) return; var s = swipe; swipe = null; s.el.style.transform = '';
-    if (s.dx > 80) { var b = document.querySelector('.ios-back'); if (b) location.hash = b.getAttribute('href').replace(/^#/, ''); }
+    if (s.dx > 80) { var b = document.querySelector('.ios-back'); if (b) N.navigate(b.getAttribute('href'), 'pop'); }
   });
   document.addEventListener('focusin', function (e) {
     if (!e.target.matches('input:not([type=checkbox]):not([type=file]),textarea')) return;
@@ -492,6 +499,39 @@
     var a = e.target.closest('.ios-tabs a[aria-current="page"]'); if (!a) return;
     var sc = document.querySelector('.ios-scroll'); if (sc && sc.scrollTop > 0) { e.preventDefault(); sc.scrollTo({ top: 0, behavior: 'smooth' }); }
   });
+
+  /* ---------- Native wiring: view transitions, haptics, context menus, swipe actions ---------- */
+  try { if (window.CSS && CSS.supports && CSS.supports('-webkit-appearance', 'switch')) document.documentElement.classList.add('nsw'); } catch (e) {}
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button > 0) return;
+    var a = e.target.closest('a[href^="#/"]'); if (!a || a.target === '_blank' || a.closest('.ios-sheet-wrap') || a.closest('.ios-ctx')) return;
+    var href = a.getAttribute('href'), cur = location.hash || '#/'; if (href === cur) return;
+    e.preventDefault();
+    var np = href.replace(/^#/, '').split('?')[0], d = depth(np), o = depth(prevPath);
+    if (a.closest('.ios-tabs')) N.haptic('light');
+    N.navigate(href, d > o ? 'push' : d < o ? 'pop' : 'tab');
+  });
+  document.addEventListener('change', function (e) { if (e.target.matches && e.target.matches('input[type=checkbox][role=switch]')) N.haptic('light'); });
+
+  var LISTS = { contact: 'contacts', team: 'careTeam', link: 'links' };
+  function findItem(kind, id) { var l = LISTS[kind]; return l ? me()[l].filter(function (x) { return x.id === id; })[0] : null; }
+  function editItem(kind, id) { var fake = { dataset: { id: id } }; (kind === 'contact' ? F.actions.editContact : kind === 'team' ? F.actions.editTeam : F.actions.editLink)(fake); }
+  function removeItem(kind, id) {
+    var it = findItem(kind, id); if (!it) return;
+    U.confirmModal({ title: 'Remove ' + (it.name || it.title) + '?', body: 'You can add it again later.', cta: 'Remove', danger: true, onOk: function () { A.remove(me().id, LISTS[kind], id); U.toast('Removed'); } });
+  }
+  N.resolveContext = function (el) {
+    var parts = (el.dataset.ctx || '').split(':'), kind = parts[0], id = parts[1];
+    if (kind === 'resource') return [{ label: 'Open', icon: ic('arrow', 18), run: function () { N.navigate('#/resources/' + id, 'push'); } }, { label: 'Share', icon: shareSvg, run: function () { F.actions.shareResource({ dataset: { id: id } }); } }];
+    var it = findItem(kind, id); if (!it) return null; var items = [];
+    if (kind === 'link') items.push({ label: 'Open', icon: ic('ext', 18), run: function () { window.open(it.url, '_blank', 'noopener'); } });
+    else if (it.phone) { var tel = it.phone.replace(/[^\d+]/g, ''); items.push({ label: 'Call', icon: ic('phone', 18), run: function () { location.href = 'tel:' + tel; } }); items.push({ label: 'Message', icon: ic('message', 18), run: function () { location.href = 'sms:' + tel; } }); }
+    items.push({ label: 'Share', icon: shareSvg, run: function () { N.shareText(kind === 'link' ? { title: it.title, text: it.title, url: it.url } : { title: it.name, text: it.name + (it.rel || it.role ? ', ' + (it.rel || it.role) : '') + (it.phone ? '\n' + it.phone : '') }); } });
+    items.push({ label: 'Edit', icon: xi('pencil', 18), run: function () { editItem(kind, id); } });
+    items.push({ label: 'Remove', icon: ic('trash', 18), danger: true, run: function () { removeItem(kind, id); } });
+    return items;
+  };
+  N.onSwipe = function (ctx, act) { var parts = ctx.split(':'); if (act === 'edit') editItem(parts[0], parts[1]); else removeItem(parts[0], parts[1]); };
 
   F.UI.createApp({ name: 'Folio', shell: shell,
     routes: [['/', route(home)], ['/levels', route(levels)], ['/resources', route(resources)], ['/resources/:id', route(resourceDetail)], ['/about', route(about)]],
