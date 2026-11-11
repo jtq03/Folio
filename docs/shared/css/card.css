@@ -13,9 +13,11 @@
 .fcard .fc-name{font:700 .85rem var(--font-ui)}
 .fcard .fc-stack{position:absolute;right:1rem;bottom:1rem;opacity:.95}
 .fcard.back .fc-tag{color:var(--blue-100)}
-.fcard.back h4{font:600 clamp(1.1rem,7cqw,1.5rem)/1.1 var(--font-display);margin-bottom:.3rem}
-.fcard.back p{font-size:.72rem;line-height:1.4;margin:0 0 .2rem;color:var(--beige-200)}
-.fcard .qrbox{position:absolute;left:1rem;top:1rem;bottom:1rem;aspect-ratio:1;border-radius:8px;overflow:hidden}
+.fcard.back h4{font:600 clamp(1rem,6.4cqw,1.4rem)/1.1 var(--font-display);margin-bottom:.35rem}
+.fcard.back p{font-size:clamp(.56rem,3cqw,.74rem);line-height:1.35;margin:0 0 .3rem;color:var(--beige-200)}
+.fcard.back p b{display:block;letter-spacing:.12em;font-size:.9em;color:var(--blue-100)}
+.fcard .qrbox{position:absolute;left:1rem;top:50%;width:40cqw;height:40cqw;transform:translateY(-50%);border-radius:8px;overflow:hidden}
 .fcard .qrbox svg{width:100%;height:100%;display:block}
-.fcard.back .fc-right{margin-left:calc(min(100%,0px) + 0px);padding-left:36%}
+.fcard.back{justify-content:center}
+.fcard.back .fc-right{padding-left:calc(40cqw + .9rem);padding-right:.1rem}
 .fcard.inactive{filter:grayscale(1) opacity(.55)}
