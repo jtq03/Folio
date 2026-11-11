@@ -146,7 +146,7 @@ a.ios-row:active .ios-tile, button.ios-row:active .ios-tile { transform: rotate(
 .ios-empty::before { content: ""; flex: none; width: 54px; height: 44px; transform: rotate(-4deg);
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 54 44'%3E%3Cpath d='M3 10a3 3 0 0 1 3-3h13l4 4h25a3 3 0 0 1 3 3v24a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z' fill='%2392AFD7'/%3E%3Cpath d='M3 17h48v21a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z' fill='%23C5D1EB'/%3E%3Cpath d='M3 38.5h48' stroke='%231F2F16' stroke-opacity='.18'/%3E%3C/svg%3E") center / contain no-repeat;
   filter: drop-shadow(1.5px 2px 0 rgba(31, 47, 22, .22)); }
-.ios-empty::after { content: ""; position: absolute; left: 30px; top: -8px; width: 14px; height: 14px; animation: fxFloat 3.2s ease-in-out infinite;
+.ios-empty::after { content: ""; position: absolute; left: 46px; top: 0; width: 14px; height: 14px; animation: fxFloat 3.2s ease-in-out infinite;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'%3E%3Cg fill='%23CE3B3B'%3E%3Crect x='-2' y='-11' width='4' height='22' rx='2'/%3E%3Crect x='-2' y='-11' width='4' height='22' rx='2' transform='rotate(60)'/%3E%3Crect x='-2' y='-11' width='4' height='22' rx='2' transform='rotate(120)'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; }
 @keyframes fxFloat { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(30deg); } }
 /* No search results: a sleepy little stack of cards */
@@ -160,8 +160,9 @@ a.ios-row:active .ios-tile, button.ios-row:active .ios-tile { transform: rotate(
 @keyframes fxShock { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(2.6); } }
 .ios-stackviz .star { animation: fxStarSlam .7s cubic-bezier(.3, 1.6, .5, 1) .95s both; }
 @keyframes fxStarSlam { 0% { opacity: 0; transform: scale(3) rotate(-160deg); } 60% { opacity: 1; transform: scale(.85) rotate(8deg); } 100% { transform: none; } }
-.fx-flap { display: inline-flex; gap: 4px; margin: 4px 0 2px; perspective: 300px; }
-.fx-flap span { position: relative; display: grid; place-items: center; min-width: 52px; height: 64px; padding: 0 8px; border-radius: 10px; background: #F0E3CE; color: #1F2F16; font: 600 2.6rem/1 var(--font-display); box-shadow: inset 0 -1px 0 rgba(31, 47, 22, .2), 0 4px 0 #B5A685; overflow: hidden; }
+.fx-flap { display: inline-flex; gap: 4px; margin: 0 0 6px; perspective: 300px; }
+.ios-lvlup:has(.fx-flap) .ios-stackviz { margin: -14px 0 -6px; scale: .8; }
+.fx-flap span { position: relative; display: grid; place-items: center; min-width: 40px; height: 48px; padding: 0 6px; border-radius: 9px; background: #F0E3CE; color: #1F2F16; font: 600 1.9rem/1 var(--font-display); box-shadow: inset 0 -1px 0 rgba(31, 47, 22, .2), 0 4px 0 #B5A685; overflow: hidden; }
 .fx-flap span::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(31, 47, 22, .28); }
 .fx-flap em { font-style: normal; display: grid; place-items: center; background: inherit; }
 .fx-flap.static .old { display: none; } .fx-flap.static .new { animation: none; }

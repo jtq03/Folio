@@ -3,8 +3,8 @@
    first frame lands on the same pixels as the iOS launch image in docs/app/splash. */
 .fi {
   --fi-paper: #F4EDDD; --fi-vig: rgba(31, 47, 22, .066); --fi-ink: #1F2F16; --fi-ink2: #2D493E; --fi-halo: rgba(255, 251, 240, .7);
-  --fi-edge: transparent; --fi-shadow: rgba(31, 47, 22, .28);
-  position: absolute; inset: 0; z-index: 115; overflow: hidden; perspective: 1400px;
+  --fi-edge: transparent; --fi-shadow: rgba(31, 47, 22, .24);
+  position: absolute; inset: 0; z-index: 115; overflow: hidden; perspective: 2200px;
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: pointer; touch-action: manipulation;
 }
 .fi-sheet {
@@ -12,7 +12,7 @@
   background-color: var(--fi-paper);
   background-image: linear-gradient(180deg, transparent 45%, var(--fi-vig) 87%);
 }
-.fi-curl { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgba(31, 47, 22, .05), rgba(31, 47, 22, .3) 85%, rgba(255, 251, 240, .35)); }
+.fi-curl { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgba(31, 47, 22, 0), rgba(31, 47, 22, .22) 80%, rgba(255, 251, 240, .5)); }
 .fi-shade { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0, 0, 0, .28), transparent 70%); }
 
 .fi-lock { position: absolute; left: 0; top: 0; width: var(--s); height: calc(var(--s) * 1.605); }
@@ -24,8 +24,9 @@
 .fi-c1 { left: calc(var(--s) * .09375); top: calc(var(--s) * .5625); background: #92AFD7; }
 .fi-c2 { left: calc(var(--s) * .1875); top: calc(var(--s) * .4375); background: #395B50; }
 .fi-c3 { left: calc(var(--s) * .28125); top: calc(var(--s) * .3125); background: #1F2F16; }
-.fi-sh { box-shadow: 0 calc(var(--s) * .05) calc(var(--s) * .11) var(--fi-shadow); opacity: 0; }
-.fi-sh1 { left: calc(var(--s) * .09375); top: calc(var(--s) * .5625); opacity: 1; }
+.fi-sh { box-shadow: 0 calc(var(--s) * .045) calc(var(--s) * .16) var(--fi-shadow); }
+.fi-bl { width: calc(var(--s) * .53125); height: calc(var(--s) * .3125); margin: calc(var(--s) * .03) 0 0; opacity: 0; background: radial-gradient(closest-side, var(--fi-shadow), transparent); transform: scale(1.7); }
+.fi-sh1 { left: calc(var(--s) * .09375); top: calc(var(--s) * .5625); }
 .fi-sh2 { left: calc(var(--s) * .1875); top: calc(var(--s) * .4375); }
 .fi-sh3 { left: calc(var(--s) * .28125); top: calc(var(--s) * .3125); }
 .fi-star { left: calc(var(--s) * .59375); top: calc(var(--s) * .025); width: calc(var(--s) * .375); height: calc(var(--s) * .375); filter: drop-shadow(0 1px 1.5px rgba(31, 47, 22, .22)); }
@@ -33,8 +34,8 @@
 .fi-bit.ln { width: 2px; height: 9px; margin: -4.5px 0 0 -1px; border-radius: 1px; background: #CE3B3B; }
 
 /* Wordmark, matching ui.js wordmark() */
-.fi-word { position: absolute; left: 50%; top: calc(var(--s) * 1.113); width: calc(var(--s) * 1.3); margin-left: calc(var(--s) * -.65); height: calc(var(--s) * .5735); }
-.fi-w { position: absolute; inset: 0; text-align: center; white-space: nowrap; font: 600 calc(var(--s) * .5735)/1 "Fraunces", "Fraunces Fallback", Georgia, serif; letter-spacing: .025em; color: var(--fi-ink); }
+.fi-word { position: absolute; left: 50%; top: calc(var(--s) * 1.113); width: calc(var(--s) * 1.3); margin-left: calc(var(--s) * -.636); height: calc(var(--s) * .5735); }
+.fi-w { position: absolute; inset: 0; text-align: center; white-space: nowrap; font: 600 calc(var(--s) * .5735)/1 "Fraunces", "Fraunces Fallback", Georgia, serif; letter-spacing: .02em; color: var(--fi-ink); }
 .fi-ri { display: inline-block; }
 .fi-rise .fi-wf > span { display: inline-block; }
 .fi-fixed { position: fixed; z-index: 2147483000; }
@@ -44,13 +45,13 @@
 .fi-clip { position: absolute; inset: -12% -4%; overflow: hidden; }
 .fi-clip > .fi-w { inset: 12% 4%; }
 .fi-ri { position: relative; }
-.fi-istar { left: 50%; top: calc(var(--s) * -.197); width: calc(var(--s) * .324); height: calc(var(--s) * .324); margin-left: calc(var(--s) * -.162); transform: scale(.9); }
+.fi-istar { left: 50%; top: calc(var(--s) * -.214); width: calc(var(--s) * .324); height: calc(var(--s) * .324); margin-left: calc(var(--s) * -.175); transform: scale(.9); }
 .fi-nib { left: 0; top: 0; width: calc(var(--s) * .2); height: calc(var(--s) * .2); opacity: 0; transform-origin: 50% 100%; }
 
 .fi-tag { position: absolute; left: 50%; top: calc(var(--s) * 1.76); width: 300px; margin-left: -150px; text-align: center; white-space: nowrap; opacity: 0;
   font: 500 11.5px/1.2 "Prompt", "Prompt Fallback", system-ui, -apple-system, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--fi-ink2); }
 
-.fi.run .fi-c, .fi.run .fi-star, .fi.run .fi-clip, .fi.run .fi-clip > .fi-w, .fi.run .fi-nib, .fi.run .fi-istar, .fi.run .fi-bit { will-change: transform, opacity; }
+.fi.run .fi-c, .fi.run .fi-bl, .fi.run .fi-star, .fi.run .fi-clip, .fi.run .fi-clip > .fi-w, .fi.run .fi-nib, .fi.run .fi-istar, .fi.run .fi-bit { will-change: transform, opacity; }
 .fi.out .fi-sheet { will-change: transform, opacity; }
 
 @media (prefers-color-scheme: dark) {

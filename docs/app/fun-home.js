@@ -104,16 +104,17 @@
   }
   function applyGreeting(pg, p) {
     var h1 = pg.querySelector('.ios-large h1'), sub = pg.querySelector('.ios-large .ios-sub'); if (!h1) return;
-    var g = greeting(p), parts = g.split('{n}'), want = parts[0] + p.first + (parts[1] || '');
+    var nm = F.nickname ? F.nickname(p) : p.first;
+    var g = greeting(p), parts = g.split('{n}'), want = parts[0] + nm + (parts[1] || '');
     if (h1.textContent !== want || !h1.querySelector('em')) {
       while (h1.firstChild) h1.removeChild(h1.firstChild);
       h1.appendChild(document.createTextNode(parts[0]));
-      var em = document.createElement('em'); em.textContent = p.first; h1.appendChild(em);
+      var em = document.createElement('em'); em.textContent = nm; h1.appendChild(em);
       if (parts[1]) h1.appendChild(document.createTextNode(parts[1]));
     }
     var s = subline(p); if (sub && sub.textContent !== s) sub.textContent = s;
     var nt = document.querySelector('.ios-nav-t'), plain = want;
-    if (nt && nt.textContent === 'Hi ' + p.first) nt.textContent = plain;
+    if (nt && nt.textContent === 'Hi ' + nm) nt.textContent = plain;
   }
 
   /* =====================================================================
@@ -172,22 +173,23 @@
     var state = n < p.level ? 'Done' : n === p.level ? 'You are here' : 'Coming up';
     var t = document.createElement('div'); t.className = 'fa-tip'; t.setAttribute('role', 'status');
     t.innerHTML = '<b>Level ' + n + ' · ' + esc(L.name) + '</b><span class="fa-tip-s">' + state + '</span><small>Unlocks: ' + esc(L.unlocks) + '</small><i class="fa-tip-tail"></i>';
-    st.appendChild(t);
-    var sw = st.getBoundingClientRect(), r = step.getBoundingClientRect(), w = t.offsetWidth, cx = r.left + r.width / 2 - sw.left;
-    var left = Math.max(-6, Math.min(sw.width - w + 6, cx - w / 2));
-    t.style.left = left + 'px'; t.style.bottom = (sw.bottom - r.top + (n === p.level ? 34 : 10)) + 'px';
+    /* Lives in the FX layer so a store update (which morphs the stairs) cannot remove it; closes on scroll */
+    fxLayer().appendChild(t);
+    var sw = st.getBoundingClientRect(), r = step.getBoundingClientRect(), w = t.offsetWidth, ht = t.offsetHeight, cx = r.left + r.width / 2;
+    var left = Math.max(sw.left - 6, Math.min(sw.right - w + 6, cx - w / 2));
+    t.style.left = left + 'px'; t.style.top = (r.top - ht - (n === p.level ? 34 : 12)) + 'px';
     t.querySelector('.fa-tip-tail').style.left = (cx - left - 7) + 'px';
-    tip = t;
+    tip = t; t.__step = step;
     step.classList.remove('fa-wig'); void step.offsetWidth; step.classList.add('fa-wig'); setTimeout(function () { step.classList.remove('fa-wig'); }, 520);
     haptic('light');
   }
   document.addEventListener('click', function (e) {
     var step = e.target.closest && e.target.closest('#main .ios-stairs > i, #main .ios-big-stairs > li');
-    var had = !!tip; closeTip();
-    if (step && !had) openTip(step);
-    else if (step && had) openTip(step);
+    var same = tip && step && tip.__step === step; closeTip();
+    if (step && !same) openTip(step);
   });
   window.addEventListener('hashchange', closeTip);
+  document.addEventListener('scroll', function () { if (tip) closeTip(); }, true);
 
   /* =====================================================================
      3. Folio card: tilt with a moving shine, tap to flip, gentle idle float

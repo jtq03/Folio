@@ -28,7 +28,7 @@
   var COLS = ['#92AFD7', '#E9DCC3', '#F0E3CE', '#C5D1EB', '#5A7684', '#395B50', '#D8E3D2'];
   var SHAPES = ['', '', 'c', 't', 'c', '', 't'];
   function bit(i, stars) {
-    var b = document.createElement('i'), shape = stars && i % 9 === 0 ? 's' : SHAPES[i % SHAPES.length];
+    var b = document.createElement('i'), shape = stars && i % 12 === 0 ? 's' : SHAPES[i % SHAPES.length];
     b.className = 'fx-bit ' + shape; if (shape === 's') b.innerHTML = U.star(14).s; else b.style.background = COLS[(i * 3) % COLS.length];
     return b;
   }
@@ -201,7 +201,7 @@
       var eb = el.querySelector('.ios-eyebrow'); if (eb) el.insertBefore(f, eb);
     }
     if (!fresh || reduced()) return;
-    lvRain = rain(26, 'fx-lvfx', .9);
+    lvRain = rain(20, 'fx-lvfx', .9);
     setTimeout(function () { if (lvEl === el) haptic('light'); }, 560);
     setTimeout(function () { if (lvEl === el) haptic('success'); }, 1000);
     setTimeout(function () { if (lvEl === el) haptic('light'); }, 1500);

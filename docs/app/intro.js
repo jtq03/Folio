@@ -11,7 +11,7 @@
   var STAR_WORD = '<g fill="#CE3B3B"><rect x="-2" y="-11" width="4" height="22" rx="2"/><rect x="-2" y="-11" width="4" height="22" rx="2" transform="rotate(60)"/><rect x="-2" y="-11" width="4" height="22" rx="2" transform="rotate(120)"/></g>';
   var NIB = '<svg class="fi-nib" viewBox="0 0 24 24"><path d="M8.6 0h6.8v5.2H8.6z" fill="#395B50"/><path d="M12 24 6.6 12.6c-.5-3 .4-5.6 2.2-7.4h6.4c1.8 1.8 2.7 4.4 2.2 7.4z" fill="#1F2F16"/><path d="M12 24v-10" stroke="#F4EDDD" stroke-width=".9"/><circle cx="12" cy="12.6" r="1.3" fill="#F4EDDD"/><path d="M9.6 6.4c-.9 1.4-1.3 3-1.1 4.8" stroke="#92AFD7" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>';
   /* Timeline in ms from the first moving frame */
-  var T = { hold: 120, toss: 120, land: [720, 860, 1000], star: 1000, write: 1150, writeDur: 600, fillLag: 120, tag: 1780, exit: 2200, exitDur: 520 };
+  var T = { hold: 120, toss: 120, land: [640, 780, 920], star: 930, write: 1080, writeDur: 600, fillLag: 120, tag: 1700, exit: 2130, exitDur: 500 };
 
   var cur = null;
 
@@ -40,7 +40,7 @@
     var bits = '';
     for (var i = 0; i < 12; i++) bits += '<i class="fi-bit' + (i >= 8 ? ' ln' : '') + '"></i>';
     el.innerHTML = '<div class="fi-sheet"><div class="fi-lock">' +
-      '<i class="fi-sh fi-sh1"></i><i class="fi-c fi-c1"></i><i class="fi-sh fi-sh2"></i><i class="fi-c fi-c2"></i><i class="fi-sh fi-sh3"></i><i class="fi-c fi-c3"></i>' +
+      '<i class="fi-sh fi-sh1"></i><i class="fi-sh fi-sh2"></i><i class="fi-sh fi-sh3"></i><i class="fi-bl fi-sh1"></i><i class="fi-bl fi-sh2"></i><i class="fi-bl fi-sh3"></i><i class="fi-c fi-c1"></i><i class="fi-c fi-c2"></i><i class="fi-c fi-c3"></i>' +
       bits + svg('fi-star', '-12 -12 24 24', STAR_MARK) +
       '<div class="fi-word"><div class="fi-w fi-w0">' + letters(true) + '</div>' +
       '<div class="fi-clip fi-cl"><div class="fi-w fi-wl">' + letters(false) + '</div></div>' +
@@ -107,10 +107,10 @@
     var all = function (a) { if (a && t0 != null) a.startTime = t0; return a; };
 
     /* 1. Toss: the deck lifts off the launch screen, top card first */
-    var cards = [q('.fi-c1'), q('.fi-c2'), q('.fi-c3')], shs = [q('.fi-sh1'), q('.fi-sh2'), q('.fi-sh3')];
+    var cards = [q('.fi-c1'), q('.fi-c2'), q('.fi-c3')], shs = [q('.fi-sh1'), q('.fi-sh2'), q('.fi-sh3')], bls = m.qa('.fi-bl');
     var up = m.top + s * 0.9, rot = [-6, 5, -4], fall = s * 1.5;
     cards.forEach(function (card, i) {
-      var tossAt = T.toss + (2 - i) * 50, tossEnd = tossAt + 220, land = T.land[i], dropAt = land - 270, tot = land + 190;
+      var tossAt = T.toss + (2 - i) * 35, tossEnd = tossAt + 190, land = T.land[i], dropAt = land - 260, tot = land + 190;
       var o = function (t) { return t / tot; };
       all(A(card, [
         { offset: 0, transform: 'none', opacity: 1 },
@@ -122,12 +122,21 @@
         { offset: o(land + 60), transform: 'translate(0,' + -s * 0.035 + 'px) rotate(' + -rot[i] * 0.15 + 'deg) scale(.98,1.03)', easing: 'ease-in-out' },
         { offset: 1, transform: 'none', opacity: 1 }
       ], { duration: tot, fill: 'both' }));
+      /* rest shadow: gone as soon as the card lifts, back once the card covers it again */
       all(A(shs[i], [
-        { offset: 0, opacity: i === 0 ? 1 : 0, transform: 'none' },
-        { offset: (T.toss + 100) / land, opacity: 0, transform: 'scale(1.3)' },
-        { offset: (land - 270) / land, opacity: 0, transform: 'scale(1.4)', easing: 'cubic-bezier(.5,0,.85,.55)' },
-        { offset: 1, opacity: 1, transform: 'none' }
-      ], { duration: land, fill: 'both' }));
+        { offset: 0, opacity: 1 },
+        { offset: tossAt / tot, opacity: 1 },
+        { offset: (tossAt + 70) / tot, opacity: 0 },
+        { offset: (land - 10) / tot, opacity: 0 },
+        { offset: 1, opacity: 1 }
+      ], { duration: tot, fill: 'both' }));
+      /* falling shadow: a soft blob that tightens and darkens as the card comes down */
+      all(A(bls[i], [
+        { offset: 0, opacity: 0, transform: 'scale(1.7)' },
+        { offset: (dropAt + 40) / tot, opacity: 0, transform: 'scale(1.7)', easing: 'cubic-bezier(.5,0,.85,.55)' },
+        { offset: land / tot, opacity: 1, transform: 'scale(.96)' },
+        { offset: 1, opacity: 0, transform: 'scale(1)' }
+      ], { duration: tot, fill: 'both' }));
     });
 
     /* The launch-screen star and wordmark step aside */
@@ -258,13 +267,14 @@
       a = c.A(q('.fi-sheet'), [{ opacity: 1 }, { opacity: 0 }], { duration: c.rm ? 500 : 280, easing: 'ease-out', fill: 'forwards' });
     } else {
       a = c.A(q('.fi-sheet'), [
-        { transform: 'none', opacity: 1, easing: 'cubic-bezier(.3,0,.6,.4)' },
-        { offset: 0.22, transform: 'rotateY(-10deg) translateZ(6px)', opacity: 1, easing: 'cubic-bezier(.4,0,.8,.5)' },
-        { offset: 0.92, transform: 'rotateY(-88deg) translateZ(30px)', opacity: 1 },
-        { transform: 'rotateY(-96deg) translateZ(30px)', opacity: 0 }
+        { transform: 'none', opacity: 1, easing: 'cubic-bezier(.4,0,.7,.4)' },
+        { offset: 0.25, transform: 'rotateY(-14deg)', opacity: 1, easing: 'cubic-bezier(.3,.3,.6,1)' },
+        { offset: 0.7, transform: 'rotateY(-70deg)', opacity: 1, easing: 'cubic-bezier(.4,0,1,1)' },
+        { offset: 0.92, transform: 'rotateY(-90deg)', opacity: 1 },
+        { transform: 'rotateY(-92deg)', opacity: 0 }
       ], { duration: T.exitDur, fill: 'forwards' });
-      c.A(q('.fi-curl'), [{ opacity: 0 }, { opacity: 0.9 }], { duration: T.exitDur, easing: 'ease-in', fill: 'forwards' });
-      c.A(q('.fi-shade'), [{ opacity: 0 }, { offset: 0.45, opacity: 0.8 }, { opacity: 0 }], { duration: T.exitDur + 60, fill: 'forwards' });
+      c.A(q('.fi-curl'), [{ opacity: 0 }, { opacity: 0.6 }], { duration: T.exitDur, easing: 'ease-in', fill: 'forwards' });
+      c.A(q('.fi-shade'), [{ opacity: 0 }, { offset: 0.5, opacity: 0.7 }, { opacity: 0 }], { duration: T.exitDur + 60, fill: 'forwards' });
     }
     var finish = function () { end(c); };
     if (a && a.finished) a.finished.then(finish, finish); else finish();
