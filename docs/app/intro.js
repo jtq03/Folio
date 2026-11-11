@@ -9,7 +9,7 @@
   var NS = 'http://www.w3.org/2000/svg';
   var STAR_MARK = '<g fill="#CE3B3B"><rect x="-1.8" y="-9" width="3.6" height="18" rx="1.8"/><rect x="-1.8" y="-9" width="3.6" height="18" rx="1.8" transform="rotate(60)"/><rect x="-1.8" y="-9" width="3.6" height="18" rx="1.8" transform="rotate(120)"/></g>';
   var STAR_WORD = '<g fill="#CE3B3B"><rect x="-2" y="-11" width="4" height="22" rx="2"/><rect x="-2" y="-11" width="4" height="22" rx="2" transform="rotate(60)"/><rect x="-2" y="-11" width="4" height="22" rx="2" transform="rotate(120)"/></g>';
-  var NIB = '<svg class="fi-nib" viewBox="0 0 24 24"><path d="M8.6 0h6.8v5.2H8.6z" fill="#395B50"/><path d="M12 24 6.6 12.6c-.5-3 .4-5.6 2.2-7.4h6.4c1.8 1.8 2.7 4.4 2.2 7.4z" fill="#1F2F16"/><path d="M12 24v-10" stroke="#F4EDDD" stroke-width=".9"/><circle cx="12" cy="12.6" r="1.3" fill="#F4EDDD"/><path d="M9.6 6.4c-.9 1.4-1.3 3-1.1 4.8" stroke="#92AFD7" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>';
+  var NIB = '<svg class="fi-nib" viewBox="0 0 24 24"><path d="M8.6 0h6.8v5.2H8.6z" fill="#395B50"/><path class="fi-nb" d="M12 24 6.6 12.6c-.5-3 .4-5.6 2.2-7.4h6.4c1.8 1.8 2.7 4.4 2.2 7.4z"/><path class="fi-ns" d="M12 24v-10" stroke-width=".9"/><circle class="fi-nh" cx="12" cy="12.6" r="1.3"/><path d="M9.6 6.4c-.9 1.4-1.3 3-1.1 4.8" stroke="#92AFD7" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>';
   /* Timeline in ms from the first moving frame */
   var T = { hold: 120, toss: 120, land: [640, 780, 920], star: 930, write: 1080, writeDur: 600, fillLag: 120, tag: 1700, exit: 2130, exitDur: 500 };
 
