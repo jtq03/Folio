@@ -52,3 +52,11 @@ Scripts are plain `<script>` tags on a `window.Folio` namespace so it works on f
 
 ## UI copy style note
 Warm, clear and teen friendly. Sentence case for everything except iOS system verbs on action sheets ("Discard Changes", "Keep Editing"). Plain words, no jargon, no placeholder text, no em-dashes. Errors say what to do next ("Use numbers only, like 416 555 0100").
+
+## Haptics on iOS web
+- iOS Safari has no `navigator.vibrate`. The only route to the Taptic Engine is `<input type="checkbox" switch>`: Safari ticks when it toggles.
+- A real tap on a native switch (or its label) always ticks, so visible toggles are real switches (`html.nsw` is set in native.js when the switch control is detected).
+- A programmatic `label.click()` on a hidden switch ticked on iOS 17.4 to 26.4. Apple blocked it in iOS 26.5, so code-started haptics (success, level up) are silent there. Android uses vibrate patterns.
+- Engine: `F.native.haptic(kind)` in `docs/app/native.js` (light, medium, heavy, success, warning, error, selection). Decorative haptics (not started by a tap) are skipped under Reduce Motion or when the last tap was over 1 s ago.
+- Test sheet: About me, Prototype, Test haptics (`docs/app/haptics.js`). Real switch buzzes but buttons do not: code haptics are blocked by iOS. Neither buzzes: System Haptics off, Low Power Mode, or iOS too old.
+- If it breaks: check the test sheet log first, then the ios-haptics npm package for the current trick (v3.3 lays an invisible label over each button so the user's own tap toggles the switch).

@@ -13,10 +13,10 @@
     var ready = pts.filter(function (p) { return sel.status(p) === 'ready'; });
     var avg = (pts.reduce(function (a, p) { return a + p.level; }, 0) / pts.length).toFixed(1);
     var hr = new Date().getHours(), greet = hr < 12 ? 'morning' : hr < 18 ? 'afternoon' : 'evening';
+    var counts = F.LEVELS.map(function (l) { return pts.filter(function (p) { return p.level === l.n; }).length; });
     var sub = ready.length ? (ready.length === 1 ? '1 patient is ready to advance.' : ready.length + ' patients are ready to advance.') + (attn.length ? ' ' + attn.length + ' could use a check-in.' : '') : attn.length ? attn.length + ' patients could use a check-in today.' : 'Everyone is on track. A calm day on the roster.';
     var stairs = h`<ol class="stairs stairs-live" aria-label="Patients by level">${F.LEVELS.map(function (l, i) { var who = pts.filter(function (p) { return p.level === l.n; }).map(sel.full);
       return h`<li style="--h:${26 + l.n * 7}%;--n:${l.n}"><a href="#/patients?lv=${l.n}" aria-label="Level ${l.n}, ${l.name}: ${who.length} patient${who.length === 1 ? '' : 's'}${who.length ? '. ' + who.join(', ') : ''}">${counts[i] ? h`<b class="cnt">${counts[i]}</b>` : ''}<span>${l.n}</span>${who.length ? h`<em class="stair-tip" aria-hidden="true">${who.join(', ')}</em>` : ''}</a></li>`; })}</ol>`;
-    var counts = F.LEVELS.map(function (l) { return pts.filter(function (p) { return p.level === l.n; }).length; });
 
     var feed = [];
     pts.forEach(function (p) {
