@@ -35,7 +35,7 @@
       var d = v.done, nextReady = S.get().patients.filter(function (x) { return x.id !== p.id && sel.status(x) === 'ready'; })[0];
       return { title: 'Visit complete', html: h`<div class="done-sheet">
         ${d.held ? h`<h1>Visit saved</h1><p class="muted" style="margin-inline:auto">${p.first} stays at Level ${p.level}. Progress pauses, it never costs a level.</p>` :
-        h`<div class="eyebrow red">Signed off</div><h1>${d.transfer ? 'Transfer complete' : h`${p.first} is now <em class="it">Level ${d.level}</em>`}</h1>
+        h`<div class="done-av">${U.avatar(p, 88)}</div><div class="eyebrow red">Signed off</div><h1>${d.transfer ? 'Transfer complete' : h`${p.first} is now <em class="it">Level ${d.level}</em>`}</h1>
         ${U.stamp(d.transfer ? 'Final sign-off' : 'Level ' + d.level + ' · ' + sel.level(d.level).name, sel.me().name + ', ' + U.fmtFull(new Date().toISOString().slice(0, 10)))}
         <p class="muted" style="margin-inline:auto">${p.first} sees this in the app right away${d.transfer ? '' : ', with a short celebration'}.</p>`}
         <div class="row wrap" style="justify-content:center;margin-top:1rem"><a class="btn btn-primary" href="#/patients/${p.id}" data-action="vreset">Back to ${p.first}</a>${nextReady ? h`<a class="btn" href="#/visit/${nextReady.id}">Next ready: ${nextReady.first}</a>` : ''}<a class="btn btn-quiet" href="#/">Home</a></div></div>` };
