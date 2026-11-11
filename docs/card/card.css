@@ -54,3 +54,42 @@ body{background:var(--beige-100) var(--grain)}
 .work,.who,.sk2 .it2{border-radius:14px;background:rgba(240,227,206,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
 .pt-av .avatar{box-shadow:0 0 0 5px var(--beige-100),0 0 0 6px rgba(31,47,22,.15),0 10px 20px -8px rgba(31,47,22,.5)}
 .sheetc:first-of-type::after{background:rgba(146,175,215,.7);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 4px,transparent 4px 9px)}
+
+/* Polish: countdown ring, key buttons, sticky notes, error pages, motion, print */
+.bar .via{display:inline-flex;align-items:center;gap:.35rem}
+.ring{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:rgba(247,240,226,.18)}
+.ring i{width:22px;height:22px;border-radius:50%;background:conic-gradient(var(--beige-100) calc(var(--p,1)*360deg),transparent 0);-webkit-mask:radial-gradient(circle,transparent 6px,#000 7px);mask:radial-gradient(circle,transparent 6px,#000 7px);transition:background .9s linear}
+.sess.warn .ring i{background:conic-gradient(#f2b84b calc(var(--p,1)*360deg),transparent 0)}
+.sess.warn #sess-left{color:#f2b84b}
+.sess.warn [data-action="extend"]{border-color:#f2b84b;animation:nudge 2.4s var(--ease) infinite}
+@keyframes nudge{0%,80%,100%{transform:none}88%{transform:translateY(-2px)}}
+.key{position:relative;transition:transform 90ms ease,box-shadow 90ms ease;box-shadow:0 3px 0 rgba(31,47,22,.35)}
+.key:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(31,47,22,.35)}
+.bar .btn.key{box-shadow:0 3px 0 rgba(0,0,0,.35)}.bar .btn.key:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.bar .tsz button{min-height:44px;min-width:44px;font-size:1rem}
+.bar .tsz button[aria-pressed="true"]{background:var(--beige-100);color:var(--green-900)}
+.bar .tsz button:focus-visible,.key:focus-visible{outline:3px solid #f2b84b;outline-offset:2px}
+.pt-av{transition:transform .35s var(--ease)}.pt-av:hover{transform:rotate(-3deg) scale(1.03)}
+.note-sticky{background:#f6e7a6 !important;color:#1f2f16;border-radius:2px 2px 14px 2px !important;box-shadow:0 8px 14px -10px rgba(60,42,14,.6) !important;transform:rotate(-.4deg)}
+.note-sticky:nth-child(odd){transform:rotate(.35deg)}
+.note-sticky .by span{color:#3d4a2c}
+.ok{margin:.75rem 0 0;font-weight:700;color:var(--green-900)}
+textarea[aria-invalid="true"],input[aria-invalid="true"]{border-color:#b3261e}
+.msg .art{display:inline-block;margin-bottom:1rem;animation:artin .7s var(--ease) both}
+@keyframes artin{from{opacity:0;transform:translateY(10px) rotate(-6deg)}}
+@media(max-width:480px){.bar .in{padding:.6rem 16px;gap:.5rem}.bar .sess{margin-left:0;width:100%}.wrap{padding-inline:16px}.sheetc{padding:1.1rem 1rem}}
+@media (prefers-reduced-motion:reduce){:root:not([data-motion="full"]) .enter .sheetc,:root:not([data-motion="full"]) .msg .art,:root:not([data-motion="full"]) .sess.warn [data-action="extend"]{animation:none}:root:not([data-motion="full"]) .pt-av:hover{transform:none}}
+html[data-motion="reduce"] .enter .sheetc,html[data-motion="reduce"] .msg .art,html[data-motion="reduce"] .sess.warn [data-action="extend"]{animation:none}
+html[data-motion="reduce"] .pt-av:hover,html[data-motion="reduce"] .key:active{transform:none}
+html[data-contrast="high"] .sheetc{border:2px solid #000;box-shadow:none}
+html[data-contrast="high"] .note-sticky{background:#fff !important;border:2px solid #000;transform:none}
+@media print{
+  .bar,.demo-banner,.skip,#toasts,.fold,.acts,form,.add-note,.sheetc::after{display:none !important}
+  body{background:#fff}.wrap{padding:0;max-width:none}
+  .sheetc{box-shadow:none;border:1px solid #999;border-radius:4px;padding:.6rem .8rem;margin-bottom:.5rem;break-inside:avoid;animation:none !important}
+  .note-sticky{transform:none;background:#fff !important;border:1px solid #999}
+  .work p{font-size:.95rem}.pt-head h1{font-size:1.6rem}
+}
+.cols .sheetc::after{display:none}
+.msg .art svg{opacity:1}
+@media print{.sheetc,.work,.who,.sk2 .it2,body{background:#fff !important;box-shadow:none !important}.who .btn{display:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}

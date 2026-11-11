@@ -16,7 +16,9 @@
      fallback for older iOS and Android). */
 (function (F) {
   var N = F.native || {}, doc = document;
-  var HOSTS = '.ios-tabs a, button.ios-btn, a.ios-btn, .ios-nbtn, .ios-add, .ios-seg button, button.ios-row, a.ios-row, .ios-rowmain, .ios-as-btn, button.ios-gbtn, .ios-round, .ios-checks button, .ios-qcard .x, .ios-ctx-item, .ios-back, .ios-av-badge, .fa-st, [data-haptic-tap]';
+  /* Safest set first (tab bar, primary buttons such as Practise and level-up Continue, opt-in controls).
+     Wider set to try after real-device checks: .ios-nbtn, .ios-add, .ios-seg button, button.ios-row, a.ios-row, .ios-as-btn */
+  var HOSTS = '.ios-tabs a, button.ios-btn, [data-haptic-tap]';
   var SKIP = '.ios-swipe-actions button, [disabled], label, .ios-update';
   var supported = (function () { try { var i = doc.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); return 'switch' in i || (window.CSS && CSS.supports && CSS.supports('-webkit-appearance', 'switch')); } catch (e) { return false; } })();
   /* Only touch devices benefit; a mouse never gets a haptic and keeps plain hover behaviour */

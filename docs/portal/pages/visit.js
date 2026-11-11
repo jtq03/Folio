@@ -65,11 +65,11 @@
     } else {
       var needNote = v.mode === 'advance' && !top && own < req, can = !needNote || v.text.trim().length > 2;
       body = h`<h2>One note, then sign off</h2><p class="muted">${p.first} sees every note in the app. ${p.first} decides who else does.</p>
-        <label for="vk">Type</label><select id="vk" data-bind="vkind"><option>Visit takeaway</option><option>Next-level goals</option><option>Handoff note</option><option>Behavioural note</option></select>
+        <label for="vk">Type</label><select id="vk" data-bind="vkind">${['Visit takeaway', 'Next-level goals', 'Handoff note', 'Behavioural note'].map(function (k) { return h`<option ${k === v.kind ? 'selected' : ''}>${k}</option>`; })}</select>
         <label for="vt">Note ${needNote ? '(required)' : '(optional)'}</label><textarea id="vt" rows="5" data-bind="vtext" placeholder="Write what ${p.first} should take away, what to work on for Level ${nx.n}, or what the adult team should know.">${v.text}</textarea>
         <label class="check"><input type="checkbox" ${v.shared ? 'checked' : ''} data-bind="vshare"><span>Show to future care teams</span></label>
         <div class="row between" style="margin-top:1.25rem"><button class="btn" data-action="vstep" data-v="2">${ic('back', 16)} Back</button>
-        <button class="btn ${v.mode === 'advance' ? 'btn-cta' : 'btn-primary'}" data-action="vfinish" ${can ? '' : 'disabled aria-disabled="true"'}>${v.mode === 'advance' ? (top ? 'Sign off and complete transfer' : 'Sign off Level ' + nx.n) : 'Save visit'}</button></div>`;
+        <button class="btn ${v.mode === 'advance' ? 'btn-cta' : 'btn-primary'}" data-action="vfinish" ${needNote ? h`data-need="1"` : ''} ${can ? '' : 'disabled aria-disabled="true"'}>${v.mode === 'advance' ? (top ? 'Sign off and complete transfer' : 'Sign off Level ' + nx.n) : 'Save visit'}</button></div>`;
     }
     return { title: 'Visit with ' + p.first, html: h`
       <a class="crumb" href="#/patients/${p.id}">${ic('back', 16)} ${sel.full(p)}</a>
@@ -77,10 +77,12 @@
       ${stepper}<section class="sec" style="max-width:860px">${body}</section>` };
   };
   F.actions.vreset = function () { F.ui.v = null; };
+  /* A finished visit should not greet you again when you come back later */
+  window.addEventListener('hashchange', function () { if (F.ui.v && F.ui.v.done) F.ui.v = null; if (F.ui.add && F.ui.add.created) F.ui.add = null; });
 
   /* Bind handlers for visit fields (data-bind writes F.ui[name]; map to F.ui.v) */
   document.addEventListener('input', function (e) { var el = e.target.closest('[data-bind]'); if (!el || !F.ui.v) return; var n = el.dataset.bind, v = F.ui.v;
-    if (n === 'vtext') v.text = el.value; if (n === 'vkind') v.kind = el.value; if (n === 'vshare') v.shared = el.checked;
+    if (n === 'vtext') { v.text = el.value; var fb = document.querySelector('[data-action="vfinish"]'); if (fb && fb.dataset.need) { var ok = v.text.trim().length > 2; fb.disabled = !ok; if (ok) fb.removeAttribute('aria-disabled'); else fb.setAttribute('aria-disabled', 'true'); } } if (n === 'vkind') v.kind = el.value; if (n === 'vshare') v.shared = el.checked;
     if (n === 'vi') v.inPerson = el.checked; if (n === 'vc') v.confirmed = el.checked; if (n === 'vo') v.override = el.checked; });
   document.addEventListener('change', function (e) { var el = e.target.closest('[data-bind]'); if (!el || !F.ui.v) return; var n = el.dataset.bind, v = F.ui.v;
     if (n === 'vkind') v.kind = el.value; if (n === 'vshare') v.shared = el.checked; if (n === 'vi') v.inPerson = el.checked; if (n === 'vc') v.confirmed = el.checked; if (n === 'vo') v.override = el.checked;

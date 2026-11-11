@@ -240,11 +240,12 @@
       if (sig && !lastBind) { var fe = root.querySelector(sig); if (fe && fe.focus) fe.focus({ preventScroll: true }); }
       if (lastBind) { var el = root.querySelector('[data-bind="' + lastBind.name + '"]'); if (el) { el.focus(); try { el.setSelectionRange(lastBind.pos, lastBind.pos); } catch (e) {} } lastBind = null; }
       if (out.after) out.after(root, loc, !!isNav);
+      if (cfg.after) cfg.after(root, loc, !!isNav, out);
       current = out;
     }
     F.rerender = render;
     window.addEventListener('hashchange', function () { render(true); });
-    F.Store.sub(function () { if (!document.querySelector('dialog[open]')) render(false); });
+    F.Store.sub(function () { if (!F.UI.hold && !document.querySelector('dialog[open]')) render(false); });
     render(true);
     return { render: render, go: function (p) { location.hash = p; } };
   }

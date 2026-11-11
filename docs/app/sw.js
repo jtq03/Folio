@@ -4,9 +4,9 @@
    - Fonts, icons and launch images are cached as they are used (cache-first).
    - Navigations fall back to the cached app page when offline.
    Bump VERSION when the list of app files changes. */
-var VERSION = 'folio-app-v5';
+var VERSION = 'folio-app-v6';
 var RUNTIME = 'folio-runtime-v2';
-var SHELL = ['./', 'index.html', 'ios.css', 'app.js', 'native.js', 'fun-ui.css', 'fun-ui.js', 'fun-home.css', 'fun-home.js', 'intro.css', 'intro.js', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
+var SHELL = ['./', 'index.html', 'ios.css', 'app.js', 'native.js', 'fun-ui.css', 'fun-ui.js', 'fun-home.css', 'fun-home.js', 'intro.css', 'intro.js', 'haptic-tap.js', 'polish.js', 'polish.css', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   '../shared/css/tokens.css', '../shared/css/card.css',
   '../shared/js/data.js', '../shared/js/store.js', '../shared/js/ui.js', '../shared/favicon.svg'];
 var APP_FILE = /\.(html|js|css|webmanifest)$|\/$/;

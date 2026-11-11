@@ -102,7 +102,7 @@
     var body = { overview: overview, notes: notes, care: care, records: records, access: access }[F.ui.pt](p);
     return {
       title: sel.full(p),
-      after: function (root, loc, isNav) { if (isNav) setTimeout(function () { var last = S.get().access[0]; if (!(last && last.pid === p.id && last.how === 'Portal' && Date.now() - new Date(last.time) < 60000)) A.log(p.id, sel.me().name, 'Portal'); }, 50); },
+      after: function (root, loc, isNav) { if (isNav) setTimeout(function () { var last = S.get().access[0]; if (!(last && last.pid === p.id && last.how === 'Portal' && Date.now() - new Date(last.time) < 60000)) { U.hold = true; try { A.log(p.id, sel.me().name, 'Portal'); } finally { U.hold = false; } } }, 50); },
       html: h`
       <a class="crumb" href="#/patients">${ic('back', 16)} All patients</a>
       <section class="hero" data-rise><span class="tape" aria-hidden="true"></span>
