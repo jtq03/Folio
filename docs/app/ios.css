@@ -433,8 +433,8 @@ button.ios-gbtn:active, a.ios-back:active .ios-gbtn { transform: scale(.92); }
 .ios-sheet-head { position: sticky; top: 0; z-index: 3; margin: 0 -16px 12px; padding: 4px 12px; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); }
 .ios-nbtn { position: relative; padding: 0 16px; border-radius: 22px; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); box-shadow: var(--g-hi), 0 4px 10px -6px rgba(31, 47, 22, .35); color: var(--ink); font-size: 1rem; }
 .ios-nbtn.bold { color: var(--tint); background-color: var(--bubble); font-weight: 600; justify-self: end; }
-.ios-sheet-wrap { padding-bottom: var(--kb, 0px); }
-.ios-sheet { max-height: calc(100% - var(--st) - 8px - var(--kb, 0px)); }
+/* With the keyboard up, native.js sizes #device to the visible area, so sheets need no keyboard padding */
+.kbd .ios-sheet { padding-bottom: 20px; }
 .ios-sheet-wrap.action .ios-sheet { background: transparent; background-image: none; box-shadow: none; padding: 0 12px calc(var(--sb) + 12px); }
 .ios-sheet-wrap.action .ios-grab { display: none; }
 .ios-actionsheet .ios-list { background-color: transparent; background-image: var(--grain), var(--g-bg); -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); border: 0; border-radius: 22px; box-shadow: var(--g-hi), var(--g-shadow); }

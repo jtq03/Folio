@@ -163,10 +163,10 @@
     var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p);
     var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
     var note = sel.notesFor(p).filter(function (n) { return n.role === 'peds'; })[0];
-    return { title: 'Hi ' + p.first,
+    return { title: 'Hi ' + (F.nickname ? F.nickname(p) : p.first),
       after: function (loc, isNav) { if (isNav && q && q.show === 'card') setTimeout(function () { history.replaceState(null, '', '#/'); F.actions.showQR(); }, 350); },
       html: h`
-      ${large(h`Hi <em>${p.first}</em>`, 'You are building your own health team.')}
+      ${large(h`Hi <em>${F.nickname ? F.nickname(p) : p.first}</em>`, 'You are building your own health team.')}
       <div class="ios-body">
         <section class="ios-index" data-rise style="--d:1" aria-label="Your level"><span class="ios-tape" aria-hidden="true"></span>
           <div class="ios-eyebrow">Your level</div>
@@ -237,7 +237,7 @@
           <div class="ios-search ${ui.rq ? 'has' : ''}" role="search"><label class="ios-searchbox">${ic('search', 18)}<span class="ios-sr">Search resources</span><input type="search" placeholder="Search" value="${ui.rq}" data-bind="rq" data-rerender autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"></label><button type="button" class="ios-cancel" data-action="clearSearch">Cancel</button></div>
           <div class="ios-sec"><div class="ios-seg" role="group" aria-label="Topic" style="--n:4;--i:${segIdx}">${TOPICS.map(function (t) { return h`<button type="button" data-action="rtag" data-v="${t}" aria-pressed="${String(ui.rt === t)}">${t}</button>`; })}</div></div></div>
         <section class="ios-sec" data-rise style="--d:2" aria-label="Library">
-          ${list.length ? h`<div class="ios-list">${list.map(function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}" data-ctx="resource:${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row has-tile" role="status">${tile(ic('search', 22), 2)}<span class="ios-rt"><b>${term ? 'No results for "' + ui.rq.trim() + '"' : 'Nothing in this topic yet'}</b><small>${term ? 'Check the spelling or try another topic.' : 'Try another topic.'}</small></span></div></div>`}</section>
+          ${list.length ? h`<div class="ios-list">${list.map(function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}" data-ctx="resource:${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${F.fx ? raw(F.fx.readDot(r.id)) : ''}${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row has-tile" role="status">${tile(ic('search', 22), 2)}<span class="ios-rt"><b>${term ? 'No results for "' + ui.rq.trim() + '"' : 'Nothing in this topic yet'}</b><small>${term ? 'Check the spelling or try another topic.' : 'Try another topic.'}</small></span></div></div>`}</section>
         <section class="ios-sec" data-rise style="--d:3" aria-labelledby="ml"><h2 class="ios-gh" id="ml">${tile(ic('link', 18), 3, true)}<span>My links · doctors can open these</span></h2>
           <div class="ios-list">${p.links.map(function (l, i) { return h`<div class="ios-swipe" data-ctx="link:${l.id}">${swipeTray()}<button type="button" class="ios-row has-tile" data-action="editLink" data-id="${l.id}" aria-label="${l.title}${l.sub ? ', ' + l.sub : ''}. Edit">${tile(ic('link', 22), (i % 5) + 1)}<span class="ios-rt"><b>${l.title}</b><small>${l.sub || l.url}</small></span>${CHEV}</button></div>`; })}
             <button type="button" class="ios-row has-tile ios-addrow" data-action="editLink">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add a link</b></span></button></div>
@@ -255,7 +255,7 @@
       <div class="ios-body">
         <div class="ios-meta" data-rise style="--d:1">${kindTile(r)}<span><b>${r.kind}</b><br><span class="ios-detail">${r.mins}${skill ? ' · helps with ' + skill.name : ''}</span></span></div>
         <article class="ios-read" data-rise style="--d:2"><span class="ios-tape" aria-hidden="true"></span>${two.map(function (t) { return h`<p>${t}</p>`; })}</article>
-        <div class="ios-sec" data-rise style="--d:3"><button type="button" class="ios-btn sec" data-action="shareResource" data-id="${r.id}">${shareSvg} Share this resource</button></div>
+        ${F.fx ? raw(F.fx.readBlock(r)) : ''}<div class="ios-sec" data-rise style="--d:3"><button type="button" class="ios-btn sec" data-action="shareResource" data-id="${r.id}">${shareSvg} Share this resource</button></div>
       </div>` };
   }
 
@@ -333,7 +333,7 @@
         <h1 tabindex="-1">${sel.full(p)}</h1>
         <div class="meta">Age ${p.age} · Folio ID ${sel.fid(p.folioId)}</div>
         <span class="ios-chip">${xi('heart', 16)} ${p.condition}</span>
-        <p class="ios-cap" style="margin-top:8px">Diagnosis is set by your clinic.</p>
+        <p class="ios-cap" style="margin-top:8px">Diagnosis is set by your clinic.</p>${F.fx ? raw(F.fx.nickRow(p)) : ''}
       </div>
       <div class="ios-body" style="margin-top:28px">
         <section class="ios-complete" data-rise style="--d:1" aria-labelledby="cp"><div class="ios-complete-head">${ring(pct)}<div><h2 id="cp">${pct === 100 ? 'Profile complete' : 'Finish your profile'}</h2><p>${doneN} of ${items.length} done. Adult doctors see this when they tap your card.</p></div></div>
@@ -463,14 +463,16 @@
     var nt = topSheet(); if (nt) nt.wrap.removeAttribute('inert'); else appEl.removeAttribute('inert');
     setTimeout(function () {
       rec.wrap.remove(); sheets = sheets.filter(function (r) { return r !== rec; });
-      if (rec.prev && document.body.contains(rec.prev) && !rec.prev.closest('[inert]')) { try { rec.prev.focus({ preventScroll: true }); } catch (e) {} }
+      if (rec.prev && document.body.contains(rec.prev) && !rec.prev.closest('[inert]')) { var keep = N.scrollSnapshot(); try { rec.prev.focus({ preventScroll: true }); } catch (e) {} keep(); }
     }, N.reduced() ? 10 : 260);
   }
   function dragWire(rec) {
     var sh = rec.sheet, scrim = rec.wrap.querySelector('.ios-scrim'), y0 = null, dy = 0, t0 = 0, active = false;
     sh.addEventListener('touchstart', function (e) {
       var head = e.target.closest('.ios-grab,.ios-sheet-head');
-      if (!(head || (sh.scrollTop <= 0 && !e.target.closest('input,textarea,select')))) return;
+      /* While typing, only the grabber or header drags the sheet: a touch on a field row must never dismiss a half-filled form */
+      var typing = document.getElementById('device').classList.contains('kbd') && rec.sheet.contains(document.activeElement);
+      if (!(head || (!typing && sh.scrollTop <= 0 && !e.target.closest('input,textarea,select,label')))) return;
       y0 = e.touches[0].clientY; t0 = Date.now(); dy = 0; active = false;
     }, { passive: true });
     sh.addEventListener('touchmove', function (e) {
@@ -728,13 +730,15 @@
     if (isNav && loc.path === '/') setTimeout(function () { if (parse().path === '/' && unread() > 0) markSeen(); }, 2500);
     if (out.after) out.after(loc, isNav);
     firstRender = false;
+    /* Hook for add-ons: fires after every route render and every in-place patch. Listeners must not re-render. */
+    try { document.dispatchEvent(new CustomEvent('folio:rendered', { detail: { route: loc.path, isNav: isNav, page: cur.el } })); } catch (e) {}
   }
   function tplFrag(html) { var t = document.createElement('template'); t.innerHTML = html; return t.content; }
   F.rerender = function (isNav) { render(isNav ? 'swap' : false); };
 
   function setCelebrate(p) {
     var c = p.celebrate, had = !!lvHost.firstChild;
-    if (!c) { if (had) { lvHost.innerHTML = ''; [navEl, stage, tabsEl].forEach(function (x) { x.removeAttribute('inert'); }); if (!topSheet()) appEl.removeAttribute('inert'); var t = cur && cur.el.querySelector('h1'); if (t) t.focus({ preventScroll: true }); } return; }
+    if (!c) { if (had) { lvHost.innerHTML = ''; [navEl, stage, tabsEl].forEach(function (x) { x.removeAttribute('inert'); }); if (!topSheet()) appEl.removeAttribute('inert'); var t = cur && cur.el.querySelector('h1'); if (t) { var keep = N.scrollSnapshot(); t.focus({ preventScroll: true }); keep(); } } return; }
     morphHTML(lvHost, celebrate(p, c).s);
     [navEl, stage, tabsEl].forEach(function (x) { x.setAttribute('inert', ''); });
     if (!had) {
@@ -813,13 +817,18 @@
   document.addEventListener('touchcancel', function () { endBack(true); });
 
   /* Keep a focused field visible above the keyboard (the page scrolls, not the window) */
-  document.addEventListener('focusin', function (e) {
-    if (!e.target.matches || !e.target.matches('input:not([type=checkbox]):not([type=file]),textarea')) return;
-    setTimeout(function () {
-      var el = e.target, vv = window.visualViewport; if (document.activeElement !== el || !vv) return;
-      var r = el.getBoundingClientRect(); if (r.bottom > vv.height - 24 || r.top < 60) el.scrollIntoView({ block: 'center', behavior: N.reduced() ? 'auto' : 'smooth' });
-    }, 380);
-  });
+  /* Only the field's own scroller moves (sheet or page). scrollIntoView also scrolled the window, which fought iOS's own pan. */
+  function revealField() {
+    var el = document.activeElement; if (!el || !el.matches || !el.matches('input:not([type=checkbox]):not([type=file]),textarea')) return;
+    var box = el.closest('.ios-sheet, .ios-scroll'); if (!box) return;
+    var b = box.getBoundingClientRect(), r = el.getBoundingClientRect(), head = box.querySelector(':scope > .ios-sheet-head, :scope form > .ios-sheet-head');
+    var topLimit = b.top + (head ? head.offsetHeight : 60) + 8, botLimit = b.bottom - 24;
+    if (r.top >= topLimit && r.bottom <= botLimit) return;
+    var delta = r.top < topLimit ? r.top - topLimit : Math.min(r.bottom - botLimit, r.top - topLimit);
+    box.scrollTo({ top: box.scrollTop + delta, behavior: N.reduced() ? 'auto' : 'smooth' });
+  }
+  document.addEventListener('focusin', function (e) { if (e.target.matches && e.target.matches('input:not([type=checkbox]):not([type=file]),textarea')) setTimeout(revealField, 380); });
+  var kbT = null; window.addEventListener('folio:kb', function () { clearTimeout(kbT); kbT = setTimeout(revealField, 120); });
 
   /* ---------- Context menus and swipe actions ---------- */
   try { if (window.CSS && CSS.supports && CSS.supports('-webkit-appearance', 'switch')) document.documentElement.classList.add('nsw'); } catch (e) {}

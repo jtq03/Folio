@@ -1,0 +1,64 @@
+/* Folio opening intro. Owned by intro.js. Only reads brand colours; nothing here touches the app's own rules.
+   Every size is a multiple of --s (the mark's width), set by intro.js from the device size so the
+   first frame lands on the same pixels as the iOS launch image in docs/app/splash. */
+.fi {
+  --fi-paper: #F4EDDD; --fi-vig: rgba(31, 47, 22, .066); --fi-ink: #1F2F16; --fi-ink2: #2D493E; --fi-halo: rgba(255, 251, 240, .7);
+  --fi-edge: transparent; --fi-shadow: rgba(31, 47, 22, .24);
+  position: absolute; inset: 0; z-index: 115; overflow: hidden; perspective: 2200px;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: pointer; touch-action: manipulation;
+}
+.fi-sheet {
+  position: absolute; inset: 0; transform-origin: 0 50%; -webkit-backface-visibility: hidden; backface-visibility: hidden;
+  background-color: var(--fi-paper);
+  background-image: linear-gradient(180deg, transparent 45%, var(--fi-vig) 87%);
+}
+.fi-curl { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgba(31, 47, 22, 0), rgba(31, 47, 22, .22) 80%, rgba(255, 251, 240, .5)); }
+.fi-shade { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0, 0, 0, .28), transparent 70%); }
+
+.fi-lock { position: absolute; left: 0; top: 0; width: var(--s); height: calc(var(--s) * 1.605); }
+.fi-lock i, .fi-lock b, .fi-lock svg { position: absolute; display: block; }
+
+/* Mark: three paper cards in 64-unit space, matching ui.js mark() */
+.fi-c, .fi-sh { width: calc(var(--s) * .53125); height: calc(var(--s) * .3125); border-radius: calc(var(--s) * .0625); }
+.fi-c { transform-origin: 50% 100%; box-shadow: 0 1px 1px rgba(31, 47, 22, .16), inset 0 0 0 .5px var(--fi-edge); }
+.fi-c1 { left: calc(var(--s) * .09375); top: calc(var(--s) * .5625); background: #92AFD7; }
+.fi-c2 { left: calc(var(--s) * .1875); top: calc(var(--s) * .4375); background: #395B50; }
+.fi-c3 { left: calc(var(--s) * .28125); top: calc(var(--s) * .3125); background: #1F2F16; }
+.fi-sh { box-shadow: 0 calc(var(--s) * .045) calc(var(--s) * .16) var(--fi-shadow); }
+.fi-bl { width: calc(var(--s) * .53125); height: calc(var(--s) * .3125); margin: calc(var(--s) * .03) 0 0; opacity: 0; background: radial-gradient(closest-side, var(--fi-shadow), transparent); transform: scale(1.7); }
+.fi-sh1 { left: calc(var(--s) * .09375); top: calc(var(--s) * .5625); }
+.fi-sh2 { left: calc(var(--s) * .1875); top: calc(var(--s) * .4375); }
+.fi-sh3 { left: calc(var(--s) * .28125); top: calc(var(--s) * .3125); }
+.fi-star { left: calc(var(--s) * .59375); top: calc(var(--s) * .025); width: calc(var(--s) * .375); height: calc(var(--s) * .375); filter: drop-shadow(0 1px 1.5px rgba(31, 47, 22, .22)); }
+.fi-bit { left: calc(var(--s) * .78125); top: calc(var(--s) * .21875); width: 7px; height: 4px; margin: -2px 0 0 -3.5px; border-radius: 1px; opacity: 0; }
+.fi-bit.ln { width: 2px; height: 9px; margin: -4.5px 0 0 -1px; border-radius: 1px; background: #CE3B3B; }
+
+/* Wordmark, matching ui.js wordmark() */
+.fi-word { position: absolute; left: 50%; top: calc(var(--s) * 1.113); width: calc(var(--s) * 1.3); margin-left: calc(var(--s) * -.636); height: calc(var(--s) * .5735); }
+.fi-w { position: absolute; inset: 0; text-align: center; white-space: nowrap; font: 600 calc(var(--s) * .5735)/1 "Fraunces", "Fraunces Fallback", Georgia, serif; letter-spacing: .02em; color: var(--fi-ink); }
+.fi-ri { display: inline-block; }
+.fi-rise .fi-wf > span { display: inline-block; }
+.fi-rise .fi-wl, .fi-rise .fi-nib { visibility: hidden; }
+.fi-fixed { position: fixed; z-index: 2147483000; }
+.fi-w0, .fi-wf { text-shadow: 0 1px 0 var(--fi-halo); }
+.fi-wl { color: transparent; -webkit-text-stroke: 1.3px var(--fi-ink); }
+.fi-ws { color: transparent; }
+.fi-clip { position: absolute; inset: -12% -4%; overflow: hidden; }
+.fi-clip > .fi-w { inset: 12% 4%; }
+.fi-ri { position: relative; }
+.fi-istar { left: 50%; top: calc(var(--s) * -.214); width: calc(var(--s) * .324); height: calc(var(--s) * .324); margin-left: calc(var(--s) * -.175); transform: scale(.9); }
+.fi-nib { left: 0; top: 0; width: calc(var(--s) * .2); height: calc(var(--s) * .2); opacity: 0; transform-origin: 50% 100%; }
+
+.fi-nb { fill: var(--fi-ink); } .fi-ns { stroke: var(--fi-paper); } .fi-nh { fill: var(--fi-paper); }
+.fi-tag { position: absolute; left: 50%; top: calc(var(--s) * 1.76); width: 300px; margin-left: -150px; text-align: center; white-space: nowrap; opacity: 0;
+  font: 500 11.5px/1.2 "Prompt", "Prompt Fallback", system-ui, -apple-system, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--fi-ink2); }
+
+.fi.run .fi-c, .fi.run .fi-bl, .fi.run .fi-star, .fi.run .fi-clip, .fi.run .fi-clip > .fi-w, .fi.run .fi-nib, .fi.run .fi-istar, .fi.run .fi-bit { will-change: transform, opacity; }
+.fi.out .fi-sheet { will-change: transform, opacity; }
+
+@media (prefers-color-scheme: dark) {
+  .fi { --fi-paper: #131B10; --fi-vig: rgba(0, 0, 0, .28); --fi-ink: #F0E3CE; --fi-ink2: #C9BEA6; --fi-halo: transparent; --fi-edge: rgba(240, 227, 206, .3); --fi-shadow: rgba(0, 0, 0, .6); }
+  .fi-sheet { background-image: var(--grain, none), linear-gradient(180deg, transparent 45%, var(--fi-vig) 87%); }
+  .fi-curl { background: linear-gradient(90deg, rgba(0, 0, 0, .1), rgba(0, 0, 0, .45) 85%, rgba(240, 227, 206, .12)); }
+}
+@media (prefers-contrast: more) { .fi-sheet { background-image: none; } }

@@ -1,0 +1,128 @@
+/* Folio patient app: personality layer (Home, Levels, Folio card, stickers). Pairs with fun-home.js.
+   Transform and opacity only. Reduced motion swaps everything for fades at the bottom. */
+
+/* ---------- FX layer: confetti and the hopping star ---------- */
+.fa-fx { position: absolute; inset: 0; z-index: 140; pointer-events: none; overflow: hidden; }
+.fa-bit { position: fixed; display: block; border-radius: 1.5px; box-shadow: 0 1px 0 rgba(31, 47, 22, .2); will-change: transform, opacity; }
+.fa-bit.st { line-height: 0; box-shadow: none; }
+.fa-ghost { position: fixed; left: 0; top: 0; line-height: 0; will-change: transform; transform-origin: 50% 100%; filter: drop-shadow(0 2px 1px rgba(31, 47, 22, .3)); }
+
+/* ---------- Staircase: rise with a paper thud, star twinkle, tap tip ---------- */
+.anim .ios-stairs i, .anim .ios-big-stairs li { animation-name: faStepThud; animation-duration: .7s; }
+@keyframes faStepThud {
+  0% { scale: 1 .2; opacity: 0; }
+  60% { scale: 1 1.07; opacity: 1; }
+  78% { scale: 1.04 .95; }
+  90% { scale: 1 1.015; }
+  100% { scale: 1 1; opacity: 1; }
+}
+.ios-stairs .star, .ios-big-stairs .star { transform-origin: 50% 50%; animation: faTwinkle 4.6s ease-in-out 1.2s infinite; }
+@keyframes faTwinkle {
+  0%, 70%, 100% { rotate: 0deg; scale: 1; }
+  76% { rotate: 30deg; scale: 1.18; }
+  82% { rotate: 60deg; scale: .94; }
+  88% { rotate: 60deg; scale: 1.04; }
+}
+.ios-stairs > i, .ios-big-stairs > li { cursor: pointer; transform-origin: 50% 100%; }
+.ios-stairs > i.fa-wig, .ios-big-stairs > li.fa-wig { animation: faWig .5s var(--spring); }
+@keyframes faWig { 20% { rotate: -5deg; } 45% { rotate: 4deg; } 70% { rotate: -2deg; } 100% { rotate: 0deg; } }
+.ios-stairs > i.fa-thud, .ios-big-stairs > li.fa-thud { animation: faThud .35s var(--spring); }
+@keyframes faThud { 30% { scale: 1.05 .9; } 65% { scale: .98 1.03; } 100% { scale: 1 1; } }
+
+.fa-tip { position: fixed; z-index: 5; width: max-content; max-width: min(240px, 78vw); padding: 10px 12px 10px; border-radius: 12px; background-color: var(--paper); background-image: var(--grain); color: var(--ink); text-align: left;
+  box-shadow: 0 0 0 1px var(--line2), 0 10px 18px -8px rgba(31, 47, 22, .45); transform-origin: 50% 100%; animation: faTipIn .32s var(--spring) both; pointer-events: none; }
+.fa-tip b { display: block; font: 600 .94rem/1.2 var(--font-display); }
+.fa-tip .fa-tip-s { display: inline-block; margin-top: 4px; font: 700 .62rem/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); }
+.fa-tip small { display: block; margin-top: 6px; font: 400 .8rem/1.3 var(--font-ui); color: var(--ink2); }
+.fa-tip-tail { position: absolute; bottom: -6px; width: 14px; height: 14px; background: var(--paper); transform: rotate(45deg); box-shadow: 1px 1px 0 var(--line2); border-radius: 0 0 3px 0; }
+.fa-tip.out { animation: faTipOut .18s ease both; }
+@keyframes faTipIn { from { opacity: 0; transform: translateY(6px) scale(.85); } }
+@keyframes faTipOut { to { opacity: 0; transform: translateY(4px) scale(.94); } }
+
+/* ---------- Folio card: idle float, tilt, shine, flip ---------- */
+.ios-cardwrap { animation: faFloat 6.5s ease-in-out infinite; }
+@keyframes faFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+.fa-float { perspective: 900px; touch-action: pan-y; -webkit-user-select: none; user-select: none; border-radius: 18px; outline: none; cursor: pointer; }
+.fa-float:focus-visible { box-shadow: 0 0 0 3px #F7F0E2, 0 0 0 6px #1F2F16; }
+.fa-tilt { position: relative; perspective: 1100px; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .7s var(--spring); }
+.fa-tilt.live { transition: transform .08s linear; }
+.fa-flip { position: relative; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform .75s var(--spring); }
+.fa-flip.on { transform: rotateY(180deg); }
+.fa-face { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.fa-face .fcard { box-shadow: none; }
+.fa-fb { position: absolute; inset: 0; transform: rotateY(180deg); }
+.fa-fb .fcard { height: 100%; aspect-ratio: auto; }
+.fa-fb .qrbox { background: #F7F0E2; padding: 5px; }
+.fa-shine { position: absolute; inset: 0; border-radius: 18px; pointer-events: none; opacity: 0; transition: opacity .5s;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255, 255, 255, .5), rgba(255, 255, 255, .12) 28%, transparent 56%); mix-blend-mode: soft-light; }
+.fa-float.sq .fa-shine { border-radius: 4px; }
+.fa-tilt.live .fa-shine { opacity: 1; transition: opacity .15s; }
+.fa-tilt.fa-boing { animation: faBoing .6s var(--spring); }
+@keyframes faBoing { 30% { scale: .96; } 60% { scale: 1.02; } 100% { scale: 1; } }
+
+/* ---------- Practise: squish, pop, status flip, self-drawing check ---------- */
+[data-action="practise"] { transition: transform .14s var(--out), box-shadow .14s; }
+[data-action="practise"]:active { transform: scale(.95, .92) translateY(2px); }
+[data-action="practise"].fa-pop { animation: faPop .5s var(--spring); }
+@keyframes faPop { 0% { scale: .92; } 45% { scale: 1.05; } 100% { scale: 1; } }
+.ios-st.fa-flipin { animation: faFlipIn .55s var(--spring); transform-origin: 50% 50%; }
+@keyframes faFlipIn { 0% { transform: perspective(300px) rotateX(-90deg); opacity: 0; } 100% { transform: perspective(300px) rotateX(0); opacity: 1; } }
+.fa-tick { display: inline-flex; color: var(--tint, #395B50); margin-left: 2px; }
+.fa-tick path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: faDraw .5s var(--out) .25s forwards; }
+@keyframes faDraw { to { stroke-dashoffset: 0; } }
+.ios-row.fa-glow { animation: faGlow 1.6s var(--out); }
+@keyframes faGlow { 0% { background-color: rgba(146, 175, 215, .45); } 100% { background-color: transparent; } }
+
+/* ---------- Ticket: friendly countdown and a torn-in stub ---------- */
+.fa-count { margin-top: 6px; font: 500 .9rem/1.3 var(--font-ui) !important; color: var(--obj-ink, #1F2F16) !important; }
+.ios-ticket .main { display: flex; flex-direction: column; }
+.ios-ticket .main > .fa-count { order: 1; }
+.ios-ticket .main > .ios-ticket-btns { order: 2; }
+.fa-tear .ios-ticket .stub { animation: faStub .75s var(--spring) both; transform-origin: 100% 0; }
+.fa-tear .ios-ticket .main { animation: faMain .6s var(--spring) both; }
+.fa-tear { animation: faDrop .55s var(--spring) both; }
+@keyframes faStub { 0% { transform: translateX(-14px) rotate(-9deg); opacity: 0; } 55% { transform: translateX(2px) rotate(1.5deg); opacity: 1; } 100% { transform: none; } }
+@keyframes faMain { 0% { transform: translateX(16px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes faDrop { 0% { transform: translateY(-10px) rotate(-1deg); } 70% { transform: translateY(1px) rotate(.3deg); } 100% { transform: none; } }
+
+/* ---------- Sticker book ---------- */
+.fa-stk .ios-gh { align-items: center; }
+.fa-stk-n { margin-left: auto; margin-right: 4px; font: 600 .72rem/1 var(--font-ui); letter-spacing: .06em; color: var(--ink2); }
+.fa-sheet { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px 6px; padding: 18px 12px; border-radius: 10px;
+  background-color: var(--sheet); background-image: var(--grain), radial-gradient(circle, rgba(31, 47, 22, .09) 1px, transparent 1.4px); background-size: auto, 14px 14px;
+  box-shadow: inset 0 1px 0 var(--hi), 0 0 0 1px var(--line), 0 12px 20px -14px var(--shadow); }
+.fa-st { position: relative; display: grid; place-items: center; aspect-ratio: 1; min-width: 44px; min-height: 44px; padding: 0; border: 0; background: none; border-radius: 50%; transform: rotate(var(--rot, 0deg)); -webkit-tap-highlight-color: transparent; }
+.fa-st svg { width: 100%; height: auto; max-width: 64px; overflow: visible; }
+.fa-st.got svg { filter: drop-shadow(0 1px 1px rgba(31, 47, 22, .28)) drop-shadow(0 3px 3px rgba(31, 47, 22, .14)); }
+.fa-st.pend { opacity: 0; }
+.fa-st .fa-sil { fill: rgba(31, 47, 22, .07); stroke: var(--line2); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.fa-st .fa-q { font: 600 18px var(--font-display); fill: var(--ink2); opacity: .55; }
+.fa-st:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.fa-st.wob { animation: faWob .55s var(--spring); }
+@keyframes faWob { 0% { transform: rotate(var(--rot)) scale(1); } 30% { transform: rotate(calc(var(--rot) - 12deg)) scale(1.14); } 60% { transform: rotate(calc(var(--rot) + 8deg)) scale(1.06); } 100% { transform: rotate(var(--rot)) scale(1); } }
+.fa-st.nope { animation: faNope .4s ease; }
+@keyframes faNope { 25% { transform: rotate(var(--rot)) translateX(-3px); } 50% { transform: rotate(var(--rot)) translateX(3px); } 75% { transform: rotate(var(--rot)) translateX(-2px); } }
+.fa-ripple { position: absolute; left: 50%; top: 50%; width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid rgba(57, 91, 80, .55); transform: translate(-50%, -50%) scale(.6); opacity: 1; animation: faRipple .65s var(--out) forwards; pointer-events: none; }
+@keyframes faRipple { to { transform: translate(-50%, -50%) scale(1.7); opacity: 0; } }
+.fa-stk-cap { min-height: 2.6em; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fa-st .fa-sil { fill: rgba(240, 227, 206, .06); } }
+
+/* ---------- Reduced motion: fades only ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ios-cardwrap, .ios-stairs .star, .ios-big-stairs .star, .fa-st.wob, .fa-st.nope, .fa-tilt.fa-boing, [data-action="practise"].fa-pop, .ios-stairs > i.fa-wig, .ios-big-stairs > li.fa-wig, .ios-stairs > i.fa-thud, .ios-big-stairs > li.fa-thud { animation: none !important; }
+  .anim .ios-stairs i, .anim .ios-big-stairs li { animation: faFade .4s ease both !important; }
+  .fa-flip, .fa-tilt { transition: none !important; }
+  .fa-face { transition: opacity .3s; }
+  .fa-tip, .ios-st.fa-flipin, .fa-tear .ios-ticket .stub, .fa-tear .ios-ticket .main, .fa-tear { animation: faFade .3s ease both !important; }
+  .fa-tick path { animation: none; stroke-dashoffset: 0; }
+  [data-action="practise"]:active { transform: none; }
+}
+html[data-motion="reduce"] .ios-cardwrap, html[data-motion="reduce"] .ios-stairs .star, html[data-motion="reduce"] .ios-big-stairs .star, html[data-motion="reduce"] .fa-st.wob, html[data-motion="reduce"] .fa-st.nope,
+html[data-motion="reduce"] .fa-tilt.fa-boing, html[data-motion="reduce"] [data-action="practise"].fa-pop, html[data-motion="reduce"] .ios-stairs > i.fa-wig, html[data-motion="reduce"] .ios-big-stairs > li.fa-wig,
+html[data-motion="reduce"] .ios-stairs > i.fa-thud, html[data-motion="reduce"] .ios-big-stairs > li.fa-thud { animation: none !important; }
+html[data-motion="reduce"] .anim .ios-stairs i, html[data-motion="reduce"] .anim .ios-big-stairs li { animation: faFade .4s ease both !important; }
+html[data-motion="reduce"] .fa-flip, html[data-motion="reduce"] .fa-tilt { transition: none !important; }
+html[data-motion="reduce"] .fa-tip, html[data-motion="reduce"] .ios-st.fa-flipin, html[data-motion="reduce"] .fa-tear .ios-ticket .stub, html[data-motion="reduce"] .fa-tear .ios-ticket .main, html[data-motion="reduce"] .fa-tear { animation: faFade .3s ease both !important; }
+html[data-motion="reduce"] .fa-tick path { animation: none; stroke-dashoffset: 0; }
+html[data-motion="reduce"] [data-action="practise"]:active { transform: none; }
+@keyframes faFade { from { opacity: 0; } }

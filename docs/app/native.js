@@ -8,6 +8,11 @@
   function reduced() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'reduce'; } catch (e) { return false; } }
   N.reduced = reduced;
   function appEl() { return document.getElementById('app'); }
+  /* Remember every scroller's position; the returned function restores any that moved. */
+  N.scrollSnapshot = function () {
+    var list = [].slice.call(document.querySelectorAll('.ios-scroll, .ios-sheet')).map(function (el) { return [el, el.scrollTop]; });
+    return function () { list.forEach(function (x) { if (x[0].isConnected && Math.abs(x[0].scrollTop - x[1]) > 1) x[0].scrollTop = x[1]; }); };
+  };
 
   /* ---------- Haptics ----------
      iOS Safari has no vibrate. A hidden <input switch> toggled by a label click fires the Taptic Engine on iOS 18+.
@@ -18,10 +23,14 @@
     try {
       hapLabel = document.createElement('label'); hapLabel.setAttribute('aria-hidden', 'true'); hapLabel.dataset.haptic = '';
       hapLabel.style.cssText = 'position:fixed;left:-60px;top:-60px;width:40px;height:40px;opacity:.01;pointer-events:none;overflow:hidden';
-      hapInput = document.createElement('input'); hapInput.type = 'checkbox'; hapInput.setAttribute('switch', ''); hapInput.tabIndex = -1; hapInput.setAttribute('aria-hidden', 'true');
+      /* No tabindex: WebKit only lets a label click focus a form control that has an explicit tabindex.
+         Stealing focus here, then handing it back to the screen heading, is what jumped pages to the top. */
+      hapInput = document.createElement('input'); hapInput.type = 'checkbox'; hapInput.setAttribute('switch', ''); hapInput.setAttribute('aria-hidden', 'true');
       hapLabel.appendChild(hapInput); document.body.appendChild(hapLabel);
-      /* Keep the hidden switch's change event away from the app's delegated change handlers */
+      /* Keep the hidden switch's events away from the app's delegated handlers, and out of keyboard focus */
       hapInput.addEventListener('change', function (e) { e.stopPropagation(); });
+      hapInput.addEventListener('input', function (e) { e.stopPropagation(); });
+      hapInput.addEventListener('focus', function () { hapInput.blur(); });
     } catch (e) { hapLabel = null; }
   }
   N.haptic = function (kind) {
@@ -30,13 +39,15 @@
       hapInit();
       var tap = function () {
         try {
-          if (!hapLabel) return; var ae = document.activeElement;
+          if (!hapLabel) return; var ae = document.activeElement, keep = N.scrollSnapshot();
           hapLabel.click();
-          /* A label click can move focus to the hidden switch, which would close the keyboard. Put it back. */
-          if (document.activeElement === hapInput) { if (ae && ae !== document.body && ae.focus) ae.focus({ preventScroll: true }); else hapInput.blur(); }
+          /* If focus moved anyway, put it back without scrolling, then undo any scroll the focus change caused */
+          if (document.activeElement !== ae && ae && ae !== document.body && document.contains(ae) && ae.focus) ae.focus({ preventScroll: true });
+          keep();
         } catch (e) {}
       };
-      if (kind === 'success') { tap(); setTimeout(tap, 70); } else tap();
+      /* The label trick only does anything on iOS; elsewhere navigator.vibrate is used */
+      if (IOS) { if (kind === 'success') { tap(); setTimeout(tap, 70); } else tap(); }
       if (navigator.vibrate && !IOS) navigator.vibrate(kind === 'success' ? [12, 50, 18] : kind === 'heavy' ? 24 : 9);
     } catch (e) {}
   };
@@ -206,13 +217,25 @@
   function editing() { var a = document.activeElement; return !!(a && (a.isContentEditable || (a.matches && a.matches('textarea, select, input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]):not([type=submit]):not([type=range])')))); }
   (function () {
     var vv = window.visualViewport, base = window.innerHeight;
-    function set(kb) { var d = document.getElementById('device'); if (!d) return; var on = kb > 0; if (d.classList.contains('kbd') !== on) d.classList.toggle('kbd', on); d.style.setProperty('--kb', on ? kb + 'px' : '0px'); }
+    /* While the keyboard is up, pin the app to the visible area (visualViewport top and height).
+       iOS also pans the visual viewport (offsetTop) to reveal the field; the old code only padded the sheet by the
+       keyboard height, so the pan and the padding added up and pushed the sheet off screen while typing. */
+    function set(kb) {
+      var d = document.getElementById('device'); if (!d) return; var on = kb > 0;
+      if (d.classList.contains('kbd') !== on) d.classList.toggle('kbd', on);
+      d.style.setProperty('--kb', on ? kb + 'px' : '0px');
+      var fixed = on && getComputedStyle(d).position === 'fixed';
+      var top = fixed ? Math.max(0, Math.round(vv.offsetTop)) + 'px' : '', hh = fixed ? Math.round(vv.height) + 'px' : '';
+      if (d.style.top !== top) d.style.top = top;
+      if (d.style.height !== hh) { d.style.height = hh; d.style.bottom = fixed ? 'auto' : ''; }
+      if (on) try { window.dispatchEvent(new CustomEvent('folio:kb')); } catch (e) {}
+    }
     function upd() {
       if (!vv) return;
       if (!editing() || (vv.scale && Math.abs(vv.scale - 1) > .01)) { set(0); if (!editing()) base = Math.max(window.innerHeight, vv.height); return; }
       var kb = Math.round(Math.max(base, window.innerHeight) - vv.height); set(kb > 120 ? kb : 0);
     }
-    if (vv) { vv.addEventListener('resize', upd); }
+    if (vv) { vv.addEventListener('resize', upd); vv.addEventListener('scroll', upd); }
     window.addEventListener('resize', function () { if (!editing()) base = window.innerHeight; upd(); });
     document.addEventListener('focusin', function () { setTimeout(upd, 60); setTimeout(upd, 400); });
     document.addEventListener('focusout', function () {

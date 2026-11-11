@@ -32,10 +32,15 @@
   <link rel="stylesheet" href="../shared/css/tokens.css">
   <link rel="stylesheet" href="../shared/css/card.css">
   <link rel="stylesheet" href="ios.css">
+  <link rel="stylesheet" href="fun-ui.css">
+  <link rel="stylesheet" href="intro.css">
+  <script src="intro.js"></script>
+  <link rel="stylesheet" href="fun-home.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <div class="ios-device" id="device">
+    <script>window.FolioIntro && FolioIntro.boot();</script>
     <div class="ios-statusmock" aria-hidden="true"><span>9:41</span><span class="ios-island"></span><span class="ios-sicons">
       <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.500" width="3" height="9.500" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
       <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"><path d="M1.500 4.200a10 10 0 0 1 14 0M4 6.800a6.500 6.500 0 0 1 9 0"/><circle cx="8.500" cy="10" r="1.200" fill="currentColor" stroke="none"/></svg>
@@ -50,5 +55,7 @@
   <script src="../shared/js/ui.js"></script>
   <script src="native.js"></script>
   <script src="app.js"></script>
+  <script defer src="fun-ui.js"></script>
+  <script defer src="fun-home.js"></script>
 </body>
 </html>
