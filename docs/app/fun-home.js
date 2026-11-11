@@ -227,7 +227,7 @@
     float.setAttribute('role', 'button'); float.tabIndex = 0;
     float.innerHTML = '<div class="fa-tilt"><div class="fa-flip"><div class="fa-face fa-ff"></div><div class="fa-face fa-fb"></div></div><span class="fa-shine"></span></div>';
     var R = { float: float, tilt: float.querySelector('.fa-tilt'), flip: float.querySelector('.fa-flip'), ff: float.querySelector('.fa-ff'), fb: float.querySelector('.fa-fb') };
-    var start = null, moved = 0;
+    var start = null, moved = 0, acc = 0, lastP = null, atEdge = false, lastM = 0;
     function setTilt(e) {
       var r = R.tilt.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
       x = Math.max(0, Math.min(1, x)); y = Math.max(0, Math.min(1, y));
@@ -235,12 +235,20 @@
       R.tilt.style.setProperty('--rx', ((.5 - y) * 16 * k).toFixed(2) + 'deg');
       R.tilt.style.setProperty('--ry', ((x - .5) * 20 * k).toFixed(2) + 'deg');
       R.tilt.style.setProperty('--mx', (x * 100).toFixed(1) + '%'); R.tilt.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+      return Math.max(Math.abs(.5 - y) * 2, Math.abs(x - .5) * 2);
     }
-    function release() { start = null; R.tilt.classList.remove('live'); R.tilt.style.setProperty('--rx', '0deg'); R.tilt.style.setProperty('--ry', '0deg'); }
-    float.addEventListener('pointerdown', function (e) { start = { x: e.clientX, y: e.clientY }; moved = 0; R.tilt.classList.add('live'); setTilt(e); });
+    function texture(e, m) {
+      /* Haptic texture while you drag: a ratchet tick every few pixels (finer and grittier on the back), a firm knock at the tilt limit */
+      if (e.pointerType === 'mouse' || reduced()) return;
+      if (lastP) { acc += Math.hypot(e.clientX - lastP.x, e.clientY - lastP.y); var step = flipped ? 7 : 12; while (acc >= step) { acc -= step; haptic('selection'); } }
+      lastP = { x: e.clientX, y: e.clientY };
+      if (m > .92 && !atEdge) { atEdge = true; haptic('medium'); } else if (m < .7) atEdge = false;
+    }
+    function release() { if (start && lastM > .4 && !reduced()) haptic('light'); start = null; lastP = null; acc = 0; atEdge = false; lastM = 0; R.tilt.classList.remove('live'); R.tilt.style.setProperty('--rx', '0deg'); R.tilt.style.setProperty('--ry', '0deg'); }
+    float.addEventListener('pointerdown', function (e) { start = { x: e.clientX, y: e.clientY }; moved = 0; acc = 0; lastP = { x: e.clientX, y: e.clientY }; atEdge = false; R.tilt.classList.add('live'); lastM = setTilt(e); });
     float.addEventListener('pointermove', function (e) {
       if (start) moved = Math.max(moved, Math.abs(e.clientX - start.x) + Math.abs(e.clientY - start.y));
-      if (start || e.pointerType === 'mouse') { R.tilt.classList.add('live'); setTilt(e); }
+      if (start || e.pointerType === 'mouse') { R.tilt.classList.add('live'); lastM = setTilt(e); if (start) texture(e, lastM); }
     });
     float.addEventListener('pointerup', release); float.addEventListener('pointercancel', release);
     float.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') release(); });
@@ -249,7 +257,8 @@
     return R;
   }
   function flipCard() {
-    if (!cardRig) return; flipped = !flipped; cardRig.flip.classList.toggle('on', flipped); setFlipLabel(); haptic('light');
+    if (!cardRig) return; flipped = !flipped; cardRig.flip.classList.toggle('on', flipped); setFlipLabel(); haptic('medium');
+    if (!reduced()) { setTimeout(function () { haptic('selection'); }, 230); setTimeout(function () { haptic('light'); }, 520); setTimeout(function () { haptic('success'); }, 760); }
     if (!reduced()) { var t = cardRig.tilt; t.classList.remove('fa-boing'); void t.offsetWidth; t.classList.add('fa-boing'); setTimeout(function () { t.classList.remove('fa-boing'); }, 700); }
   }
   window.addEventListener('hashchange', function () { flipped = false; });
