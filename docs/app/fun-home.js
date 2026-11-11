@@ -22,6 +22,7 @@
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function page() { return document.getElementById('main'); }
+  function inView(el) { var r = el.getBoundingClientRect(); return r.bottom > 60 && r.top < innerHeight - 90; }
   function overlayOpen() { var h = document.querySelector('.ios-lvhost'); return !!(h && h.firstElementChild); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function hash(s) { var x = 2166136261; for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
@@ -125,7 +126,7 @@
   function checkLevel(pg, p) {
     var key = 'folio.fun.lvl.' + p.id, prev = lsGet(key, null), st = stairsOf(pg);
     if (prev === null) { lsSet(key, p.level); return; }
-    if (prev === p.level || !st || overlayOpen() || hopping) return;
+    if (prev === p.level || !st || overlayOpen() || hopping || !inView(st)) return;
     lsSet(key, p.level);
     var wait = pg.classList.contains('anim') ? 1000 : 120;
     hopping = true;
@@ -184,12 +185,19 @@
     haptic('light');
   }
   document.addEventListener('click', function (e) {
+    if (!e.isTrusted || (e.target.closest && e.target.closest('[data-haptic]'))) return; /* the haptic helper's synthetic clicks */
     var step = e.target.closest && e.target.closest('#main .ios-stairs > i, #main .ios-big-stairs > li');
     var same = tip && step && tip.__step === step; closeTip();
     if (step && !same) openTip(step);
   });
   window.addEventListener('hashchange', closeTip);
-  document.addEventListener('scroll', function () { if (tip) closeTip(); }, true);
+  var scrollQ = 0;
+  document.addEventListener('scroll', function () {
+    if (tip) closeTip();
+    if (scrollQ) return; scrollQ = setTimeout(function () { scrollQ = 0; var pg = page(), p = me(); if (!pg || !p) return;
+      if (pg.dataset.path === '/' || pg.dataset.path === '/levels') checkLevel(pg, p);
+      if (pg.dataset.path === '/levels' && !slapping && stkState(p).fresh.length) { slapping = true; slapNext(p.id); } }, 200);
+  }, true);
 
   /* =====================================================================
      3. Folio card: tilt with a moving shine, tap to flip, gentle idle float
@@ -384,11 +392,11 @@
     if (!p || !pg || !sheetEl || !pg.contains(sheetEl) || overlayOpen()) { slapping = false; return; }
     var ss = stkState(p); if (!ss.fresh.length) { slapping = false; refreshSheet(); return; }
     var sid = ss.fresh[0], d = STICKERS.filter(function (x) { return x.id === sid; })[0], el = sheetEl.querySelector('[data-sid="' + sid + '"]');
+    if (!toasted[p.id + sid]) { toasted[p.id + sid] = 1; toast('New sticker: ' + d.name, true); }
+    if (el && !inView(el)) { slapping = false; return; }
     markSeen(p, sid);
-    var msg = 'New sticker: ' + d.name;
-    if (!toasted[p.id + sid]) { toasted[p.id + sid] = 1; toast(msg, true); }
     if (!el) { slapping = false; refreshSheet(); return; }
-    var r = el.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) { try { el.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' }); } catch (e) {} }
+    if (!inView(el)) { slapping = false; return; } /* never yank the page: it slaps when you scroll to it */
     el.classList.remove('pend');
     var finish = function () { slapping = false; refreshSheet(); if (stkState(p).fresh.length) { slapping = true; setTimeout(function () { slapNext(id); }, 350); } };
     if (reduced()) { animate(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); haptic('success'); setTimeout(finish, 320); return; }
@@ -416,7 +424,7 @@
     ss.fresh.forEach(function (sid) { if (toasted[p.id + sid]) return; toasted[p.id + sid] = 1; var d = STICKERS.filter(function (x) { return x.id === sid; })[0]; toast('New sticker: ' + d.name + '. Find it in Levels.', true); });
   }
   document.addEventListener('click', function (e) {
-    var b = e.target.closest && e.target.closest('.fa-st'); if (!b) return;
+    var b = e.target.closest && e.target.closest('.fa-st'); if (!b || !e.isTrusted) return;
     var d = STICKERS.filter(function (x) { return x.id === b.dataset.sid; })[0], cap = sheetEl && sheetEl.querySelector('.fa-stk-cap'); if (!d) return;
     var got = b.classList.contains('got');
     if (cap) cap.textContent = got ? d.name + '. ' + (d.lv ? (d.lv === 10 ? 'Earned when you moved to adult care.' : 'Earned for passing Level ' + d.lv + '.') : 'Earned for doing it on your own.') : 'Locked. ' + d.hint + ' to earn this one.';

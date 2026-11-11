@@ -191,7 +191,11 @@
       all(c.anims[c.anims.length - 1]);
     }
     c.later(function () {
-      try { var n = window.Folio && window.Folio.native; if (n && typeof n.haptic === 'function') n.haptic('light'); } catch (e) {}
+      try {
+        /* Only after a real tap (a replay): browsers refuse vibration before any user gesture and log it */
+        var ua = navigator.userActivation, n = window.Folio && window.Folio.native;
+        if ((!ua || ua.hasBeenActive) && n && typeof n.haptic === 'function') n.haptic('light');
+      } catch (e) {}
     }, burst);
 
     /* 4. The wordmark: decide on the font just before it is needed */
