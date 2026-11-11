@@ -22,7 +22,7 @@
         <aside class="side">
           <a class="brand" href="#/" aria-label="Folio home">${F.UI.wordmark()}</a>
           <div class="clinic"><strong>${st.clinic.org}</strong><span>${st.clinic.team}</span></div>
-          <nav class="nav" aria-label="Main">${nav}</nav>
+          <nav class="nav" aria-label="Main"><span class="nav-bubble" aria-hidden="true"></span>${nav}</nav>
           <div class="side-foot">
             <div class="me">${F.UI.avatar(me, 40)}<div><strong>${me.name}</strong><span>${me.role}</span></div></div>
             <div class="demo-links"><a href="app/" target="_blank" rel="noopener">Patient app ${ic('ext', 13)}</a><a href="card/?demo=1" target="_blank" rel="noopener">Adult view demo ${ic('ext', 13)}</a></div>
@@ -38,7 +38,7 @@
     ['/cards', F.Pages.cards], ['/levels', F.Pages.levels], ['/access', F.Pages.access],
     ['/insights', F.Pages.insights], ['/resources', F.Pages.resources], ['/team', F.Pages.team], ['/settings', F.Pages.settings]
   ];
-  F.UI.createApp({ name: 'Folio Portal', routes: routes, shell: shell,
+  F.UI.createApp({ name: 'Folio Portal', routes: routes, shell: shell, after: function (r, l, n) { if (F.fx) F.fx.after(r, l, n); },
     notFound: function () { return { title: 'Not found', html: h`<h1>That page is not in the binder</h1><p><a href="#/">Back to Home</a></p>` }; } });
 
   F.actions.resetDemo = function () {

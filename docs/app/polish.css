@@ -1,0 +1,82 @@
+/* Folio polish layer: real-switch haptic overlays, app-like chrome, offline pill, About Folio, welcome tour. */
+
+/* ---------- Real-switch overlay (see haptic-tap.js) ---------- */
+.hx-host { position: relative; }
+.hx-ov { position: absolute !important; inset: 0; width: 100% !important; height: 100% !important; min-width: 0; min-height: 0; margin: 0 !important; padding: 0; border: 0;
+  opacity: .011; z-index: 6; -webkit-appearance: auto; appearance: auto; cursor: inherit; border-radius: inherit; background: none; box-shadow: none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; transform: none !important; animation: none !important; }
+.hx-ov:focus, .hx-ov:focus-visible { outline: none !important; box-shadow: none !important; }
+/* Pressed look still follows the finger: the overlay is inside the control, so :active applies to the control */
+
+/* ---------- App, not a web page ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overscroll-behavior: none; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, select, [contenteditable], .ios-read, .ios-read *, .ios-sticky p, .ios-story textarea, .ios-qcard .q, .hx-lab-log { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+img, svg, a { -webkit-user-drag: none; user-drag: none; }
+img { pointer-events: auto; }
+a, button, [role="button"], [data-action], label { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.ios-sheet, .ios-scroll { scrollbar-width: none; }
+.ios-sheet::-webkit-scrollbar { display: none; }
+
+/* ---------- Offline pill ---------- */
+.px-offline { position: absolute; z-index: 40; left: 50%; top: calc(var(--st, 0px) + 6px); transform: translate(-50%, -8px); opacity: 0; pointer-events: none;
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 8px; border-radius: 999px; font: 600 .75rem/1.2 var(--font-ui); color: var(--ink);
+  background: color-mix(in srgb, var(--paper, #F7F0E2) 82%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+  box-shadow: 0 0 0 .5px var(--line2, rgba(31,47,22,.2)), 0 4px 12px -6px rgba(0,0,0,.35); transition: opacity .25s, transform .3s cubic-bezier(.2,.9,.25,1); }
+.px-offline.on { opacity: 1; transform: translate(-50%, 0); }
+.px-offline i { width: 7px; height: 7px; border-radius: 50%; background: #B8860B; }
+.kbd .px-offline { display: none; }
+
+/* ---------- About Folio sheet ---------- */
+.px-about { display: flex; flex-direction: column; gap: 20px; padding-bottom: 8px; }
+.px-about-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 8px 0 4px; }
+.px-about-hero img { width: 76px; height: 76px; border-radius: 18px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 8px 18px -10px rgba(0,0,0,.5); }
+.px-about-hero h3 { font: 600 1.375rem/1.2 var(--font-display, Georgia, serif); margin: 6px 0 0; }
+.px-about-hero p { margin: 0; color: var(--ink2); font-size: .875rem; }
+.px-about .ios-row b { font-weight: 500; }
+.px-about .ios-row .px-val { margin-left: auto; color: var(--ink2); font-size: .9375rem; white-space: nowrap; }
+.px-about .ios-gf, .px-about .px-note { margin: 6px 16px 0; color: var(--ink2); font-size: .8125rem; line-height: 1.4; }
+.px-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; font: 600 .6875rem/1.4 var(--font-ui); background: rgba(206,59,59,.12); color: #A12D2D; vertical-align: 1px; }
+
+/* ---------- Haptics lab ---------- */
+.hx-lab { display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
+.hx-lab .ios-row { gap: 12px; }
+.hx-lab .hx-k { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--tint); color: var(--tint-ink); font: 700 .875rem/1 var(--font-ui); }
+.hx-lab-big { min-height: 64px !important; font-size: 1.125rem !important; }
+.hx-lab-log { margin: 0; padding: 10px 12px; min-height: 84px; max-height: 150px; overflow: auto; border-radius: 12px; background: rgba(31,47,22,.06); font: 500 .75rem/1.45 ui-monospace, Menlo, monospace; white-space: pre-wrap; color: var(--ink); }
+.hx-lab-dev { font: 500 .75rem/1.45 ui-monospace, Menlo, monospace; color: var(--ink2); margin: 0 4px; }
+.hx-lab .hx-check { display: flex; align-items: center; gap: 12px; }
+.hx-lab .hx-check input { width: 22px; height: 22px; accent-color: var(--tint); flex: none; }
+
+/* ---------- Welcome tour ---------- */
+.px-tour { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; background-color: var(--paper, #F7F0E2); background-image: var(--grain);
+  padding: calc(var(--st, 0px) + 12px) 0 calc(var(--sb, 0px) + 20px); animation: pxIn .35s ease both; }
+.px-tour.out { animation: pxOut .3s ease both; }
+@keyframes pxIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pxOut { to { opacity: 0; transform: scale(1.02); } }
+.px-tour-top { display: flex; justify-content: flex-end; padding: 0 16px; min-height: 44px; }
+.px-tour-track { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.px-tour-track::-webkit-scrollbar { display: none; }
+.px-slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 0 32px; text-align: center; }
+.px-slide h2 { margin: 0; font: 600 clamp(1.75rem, 7vw, 2.125rem)/1.15 var(--font-display, Georgia, serif); color: var(--ink); }
+.px-slide h2 em { font-style: italic; }
+.px-slide p { margin: 0; max-width: 32ch; font-size: 1.0625rem; line-height: 1.45; color: var(--ink2); }
+.px-art { width: min(64vw, 240px); aspect-ratio: 1; display: grid; place-items: center; }
+.px-art svg { width: 100%; height: 100%; overflow: visible; }
+.px-dots { display: flex; justify-content: center; gap: 8px; padding: 14px 0 18px; }
+.px-dots i { width: 8px; height: 8px; border-radius: 4px; background: var(--ink); opacity: .22; transition: width .3s cubic-bezier(.2,.9,.25,1), opacity .3s; }
+.px-dots i.on { width: 22px; opacity: .9; }
+.px-tour-cta { padding: 0 24px; }
+.px-tour .px-art .bob { animation: pxBob 3.2s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes pxBob { 50% { transform: translateY(-6px) rotate(-2deg); } }
+@media (prefers-reduced-motion: reduce) { .px-tour, .px-tour.out, .px-tour .px-art .bob { animation: none !important; } }
+html[data-motion="reduce"] .px-tour, html[data-motion="reduce"] .px-tour .px-art .bob { animation: none !important; }
+
+/* ---------- Landscape on phones: polite hint instead of a broken layout ---------- */
+.px-rotate { display: none; }
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  .px-rotate { display: flex; position: fixed; inset: 0; z-index: 200; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px;
+    background-color: var(--paper, #F7F0E2); background-image: var(--grain); color: var(--ink); text-align: center; font: 500 1.0625rem/1.4 var(--font-ui); }
+  .px-rotate b { font: 600 1.375rem/1.2 var(--font-display, Georgia, serif); }
+  .px-rotate svg { width: 56px; height: 56px; }
+}

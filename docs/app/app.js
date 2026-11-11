@@ -298,7 +298,9 @@
   F.actions.editTeam = personForm('careTeam', 'care team member', 'role');
   F.actions.a11yApp = function (el) { S.a11y.set(el.dataset.k, el.checked ? el.dataset.on : el.dataset.off); };
   F.actions.install = function () { if (deferred) { deferred.prompt(); deferred = null; render(false); } };
-  F.actions.asPatient = function (el) { saveWantNow(); try { localStorage.setItem(PKEY, el.value); } catch (e) {} cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {}; render('swap'); U.toast('Now viewing as ' + sel.full(me())); };
+  F.actions.asPatient = function (el) { saveWantNow(); try { localStorage.setItem(PKEY, el.value); } catch (e) {} cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {}; tabMem['/about'] = '/about';
+    /* Patch in place: keep the scroll position and focus, and do not replay entrance animations */
+    var keep = N.scrollSnapshot(); render(false); keep(); el.blur && el.blur(); U.toast('Now viewing as ' + sel.full(me())); };
   F.actions.focusStory = function () { var t = document.getElementById('story'); if (t) { t.scrollIntoView({ block: 'center', behavior: N.reduced() ? 'auto' : 'smooth' }); setTimeout(function () { t.focus({ preventScroll: true }); }, 350); } };
 
   function ring(pct) {
@@ -361,6 +363,7 @@
         ${standalone ? '' : h`<section class="ios-sec" aria-labelledby="i-h"><h2 class="ios-gh" id="i-h">${tile(ic('plus', 18), 3, true)}<span>Add Folio to your home screen</span></h2><div class="ios-list"><div class="ios-row has-tile">${tile(shareSvg, 1)}<span class="ios-rt"><b>${N.ios ? 'In Safari, tap Share, then Add to Home Screen' : 'Install it like an app'}</b><small>${N.ios ? 'On iOS 26, Share is in the ··· menu. ' : ''}Folio then opens full screen and works offline.</small></span></div>${deferred ? h`<button type="button" class="ios-row ios-addrow" data-action="install"><b>Install Folio</b></button>` : ''}</div></section>`}
         <section class="ios-sec" aria-labelledby="d-h"><h2 class="ios-gh" id="d-h"><span>Prototype</span></h2>
           <div class="ios-list"><label class="ios-row ios-selrow"><span class="ios-rt"><b>View the app as</b></span><select class="ios-select" data-change="asPatient" aria-label="View the app as">${st.patients.map(function (x) { return h`<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${sel.full(x)} · L${x.level}</option>`; })}</select>${raw('<svg class="ios-chev" width="12" height="18" viewBox="0 0 12 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7l4-4 4 4M2 11l4 4 4-4"/></svg>')}</label></div>
+          <div class="ios-list" style="margin-top:12px"><button type="button" class="ios-row" data-action="hapticLab"><span class="ios-rt"><b>Haptics test</b><small>Check which taps make your phone tick</small></span>${CHEV}</button></div>
           <p class="ios-gf">Demo only. Switch patient to try other levels.</p></section>
       </div>` };
   }
@@ -484,15 +487,25 @@
     }, { passive: true });
     function end() {
       if (y0 == null) return; var v = dy / Math.max(1, Date.now() - t0); y0 = null; if (!active) return; active = false;
+      if ((dy > 110 || v > .6) && rec.guard && rec.guard()) { snapBack(); askDiscard(rec); return; }
       if (dy > 110 || v > .6) { rec.dragged = true; if (scrim) { scrim.style.transition = 'opacity .24s'; scrim.style.opacity = '0'; } closeSheet(rec); }
-      else { sh.style.transition = 'transform .3s cubic-bezier(.2,.9,.25,1)'; sh.style.transform = ''; if (scrim) { scrim.style.transition = 'opacity .3s'; scrim.style.opacity = ''; } setTimeout(function () { sh.style.transition = ''; if (scrim) scrim.style.transition = ''; }, 320); }
+      else snapBack();
     }
+    function snapBack() { sh.style.transition = 'transform .3s cubic-bezier(.2,.9,.25,1)'; sh.style.transform = ''; if (scrim) { scrim.style.transition = 'opacity .3s'; scrim.style.opacity = ''; } setTimeout(function () { sh.style.transition = ''; if (scrim) scrim.style.transition = ''; }, 320); }
     sh.addEventListener('touchend', end); sh.addEventListener('touchcancel', end);
   }
   document.addEventListener('click', function (e) {
     var c = e.target.closest('[data-close]'); if (!c) return; var w = c.closest('.ios-sheet-wrap'); if (!w) return;
-    closeSheet(sheets.filter(function (r) { return r.wrap === w; })[0]);
+    requestClose(sheets.filter(function (r) { return r.wrap === w; })[0]);
   });
+  /* A form with unsaved typing asks before it closes (backdrop tap, swipe down, Cancel, Escape). Clean forms close freely. */
+  function requestClose(rec) { if (!rec || rec.closed) return; if (rec.guard && rec.guard()) askDiscard(rec); else closeSheet(rec); }
+  function askDiscard(rec) {
+    if (rec.asking) return; rec.asking = true;
+    var a = document.activeElement; if (a && a.blur && rec.sheet.contains(a)) a.blur();
+    U.confirmModal({ title: 'Discard changes?', body: 'What you typed will not be saved.', cta: 'Discard Changes', cancel: 'Keep Editing', danger: true,
+      onOk: function () { rec.asking = false; rec.guard = null; closeSheet(rec); }, onCancel: function () { rec.asking = false; } });
+  }
   document.addEventListener('keydown', function (e) {
     var top = topSheet();
     if (!top) {
@@ -500,7 +513,7 @@
       if (e.key === 'Tab' && lvHost && lvHost.firstChild) trap(e, lvHost);
       return;
     }
-    if (e.key === 'Escape') { if (N.contextOpen()) return; e.preventDefault(); closeSheet(top); return; }
+    if (e.key === 'Escape') { if (N.contextOpen()) return; e.preventDefault(); requestClose(top); return; }
     if (e.key === 'Tab') trap(e, top.sheet);
   });
   function trap(e, box) {
@@ -527,6 +540,8 @@
       <div class="ios-list">${o.fields.map(fieldRow)}</div>
       ${o.destructive ? h`<div class="ios-list"><button type="button" class="ios-row destructive" data-destroy style="justify-content:center"><b>${o.destructive.label}</b></button></div>` : ''}</form>`.s, 'form', o.title);
     var form = rec.sheet.querySelector('form');
+    function snap() { return [].map.call(form.elements, function (el) { return el.name ? el.name + '=' + el.value : ''; }).join('\n'); }
+    var initial = snap(); rec.guard = function () { return snap() !== initial; };
     function setErr(name, msg) {
       var f = form.elements[name], e = form.querySelector('#e_' + name); if (!f || !e) return;
       e.textContent = msg || ''; if (msg) f.setAttribute('aria-invalid', 'true'); else f.removeAttribute('aria-invalid');
@@ -549,9 +564,10 @@
     return rec.sheet;
   };
   U.confirmModal = function (o) {
-    var rec = mountSheet(h`<div class="ios-actionsheet"><div class="ios-list"><div class="ios-as-msg"><strong>${o.title}</strong>${o.body ? h`<span>${o.body}</span>` : ''}</div><button type="button" class="ios-as-btn ${o.danger ? 'danger' : ''}" data-ok>${o.cta || 'Confirm'}</button></div><div class="ios-list"><button type="button" class="ios-as-btn bold" data-close>Cancel</button></div></div>`.s, 'action', o.title);
+    var rec = mountSheet(h`<div class="ios-actionsheet"><div class="ios-list"><div class="ios-as-msg"><strong>${o.title}</strong>${o.body ? h`<span>${o.body}</span>` : ''}</div><button type="button" class="ios-as-btn ${o.danger ? 'danger' : ''}" data-ok>${o.cta || 'Confirm'}</button></div><div class="ios-list"><button type="button" class="ios-as-btn bold" data-close>${o.cancel || 'Cancel'}</button></div></div>`.s, 'action', o.title);
+    if (o.onCancel) rec.onClose = function () { if (!rec.ok) o.onCancel(); };
     var ok = rec.sheet.querySelector('[data-ok]');
-    ok.addEventListener('click', function () { N.haptic(o.danger ? 'success' : 'light'); closeSheet(rec); o.onOk(); });
+    ok.addEventListener('click', function () { rec.ok = true; N.haptic(o.danger ? 'success' : 'light'); closeSheet(rec); o.onOk(); });
     /* Action sheets put focus on Cancel (safe default) so Enter never deletes by accident */
     var cancel = rec.sheet.querySelector('[data-close]'); if (cancel) cancel.focus({ preventScroll: true });
   };
@@ -574,7 +590,14 @@
   }
   function morphNode(a, b) {
     if (a.nodeType !== 1) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+    /* Live UI state the markup does not know about: a swiped-open (or mid-drag) row keeps its class and offset */
+    var cl = a.classList, swOpen = cl.contains('ios-swipe') && cl.contains('open'),
+      swRow = cl.contains('ios-row') && a.parentNode && a.parentNode.classList && a.parentNode.classList.contains('ios-swipe') && a.style.transform ? a.getAttribute('style') : null,
+      swTab = swOpen ? [].map.call(a.querySelectorAll('.ios-swipe-actions button'), function (x) { return x.tabIndex; }) : null;
     morphAttrs(a, b);
+    if (swOpen) a.classList.add('open');
+    if (swRow != null) a.setAttribute('style', swRow);
+    if (swTab) setTimeout(function () { [].forEach.call(a.querySelectorAll('.ios-swipe-actions button'), function (x, i) { if (swTab[i] != null) x.tabIndex = swTab[i]; }); }, 0);
     var focused = a === document.activeElement;
     if (a.nodeName === 'TEXTAREA') { if (!focused && a.value !== b.textContent) { a.value = b.textContent; } return; }
     if (a.nodeName === 'INPUT') {
