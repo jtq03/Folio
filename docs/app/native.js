@@ -225,17 +225,26 @@
       if (d.classList.contains('kbd') !== on) d.classList.toggle('kbd', on);
       d.style.setProperty('--kb', on ? kb + 'px' : '0px');
       var fixed = on && getComputedStyle(d).position === 'fixed';
-      var top = fixed ? Math.max(0, Math.round(vv.offsetTop)) + 'px' : '', hh = fixed ? Math.round(vv.height) + 'px' : '';
-      if (d.style.top !== top) d.style.top = top;
-      if (d.style.height !== hh) { d.style.height = hh; d.style.bottom = fixed ? 'auto' : ''; }
-      if (on) try { window.dispatchEvent(new CustomEvent('folio:kb')); } catch (e) {}
+      /* iOS 26+ can report a negative or overshooting offsetTop mid-animation (rubber band): clamp it to the layout viewport */
+      var vh = fixed ? Math.round(vv.height) : 0, ot = fixed ? Math.round(Math.min(Math.max(0, vv.offsetTop || 0), Math.max(0, Math.max(base, window.innerHeight) - vh))) : 0;
+      var top = fixed ? ot + 'px' : '', hh = fixed ? vh + 'px' : '', changed = false;
+      if (d.style.top !== top) { d.style.top = top; changed = true; }
+      if (d.style.height !== hh) { d.style.height = hh; d.style.bottom = fixed ? 'auto' : ''; changed = true; }
+      /* Only tell listeners (field reveal) when the visible area really moved, not on every scroll event */
+      if (on && (changed || kb !== lastKb)) try { window.dispatchEvent(new CustomEvent('folio:kb')); } catch (e) {}
+      lastKb = kb;
     }
+    var lastKb = 0, raf = 0;
+    function updSoon() { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; upd(); }); }
     function upd() {
       if (!vv) return;
       if (!editing() || (vv.scale && Math.abs(vv.scale - 1) > .01)) { set(0); if (!editing()) base = Math.max(window.innerHeight, vv.height); return; }
       var kb = Math.round(Math.max(base, window.innerHeight) - vv.height); set(kb > 120 ? kb : 0);
     }
-    if (vv) { vv.addEventListener('resize', upd); vv.addEventListener('scroll', upd); }
+    if (vv) { vv.addEventListener('resize', updSoon); vv.addEventListener('scroll', updSoon); }
+    /* Rotation and returning to the app re-measure the full height once the keyboard is gone */
+    function rebase() { setTimeout(function () { if (!editing()) { base = window.innerHeight; set(0); } else upd(); }, 350); }
+    window.addEventListener('orientationchange', rebase); window.addEventListener('pageshow', rebase);
     window.addEventListener('resize', function () { if (!editing()) base = window.innerHeight; upd(); });
     document.addEventListener('focusin', function () { setTimeout(upd, 60); setTimeout(upd, 400); });
     document.addEventListener('focusout', function () {
@@ -244,6 +253,8 @@
         /* iOS can leave the page scrolled after the keyboard closes, which shifts fixed bars. */
         if (window.scrollY || document.documentElement.scrollTop) window.scrollTo(0, 0);
       }, 30);
+      /* The keyboard animates out for about 300ms and iOS may pan once more at the end: check again after it */
+      setTimeout(function () { if (editing()) return; set(0); if (window.scrollY || document.documentElement.scrollTop) window.scrollTo(0, 0); }, 420);
     });
     N.kbUpdate = upd;
   })();
