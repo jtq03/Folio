@@ -15,42 +15,82 @@
   };
 
   /* ---------- Haptics ----------
-     iOS Safari has no vibrate. A hidden <input switch> toggled by a label click fires the Taptic Engine on iOS 18+.
-     The synthetic clicks are untrusted, so the app's click handlers ignore them (see isTrusted checks). */
+     iOS has no navigator.vibrate. The web route to the Taptic Engine is <input type=checkbox switch>: Safari ticks when it toggles.
+     - A real tap on a native switch (or its label) always ticks. That is why visible toggles are real switches (html.nsw).
+     - A programmatic label.click() on a hidden switch ticked on iOS 17.4 to 26.4; Apple blocked it in iOS 26.5.
+     - Android and others use navigator.vibrate patterns.
+     Feature-detected (never by user agent alone), never throws, never moves focus or scroll. Test sheet: haptics.js. */
+  var H = N.haptics = {};
+  var swSupport = (function () {
+    try {
+      if ('switch' in HTMLInputElement.prototype) return 'switch attribute';
+      if (window.CSS && CSS.supports && (CSS.supports('selector(::thumb)') || CSS.supports('-webkit-appearance', 'switch'))) return 'css';
+    } catch (e) {}
+    return '';
+  })();
+  var uaM = /OS (\d+)[_.](\d+)/.exec(navigator.userAgent), iosVer = uaM ? +uaM[1] + +uaM[2] / 100 : 0;
+  var touch = (navigator.maxTouchPoints || 0) > 0;
+  H.switchSupport = swSupport; H.iosVersion = uaM ? uaM[1] + '.' + uaM[2] : '';
+  H.canSwitch = touch && (!!swSupport || (IOS && iosVer >= 17.04));
+  H.vibrate = typeof navigator.vibrate === 'function';
+  /* Real switches look and act native wherever the switch control exists */
+  try { if (swSupport) document.documentElement.classList.add('nsw'); } catch (e) {}
+  var lastGesture = 0, lastPulse = 0;
+  ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(function (n) { window.addEventListener(n, function (e) { if (e.isTrusted) lastGesture = Date.now(); }, { capture: true, passive: true }); });
+  var PAT = {
+    light: { p: [0], v: 8 }, selection: { p: [0], v: 5 }, medium: { p: [0], v: 14 }, heavy: { p: [0, 45, 90], v: 24 },
+    success: { p: [0, 70], v: [10, 60, 16] }, warning: { p: [0, 140], v: [18, 90, 18] }, error: { p: [0, 80, 160], v: [20, 50, 20, 50, 28] }
+  };
   var hapLabel = null, hapInput = null;
   function hapInit() {
-    if (hapLabel || !document.body) return;
+    if (hapLabel && hapLabel.isConnected) return true;
+    if (!document.body) return false;
     try {
-      hapLabel = document.createElement('label'); hapLabel.setAttribute('aria-hidden', 'true'); hapLabel.dataset.haptic = '';
-      hapLabel.style.cssText = 'position:fixed;left:-60px;top:-60px;width:40px;height:40px;opacity:.01;pointer-events:none;overflow:hidden';
-      /* No tabindex: WebKit only lets a label click focus a form control that has an explicit tabindex.
-         Stealing focus here, then handing it back to the screen heading, is what jumped pages to the top. */
+      hapLabel = document.createElement('label'); hapLabel.setAttribute('aria-hidden', 'true'); hapLabel.setAttribute('data-haptic', '');
+      /* Rendered (not display:none), on screen, 1px, never hit by taps */
+      hapLabel.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:1px;margin:0;padding:0;opacity:.01;pointer-events:none;overflow:hidden;z-index:-1';
+      /* No tabindex, and visibility:hidden: the switch can never take focus, so nothing scrolls */
       hapInput = document.createElement('input'); hapInput.type = 'checkbox'; hapInput.setAttribute('switch', ''); hapInput.setAttribute('aria-hidden', 'true');
+      hapInput.style.cssText = 'position:absolute;left:0;top:0;width:1px;height:1px;margin:0;visibility:hidden';
       hapLabel.appendChild(hapInput); document.body.appendChild(hapLabel);
-      /* Keep the hidden switch's events away from the app's delegated handlers, and out of keyboard focus */
-      hapInput.addEventListener('change', function (e) { e.stopPropagation(); });
-      hapInput.addEventListener('input', function (e) { e.stopPropagation(); });
-      hapInput.addEventListener('focus', function () { hapInput.blur(); });
-    } catch (e) { hapLabel = null; }
+      ['click', 'change', 'input'].forEach(function (n) { hapLabel.addEventListener(n, function (e) { e.stopPropagation(); }); });
+      return true;
+    } catch (e) { hapLabel = null; return false; }
   }
-  N.haptic = function (kind) {
+  /* One programmatic tick. Returns true when the switch toggled (iOS may still mute the tick). */
+  function tick() {
     try {
-      if (reduced() && kind !== 'success') return;
-      hapInit();
-      var tap = function () {
-        try {
-          if (!hapLabel) return; var ae = document.activeElement, keep = N.scrollSnapshot();
-          hapLabel.click();
-          /* If focus moved anyway, put it back without scrolling, then undo any scroll the focus change caused */
-          if (document.activeElement !== ae && ae && ae !== document.body && document.contains(ae) && ae.focus) ae.focus({ preventScroll: true });
-          keep();
-        } catch (e) {}
-      };
-      /* The label trick only does anything on iOS; elsewhere navigator.vibrate is used */
-      if (IOS) { if (kind === 'success') { tap(); setTimeout(tap, 70); } else tap(); }
-      if (navigator.vibrate && !IOS) navigator.vibrate(kind === 'success' ? [12, 50, 18] : kind === 'heavy' ? 24 : 9);
-    } catch (e) {}
+      var t = Date.now(); if (t - lastPulse < 40) return false; lastPulse = t;
+      if (!hapInit()) return false;
+      var ae = document.activeElement, keep = N.scrollSnapshot(), before = hapInput.checked;
+      hapLabel.click();
+      if (document.activeElement !== ae && ae && ae !== document.body && document.contains(ae) && ae.focus) ae.focus({ preventScroll: true });
+      keep(); return hapInput.checked !== before;
+    } catch (e) { return false; }
+  }
+  function userEvent(ev) { return !!(ev && ev.isTrusted && /^(click|pointer|touch|mouse|key|change|input|submit)/.test(ev.type)); }
+  /* play(kind, {force}) -> {route, toggled, note}. force skips the gesture and dedupe rules (test sheet). */
+  H.play = function (kind, o) {
+    o = o || {}; var P = PAT[kind] || PAT.light, ev = window.event, t = Date.now(), user = userEvent(ev), r = { kind: kind, route: 'none', toggled: null, note: '' };
+    try {
+      if (!o.force) {
+        /* Reduce Motion drops decorative haptics only (ones not started by a tap) */
+        if (!user && reduced()) { r.note = 'skipped: reduce motion, decorative'; return r; }
+        /* Not started by a tap and the last tap was over 1s ago: the browser has likely dropped user activation */
+        if (!user && t - lastGesture > 1000) { r.note = 'skipped: no recent tap'; return r; }
+      }
+      var pulses = P.p.slice();
+      /* A real tap on a native switch already ticked: do not add a second one */
+      if (!o.force && user && H.canSwitch && ev.target && ev.target.matches && ev.target.matches('input[type=checkbox][switch]')) pulses.shift();
+      if (H.canSwitch) {
+        r.route = pulses.length ? 'label click' : 'native switch';
+        if (pulses.length) { r.toggled = tick(); pulses.slice(1).forEach(function (d) { setTimeout(tick, d); }); }
+      } else if (H.vibrate) { r.route = 'vibrate'; try { r.toggled = navigator.vibrate(P.v) !== false; } catch (e) { r.toggled = false; } }
+      else r.note = 'no haptic API on this device';
+    } catch (e) { r.note = 'error'; }
+    return r;
   };
+  N.haptic = function (kind, o) { try { return H.play(kind, o).route; } catch (e) { return 'none'; } };
 
   /* ---------- Share ---------- */
   var CANCEL = 'cancel';
