@@ -6,9 +6,35 @@
   var subs = [];
 
   function seed() { return JSON.parse(JSON.stringify(F.SEED)); }
+  /* v2 research update: fill in new fields on saved demo data instead of wiping it, and swap out
+     leftover GI wording (flare plan) that older saved copies still carry. Safe to run more than once. */
+  function migrate(st) {
+    var OLD_TEXT = { 'Practise your flare plan out loud. Bring one soccer question.': 'Practise your low-sugar plan out loud. Bring one question about soccer days.' };
+    var seedP = {}; F.SEED.patients.forEach(function (x) { seedP[x.id] = x; });
+    (st.patients || []).forEach(function (p) {
+      var fromSeed = seedP[p.id];
+      ['meds', 'medsConfirmed', 'supportThisVisit', 'decisionSupport', 'careTasks', 'plant'].forEach(function (k) {
+        if (p[k] === undefined && fromSeed && fromSeed[k] !== undefined) p[k] = JSON.parse(JSON.stringify(fromSeed[k]));
+      });
+      if (F.defaults) F.defaults(p);
+      (p.notes || []).forEach(function (n) {
+        if (OLD_TEXT[n.text]) n.text = OLD_TEXT[n.text];
+        if (fromSeed && n.id === 'n1' && /symptoms down/.test(n.text || '')) { var sn = fromSeed.notes.filter(function (x) { return x.id === 'n1'; })[0]; if (sn) { n.text = sn.text; n.fields = sn.fields; n.draft = true; } }
+      });
+    });
+    if (Array.isArray(st.resources)) {
+      st.resources = st.resources.map(function (r) {
+        var fresh = F.SEED.resources.filter(function (x) { return x.id === r.id; })[0];
+        if (fresh && (r.title === 'Build your flare plan' || r.skill === undefined)) return Object.assign({}, fresh, { published: r.published !== false });
+        return r;
+      });
+      F.SEED.resources.forEach(function (r) { if (!st.resources.some(function (x) { return x.id === r.id; })) st.resources.push(JSON.parse(JSON.stringify(r))); });
+    }
+    return st;
+  }
   function load() {
-    try { var r = localStorage.getItem(KEY); if (r) { var s = JSON.parse(r); if (s && s.v === 2) return s; } } catch (e) {}
-    return seed();
+    try { var r = localStorage.getItem(KEY); if (r) { var s = JSON.parse(r); if (s && s.v === 2) return migrate(s); } } catch (e) {}
+    return migrate(seed());
   }
   /* A failed write (usually storage full) used to vanish silently. Tell the page so it can roll back and explain. */
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch (e) { try { window.dispatchEvent(new CustomEvent('folio:savefail', { detail: { error: e } })); } catch (e2) {} return false; } }
@@ -26,6 +52,11 @@
   function randFolioId() { var s = ''; for (var i = 0; i < 8; i++) s += Math.floor(Math.random() * 10); return s; }
   var today = function () { return new Date().toISOString().slice(0, 10); };
 
+  /* Plant growth events. Nothing is ever removed, so the plant never shrinks. */
+  function grow(p, type, label) {
+    if (!p.plant || !Array.isArray(p.plant.events)) p.plant = { events: [] };
+    p.plant.events.push({ id: uid('g'), type: type, label: label, date: today() });
+  }
   var sel = {
     patient: function (id) { return state.patients.filter(function (p) { return p.id === id; })[0]; },
     byToken: function (t) { return state.patients.filter(function (p) { return p.card && p.card.token && p.card.token === t && p.card.status === 'active'; })[0]; },
@@ -40,11 +71,26 @@
       if (p.level === 10 && sel.ownCount(p) === 5) return 'ready';
       return 'track';
     },
+    /* Medication list is "May be out of date" when never confirmed or confirmed over 90 days ago (TODO open question: threshold) */
+    medsStale: function (p) {
+      if (!p.medsConfirmed || !p.medsConfirmed.date) return true;
+      return (Date.now() - new Date(p.medsConfirmed.date + 'T12:00:00').getTime()) / 864e5 > 90;
+    },
+    /* Leaves since the last sign-off: practice, guides and care tasks feed the plant */
+    leaves: function (p) {
+      var ev = (p.plant && p.plant.events) || [], last = -1;
+      ev.forEach(function (e, i) { if (e.type === 'signOff') last = i; });
+      /* After a sign-off in Folio, count what came after it. For older data with no sign-off event, count from the sign-off date. */
+      if (last >= 0) return ev.slice(last + 1).filter(function (e) { return e.type !== 'signOff'; }).length;
+      var since = p.levelSignoff ? p.levelSignoff.date : '';
+      return ev.filter(function (e) { return e.type !== 'signOff' && (!since || e.date >= since); }).length;
+    },
     fid: function (id) { return String(id).replace(/(\d{4})(\d{4})/, '$1 $2'); },
     full: function (p) { return p.first + ' ' + p.last; },
     notesFor: function (p, audience) {
       var n = p.notes.slice().sort(function (a, b) { return b.date < a.date ? -1 : 1; });
-      return audience === 'adult' ? (p.shareNotes === false ? [] : n.filter(function (x) { return x.shared; })) : n;
+      /* Drafts never reach adult teams (research: classroom testers and the AI pilot flagged unfinished notes) */
+      return audience === 'adult' ? (p.shareNotes === false ? [] : n.filter(function (x) { return x.shared && !x.draft; })) : n;
     }
   };
 
@@ -54,7 +100,7 @@
       return commit(function () {
         var p = sel.patient(pid), skill = F.SKILLS.filter(function (k) { return p.skills[k.id] === 'learning'; })[0];
         if (!skill) return null;
-        p.skills[skill.id] = 'help'; return skill;
+        p.skills[skill.id] = 'help'; grow(p, 'practice', 'You practised ' + skill.name.toLowerCase()); return skill;
       });
     },
     advance: function (pid, o) {
@@ -64,6 +110,7 @@
         else { p.level += 1; F.SKILLS.forEach(function (k) { p.skills[k.id] = 'learning'; }); p.celebrate = p.level; }
         p.attention = false; p.attentionReason = ''; p.lastNote = today();
         p.levelSignoff = { level: p.level, by: sel.me().name, date: today() };
+        grow(p, 'signOff', p.transferred ? 'Your final sign-off' : 'Signed off to Level ' + p.level);
         if (o.text) p.notes.unshift({ id: uid('n'), kind: o.kind || 'Visit takeaway', author: sel.me().name, role: 'peds', date: today(), shared: !!o.shared, text: o.text });
         return p.level;
       });
@@ -119,6 +166,43 @@
     program: function (f) { commit(function (s) { Object.assign(s.program, f); }); },
     addResource: function (r) { commit(function (s) { r.id = uid('r'); r.published = true; s.resources.push(r); }); },
     togglePublish: function (id) { commit(function (s) { var r = s.resources.filter(function (x) { return x.id === id; })[0]; r.published = !r.published; }); },
+    /* v2 research actions */
+    editMed: function (pid, item) {
+      commit(function () {
+        var p = sel.patient(pid), arr = p.meds || (p.meds = []), i = -1;
+        arr.forEach(function (x, k) { if (x.id === item.id) i = k; });
+        if (i >= 0) arr[i] = Object.assign(arr[i], item); else { item.id = uid('m'); arr.push(item); }
+        p.medsConfirmed = null; /* any change needs the care team to confirm the list again */
+      });
+    },
+    removeMed: function (pid, id) { commit(function () { var p = sel.patient(pid); p.meds = (p.meds || []).filter(function (x) { return x.id !== id; }); p.medsConfirmed = null; }); },
+    confirmMeds: function (pid) { commit(function () { sel.patient(pid).medsConfirmed = { by: sel.me().name, date: today() }; }); },
+    toggleCareTask: function (pid, id) {
+      return commit(function () {
+        var p = sel.patient(pid), t = (p.careTasks || []).filter(function (x) { return x.id === id; })[0]; if (!t) return null;
+        t.done = !t.done; t.doneDate = t.done ? today() : '';
+        if (t.done) grow(p, 'careTask', 'You did this yourself: ' + t.label.charAt(0).toLowerCase() + t.label.slice(1));
+        return t;
+      });
+    },
+    readGuide: function (pid, r) {
+      commit(function () {
+        var p = sel.patient(pid); if (!p.plant) p.plant = { events: [] };
+        if (p.plant.events.some(function (e) { return e.type === 'guide' && e.ref === r.id; })) return;
+        grow(p, 'guide', 'You read ' + r.title.charAt(0).toLowerCase() + r.title.slice(1)); p.plant.events[p.plant.events.length - 1].ref = r.id;
+      });
+    },
+    setDecisionSupport: function (pid, d) { commit(function () { sel.patient(pid).decisionSupport = d && d.name ? { name: d.name, rel: d.rel || '' } : null; }); },
+    saveHandoff: function (pid, fields, final) {
+      commit(function () {
+        var p = sel.patient(pid), text = fields.summary || 'Handoff summary for the adult team.';
+        var n = p.notes.filter(function (x) { return x.kind === 'Handoff note' && x.draft; })[0];
+        if (!n) { n = { id: uid('n'), kind: 'Handoff note', role: 'peds', shared: true }; p.notes.unshift(n); }
+        Object.assign(n, { author: sel.me().name, date: today(), text: text, draft: !final, shared: true,
+          fields: { meds: fields.meds || '', referrals: fields.referrals || '', upcoming: fields.upcoming || '', managed: fields.managed || '', watch: fields.watch || '' } });
+        p.lastNote = today();
+      });
+    },
     removeResource: function (id) { commit(function (s) { s.resources = s.resources.filter(function (x) { return x.id !== id; }); }); }
   };
 
