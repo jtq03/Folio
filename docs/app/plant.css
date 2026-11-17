@@ -1,0 +1,41 @@
+/* The growing plant (v2 research update, change C12). Brand tokens only: greens for the plant, beige for the pot. */
+.pl-svg { display: block; overflow: visible; }
+.pl-pot { fill: var(--beige-300); stroke: var(--green-900); stroke-width: 2; }
+.pl-rim { fill: var(--beige-200); stroke: var(--green-900); stroke-width: 2; }
+.pl-soil { fill: var(--green-900); }
+.pl-seed { fill: var(--beige-300); stroke: var(--green-900); stroke-width: 2; }
+.pl-stem { fill: none; stroke: var(--green-900); stroke-width: 3; stroke-linecap: round; }
+.pl-leaf { fill: var(--green-500); stroke: var(--green-900); stroke-width: 1.2; }
+.pl-leaf.pl-new { fill: var(--blue-300); }
+.pl-crown circle { fill: var(--green-500); stroke: var(--green-900); stroke-width: 2; }
+.pl-star rect { fill: var(--red-500); }
+
+/* Home card and the My plant page sit on the same paper sheet as the level card */
+.pl-card { display: grid; grid-template-columns: auto 1fr; gap: 14px 18px; align-items: center; }
+.pl-card .pl-art { width: 130px; }
+.pl-card h2 { margin: 2px 0 4px; }
+.pl-card p { margin: 0; }
+.pl-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-weight: 600; color: var(--green-900); min-height: 44px; }
+.pl-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.pl-hero .pl-art { width: 200px; }
+.pl-why li { margin: 0; }
+
+/* Growth moments: a new leaf eases in. Reduced motion gets a plain fade. */
+.pl-new { transform-box: fill-box; transform-origin: left center; animation: pl-grow 900ms var(--ease-spring, ease-out) both; }
+@keyframes pl-grow { from { transform: scale(.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+:root[data-motion="reduce"] .pl-new { animation: pl-fade 300ms ease both; }
+@media (prefers-reduced-motion: reduce) { .pl-new { animation: pl-fade 300ms ease both; } }
+@keyframes pl-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Run my care checklist and the status legend */
+.mc-task { display: flex; gap: 12px; align-items: flex-start; }
+.mc-task input[type="checkbox"] { width: 26px; height: 26px; margin-top: 2px; flex: none; accent-color: var(--green-500); }
+.mc-task .ios-rt small { display: block; }
+.mc-task.done b { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.st-legend { margin: 10px 4px 0; display: grid; gap: 6px; }
+.st-legend div { display: flex; gap: 8px; align-items: baseline; }
+.st-legend b { flex: none; min-width: 6.5em; }
+.meds-stale { display: flex; gap: 6px; align-items: flex-start; border-left: 4px solid var(--red-500); padding-left: 8px; }
+.pl-celebrate { display: flex; justify-content: center; margin: 4px 0 8px; }
+
+.pl-shoot { stroke-width: 2.5; }

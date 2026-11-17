@@ -31,7 +31,9 @@
   function tile(inner, n, sm) { return h`<span class="ios-tile t${n} ${sm ? 'sm' : ''}" aria-hidden="true">${inner}</span>`; }
   var SKILL_ICON = { know: 'book', manage: 'clock', speak: 'message', run: 'visit', support: 'users' };
   /* Each skill's "learn how" link opens the resource that teaches it */
-  var SKILL_RES = { know: 'r1', manage: 'r8', speak: 'r3', run: 'r7', support: 'r2' };
+  var SKILL_RES = { know: 'r13', manage: 'r9', speak: 'r3', run: 'r14', support: 'r2' };
+  function plantOn() { return !!(F.Plant && F.Plant.mode() === 'plant'); }
+  var EV_ICON = { practice: ['check', 4], guide: ['book', 1], careTask: ['visit', 2], signOff: ['levels', 3] };
   var KIND_ICON = { Guide: ['book', 1], Checklist: ['visit', 2], Video: ['play', 3], Worksheet: ['edit', 5] };
   function kindTile(r) { var k = KIND_ICON[r.kind] || ['book', 1]; return tile(k[0] === 'play' ? xi('play', 22) : ic(k[0], 22), k[1]); }
   function status(st) { return h`<span class="ios-st s-${st}"><i aria-hidden="true"></i>${F.SKILL_STATUS[st]}</span>`; }
@@ -168,12 +170,12 @@
       html: h`
       ${large(h`Hi <em>${F.nickname ? F.nickname(p) : p.first}</em>`, 'You are building your own health team.')}
       <div class="ios-body">
-        <section class="ios-index" data-rise style="--d:1" aria-label="Your level"><span class="ios-tape" aria-hidden="true"></span>
+        ${plantOn() ? plantCard(p, L, own) : h`<section class="ios-index" data-rise style="--d:1" aria-label="Your level"><span class="ios-tape" aria-hidden="true"></span>
           <div class="ios-eyebrow">Your level</div>
           <div class="ios-lvl" aria-hidden="true"><span class="ios-num">${p.level}</span><div><h2>${L.name}</h2><p>${L.phase} phase · level ${p.level} of 10</p></div></div>
           <span class="ios-sr">Level ${p.level} of 10, ${L.name}. ${L.phase} phase.</span>
           ${stairs(p.level)}
-          <p class="ios-cap">${p.transferred ? 'You have moved to adult care.' : L.leads + '. ' + own + ' of 5 skills on your own.'}</p></section>
+          <p class="ios-cap">${p.transferred ? 'You have moved to adult care.' : L.leads + '. ' + own + ' of 5 skills on your own.'}</p></section>`}
         ${ticket(p)}
         ${nx && todo.length ? h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="wk"><h2 class="ios-gh" id="wk">${tile(ic('levels', 18), 4, true)}<span>Working toward Level ${nx.n}: ${nx.name}</span></h2>
           <div class="ios-list">${todo.map(function (s) { var i = F.SKILLS.indexOf(s); return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[p.skills[s.id]]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>
@@ -199,7 +201,9 @@
         <section class="ios-sec" data-rise style="--d:2" aria-labelledby="sk"><h2 class="ios-gh" id="sk">${tile(ic('check', 18), 4, true)}<span>Skills at this level</span></h2>
           <div class="ios-meter" role="img" aria-label="${own} of 5 skills on your own">${[1, 2, 3, 4, 5].map(function (i) { return h`<i class="${i <= own ? 'on' : ''}"></i>`; })}</div>
           <div class="ios-list" style="margin-top:12px">${F.SKILLS.map(function (s, i) { var st = p.skills[s.id]; return st !== 'own' ? h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[st]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span>${CHEV}</a>` : h`<div class="ios-row has-tile" data-key="sk-${s.id}">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span></div>`; })}</div>
-          <p class="ios-gf">${own} of 5 on your own. Your care team signs skills off in person.</p></section>
+          <p class="ios-gf">${own} of 5 on your own. Your care team signs skills off in person.</p>${legendApp()}</section>
+        ${careSection(p)}
+        ${plantOn() ? h`<section class="ios-sec" data-rise style="--d:3"><div class="ios-list"><a class="ios-row has-tile" href="#/levels/plant">${tile(raw(F.Plant.svg(p.level, sel.leaves(p), 22, '')), 4)}<span class="ios-rt"><b>My plant</b><small>Stage ${p.level} of 10 · ${sel.leaves(p)} new ${sel.leaves(p) === 1 ? 'leaf' : 'leaves'} since your last sign-off</small></span>${CHEV}</a></div></section>` : ''}
         ${nx ? h`<section class="ios-up" data-rise style="--d:3"><div class="ios-eyebrow">Up next · Level ${nx.n}</div><h3>${nx.name}</h3><p>${nx.leads}.</p><p style="margin-top:6px"><b>Unlocks:</b> ${nx.unlocks}</p></section>` : ''}
         <section class="ios-sec" data-rise style="--d:4" aria-labelledby="al"><h2 class="ios-gh" id="al">${tile(ic('levels', 18), 3, true)}<span>All 10 levels</span></h2>
           <div class="ios-list">${F.LEVELS.map(function (l) { return h`<div class="ios-row ${l.n === p.level ? 'cur' : ''}" ${l.n === p.level ? h`aria-current="step"` : ''}><span class="ios-lvn ${l.n < p.level ? 'done' : ''}" aria-hidden="true">${l.n}</span><span class="ios-rt"><b>${l.name}${l.n === p.level ? ' (you are here)' : ''}</b><small>${l.phase} · ${l.leads}</small></span>${l.n < p.level ? h`<span class="ios-done" aria-label="Done">${ic('check', 20)}</span>` : ''}</div>`; })}</div></section>
@@ -249,12 +253,12 @@
     if (!r) return { title: 'Not found', back: { href: '#/resources', label: 'Resources' }, html: h`${large('Not found', 'This resource was removed or is not published.')}<div class="ios-body"><div class="ios-sec"><a class="ios-btn sec" href="#/resources">Back to resources</a></div></div>` };
     var paras = r.body.split('. ').map(function (t, i, a) { return i < a.length - 1 ? t + '.' : t; }); var mid = Math.ceil(paras.length / 2);
     var two = [paras.slice(0, mid).join(' '), paras.slice(mid).join(' ')].filter(Boolean);
-    var skill = F.SKILLS.filter(function (s) { return SKILL_RES[s.id] === r.id; })[0];
+    var skill = F.SKILLS.filter(function (s) { return r.skill ? s.id === r.skill : SKILL_RES[s.id] === r.id; })[0];
     return { title: r.title, navTitle: r.title, back: { href: '#/resources', label: 'Resources' }, html: h`
       <header class="ios-large" data-rise><h1 tabindex="-1">${r.title}</h1></header>
       <div class="ios-body">
         <div class="ios-meta" data-rise style="--d:1">${kindTile(r)}<span><b>${r.kind}</b><br><span class="ios-detail">${r.mins}${skill ? ' · helps with ' + skill.name : ''}</span></span></div>
-        <article class="ios-read" data-rise style="--d:2"><span class="ios-tape" aria-hidden="true"></span>${two.map(function (t) { return h`<p>${t}</p>`; })}</article>
+        <article class="ios-read" data-rise style="--d:2"><span class="ios-tape" aria-hidden="true"></span>${two.map(function (t) { return h`<p>${t}</p>`; })}</article>${r.review ? h`<p class="ios-gf" data-rise style="--d:2">Draft guide. To be reviewed by a diabetes educator before it goes live.</p>` : ''}
         ${F.fx ? raw(F.fx.readBlock(r)) : ''}<div class="ios-sec" data-rise style="--d:3"><button type="button" class="ios-btn sec" data-action="shareResource" data-id="${r.id}">${shareSvg} Share this resource</button></div>
       </div>` };
   }
@@ -345,6 +349,7 @@
         <section class="ios-sec" data-rise style="--d:3" aria-labelledby="q-h"><h2 class="ios-gh" id="q-h">${tile(ic('message', 18), 3, true)}<span>Questions for my next visit</span></h2>
           <div class="ios-qcards">${p.questions.length ? '' : h`<p class="ios-empty">No questions yet. Add one when it comes to mind.</p>`}${p.questions.map(function (qq, i) { return h`<div class="ios-qcard"><span aria-hidden="true">${ic('message', 20)}</span><span class="q">${qq}</span><button type="button" class="x" data-action="rmQ" data-i="${i}" aria-label="Remove question: ${qq}">${ic('x', 18)}</button></div>`; })}
             <button type="button" class="ios-add" data-action="addQ">${ic('plus', 20)} Add a question</button></div></section>
+        ${medsSection(p)}
         <section class="ios-sec" data-rise style="--d:4" aria-labelledby="f-h"><h2 class="ios-gh" id="f-h">${tile(ic('users', 18), 1, true)}<span>Family contacts</span></h2>
           <div class="ios-list">${p.contacts.map(function (c) { return contactRow(c, 'contacts', 'rel'); })}<button type="button" class="ios-row has-tile ios-addrow" data-action="editContact">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add contact</b></span></button></div>
           <p class="ios-gf">Switch on so doctors can call or message them.</p></section>
@@ -352,7 +357,9 @@
           <div class="ios-list">${p.careTeam.map(function (c) { return contactRow(c, 'careTeam', 'role'); })}<button type="button" class="ios-row has-tile ios-addrow" data-action="editTeam">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add care team member</b></span></button></div></section>
         <section class="ios-sec" data-rise style="--d:6" aria-labelledby="s-h"><h2 class="ios-gh" id="s-h">${tile(ic('shield', 18), 4, true)}<span>Sharing and privacy</span></h2>
           <div class="ios-list"><label class="ios-row has-tile">${tile(ic('lock', 22), 3)}<span class="ios-rt"><b>Share my notes with adult care</b><small>You can change this any time.</small></span><input type="checkbox" role="switch" switch class="ios-sw" ${p.shareNotes !== false ? 'checked' : ''} data-change="shareNotes" aria-label="Share my notes with adult care"></label>
-            <button type="button" class="ios-row has-tile" data-action="shareProfile">${tile(shareSvg, 1)}<span class="ios-rt"><b>Share a summary</b><small>Send your level, skills and visit questions to a new doctor.</small></span>${CHEV}</button></div></section>
+            <button type="button" class="ios-row has-tile" data-action="shareProfile">${tile(shareSvg, 1)}<span class="ios-rt"><b>Share a summary</b><small>Send your level, skills and visit questions to a new doctor.</small></span>${CHEV}</button>
+            ${p.card && p.card.status !== 'unassigned' ? h`<button type="button" class="ios-row has-tile" data-action="freezeCard">${tile(ic('lock', 22), 2)}<span class="ios-rt"><b>${p.card.status === 'active' ? 'Freeze my card' : 'Unfreeze my card'}</b><small>${p.card.status === 'active' ? 'Lost it? Freezing stops it opening your profile.' : 'Your card is frozen. Nobody can open your profile with it.'}</small></span>${CHEV}</button>
+            <button type="button" class="ios-row has-tile" data-action="newCardLink">${tile(ic('refresh', 22), 3)}<span class="ios-rt"><b>Get a new card link</b><small>Your old card stops working. Your clinic prints a new one.</small></span>${CHEV}</button>` : ''}</div></section>
         <section class="ios-sec" data-rise style="--d:7" aria-labelledby="w-h"><h2 class="ios-gh" id="w-h">${tile(ic('eye', 18), 5, true)}<span>Who has looked at my profile</span></h2>
           <div class="ios-list">${log.length ? h`<ol class="ios-timeline">${log.map(function (l) { var ho = HOW_ICON[l.how] || ['eye', '#C5D1EB']; return h`<li><span class="dot" style="--c:${ho[1]}" aria-hidden="true">${ic(ho[0], 20)}</span><span class="ios-rt"><b>${l.who}</b><small>${l.how} · ${U.fmtTime(l.time)}</small></span></li>`; })}</ol>` : h`<div class="ios-row has-tile">${tile(ic('eye', 22), 2)}<span class="ios-rt"><b>No one yet</b><small>Opens are listed here.</small></span></div>`}</div></section>
         <section class="ios-sec" data-rise style="--d:8" aria-labelledby="a-h"><h2 class="ios-gh" id="a-h">${tile(ic('settings', 18), 2, true)}<span>Display and motion</span></h2>
@@ -363,6 +370,7 @@
         ${standalone ? '' : h`<section class="ios-sec" aria-labelledby="i-h"><h2 class="ios-gh" id="i-h">${tile(ic('plus', 18), 3, true)}<span>Add Folio to your home screen</span></h2><div class="ios-list"><div class="ios-row has-tile">${tile(shareSvg, 1)}<span class="ios-rt"><b>${N.ios ? 'In Safari, tap Share, then Add to Home Screen' : 'Install it like an app'}</b><small>${N.ios ? 'On iOS 26, Share is in the ··· menu. ' : ''}Folio then opens full screen and works offline.</small></span></div>${deferred ? h`<button type="button" class="ios-row ios-addrow" data-action="install"><b>Install Folio</b></button>` : ''}</div></section>`}
         <section class="ios-sec" aria-labelledby="d-h"><h2 class="ios-gh" id="d-h"><span>Prototype</span></h2>
           <div class="ios-list"><label class="ios-row ios-selrow"><span class="ios-rt"><b>View the app as</b></span><select class="ios-select" data-change="asPatient" aria-label="View the app as">${st.patients.map(function (x) { return h`<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${sel.full(x)} · L${x.level}</option>`; })}</select>${raw('<svg class="ios-chev" width="12" height="18" viewBox="0 0 12 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7l4-4 4 4M2 11l4 4 4-4"/></svg>')}</label></div>
+          ${F.Plant ? h`<h3 class="ios-gh" style="margin:14px 4px 8px"><span>Motivation style</span></h3><div class="ios-seg" role="group" aria-label="Motivation style" style="--n:3;--i:${Math.max(0, ['plant', 'stickers', 'bar'].indexOf(F.Plant.mode()))}">${['plant', 'stickers', 'bar'].map(function (m) { return h`<button type="button" data-action="motiv" data-v="${m}" aria-pressed="${String(F.Plant.mode() === m)}">${F.Plant.MODES[m]}</button>`; })}</div><p class="ios-gf">For testing with teens: a growing plant, the sticker book, or the level only.</p>` : ''}
           <div class="ios-list" style="margin-top:12px"><button type="button" class="ios-row" data-action="hapticLab"><span class="ios-rt"><b>Haptics test</b><small>Check which taps make your phone tick</small></span>${CHEV}</button></div>
           <p class="ios-gf">Demo only. Switch patient to try other levels.</p></section>
       </div>` };
@@ -428,12 +436,12 @@
     for (var i = 0; i < 22; i++) bits += '<i style="left:' + Math.round(rnd() * 100) + '%;background:' + cols[i % 5] + ';animation-duration:' + (2.4 + rnd() * 2.4).toFixed(1) + 's;animation-delay:' + (rnd() * 1.4).toFixed(1) + 's"></i>';
     var so = p.levelSignoff || { by: 'Your care team', date: new Date().toISOString().slice(0, 10) };
     return h`<div class="ios-lvlup" role="dialog" aria-modal="true" aria-labelledby="lv-h"><div class="ios-confetti" aria-hidden="true">${raw(bits)}</div>
-      <div class="ios-stackviz" aria-hidden="true"><i></i><i></i><i></i>${U.star(34)}</div>
+      ${plantOn() ? h`<div class="pl-celebrate" aria-hidden="true">${raw(F.Plant.svg(transfer ? 10 : L.n, 0, 150, ''))}</div>` : h`<div class="ios-stackviz" aria-hidden="true"><i></i><i></i><i></i>${U.star(34)}</div>`}
       <div class="ios-eyebrow">${transfer ? 'Final sign-off' : 'Level up'}</div>
       <h2 id="lv-h">${transfer ? 'You own it' : 'Level ' + L.n + ': ' + L.name}</h2>
       <p>${transfer ? 'Your adult team has what they need, and you decide who sees what.' : 'You and your care team now: ' + L.leads.toLowerCase() + '.'}</p>
       <div class="stamp" role="img" aria-label="Signed off by ${so.by}">${U.star(22)}<span>Signed off</span></div>
-      <div class="ios-changed"><div class="ios-eyebrow">What changed</div><ul><li>${so.by} signed off, ${U.monthYear(so.date)}</li><li>Unlocked: ${L.unlocks}</li></ul></div>
+      <div class="ios-changed"><div class="ios-eyebrow">What changed</div><ul><li>${so.by} signed off, ${U.monthYear(so.date)}</li>${plantOn() ? h`<li>Your plant grew to stage ${transfer ? 10 : L.n}: ${F.Plant.stageName(transfer ? 10 : L.n).toLowerCase()}</li>` : ''}<li>Unlocked: ${L.unlocks}</li></ul></div>
       <div class="ios-lv-btns"><button type="button" class="ios-btn light" data-action="closeCelebrate">Continue</button><button type="button" class="ios-btn ghost" data-action="shareLevel" data-id="${L.n}">${shareSvg} Share this level</button></div></div>`;
   }
   F.actions.closeCelebrate = function () {
@@ -627,9 +635,88 @@
   function morphHTML(el, html) { tpl.innerHTML = html; morphChildren(el, tpl.content); tpl.innerHTML = ''; }
 
   /* =====================================================================
+     v2 research update: plant, Run my care, medications, card controls
+     ===================================================================== */
+  /* One plain line per status (research: testers could not tell With help from Learning) */
+  function legendApp() {
+    return h`<div class="st-legend ios-cap">${['own', 'help', 'learning'].map(function (k) { return h`<div><b>${F.SKILL_STATUS[k]}</b><span>${F.SKILL_STATUS_HELP[k]}</span></div>`; })}</div>`;
+  }
+  function plantCard(p, L, own) {
+    var n = sel.leaves(p), ev = F.Plant.recent(p, 1)[0];
+    return h`<section class="ios-index" data-rise style="--d:1" aria-labelledby="pl-h"><span class="ios-tape" aria-hidden="true"></span>
+      <div class="ios-eyebrow">Your plant</div>
+      <div class="pl-card"><div class="pl-art">${raw(F.Plant.svg(p.level, n, 130, F.Plant.describe(p)))}</div>
+        <div><h2 id="pl-h">${F.Plant.stageName(p.level)}</h2><p class="ios-cap">Stage ${p.level} of 10 · Level ${p.level}, ${L.name}</p>
+          <p>${ev && ev.type !== 'signOff' ? 'Last growth: ' + ev.label.charAt(0).toLowerCase() + ev.label.slice(1) + '.' : 'Practise a skill, read a guide or tick off a care task to grow a leaf.'}</p></div></div>
+      <a class="pl-link" href="#/levels/plant">See my plant ${CHEV}</a>
+      <p class="ios-cap">${p.transferred ? 'You have moved to adult care.' : L.leads + '. ' + own + ' of 5 skills on your own.'}</p></section>`;
+  }
+  function plantPage() {
+    var p = me(), n = sel.leaves(p), nx = p.level < 10 ? sel.level(p.level + 1) : null, ev = F.Plant.recent(p, 5), v = visitDate(p.nextVisit);
+    var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
+    return { title: 'My plant', navTitle: 'My plant', back: { href: '#/levels', label: 'Levels' }, html: h`
+      ${large(h`My <em>plant</em>`, 'It grows when you practise, learn and take care of things yourself.')}
+      <div class="ios-body">
+        <section class="ios-index pl-hero" data-rise style="--d:1"><span class="ios-tape" aria-hidden="true"></span>
+          <div class="pl-art">${raw(F.Plant.svg(p.level, n, 200, F.Plant.describe(p)))}</div>
+          <h2>${F.Plant.stageName(p.level)}</h2><p class="ios-cap">Stage ${p.level} of 10 · ${n} new ${n === 1 ? 'leaf' : 'leaves'} since your last sign-off</p>
+          <p class="ios-cap">It never shrinks. A hard stretch just pauses it.</p></section>
+        <section class="ios-sec" data-rise style="--d:2" aria-labelledby="pw-h"><h2 class="ios-gh" id="pw-h">${tile(xi('sparkle', 18), 4, true)}<span>What helped it grow</span></h2>
+          <div class="ios-list">${ev.length ? ev.map(function (e) { var ei = EV_ICON[e.type] || ['check', 4]; return h`<div class="ios-row has-tile">${tile(ic(ei[0], 22), ei[1])}<span class="ios-rt"><b>${e.label}</b><small>${U.fmt(e.date)}</small></span></div>`; }) : h`<div class="ios-row"><span class="ios-rt"><b>Nothing yet</b><small>Practise a skill, read a guide or tick off a Run my care task.</small></span></div>`}</div></section>
+        ${nx ? h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="pn-h"><h2 class="ios-gh" id="pn-h">${tile(ic('levels', 18), 3, true)}<span>Next growth: stage ${nx.n}</span></h2>
+          ${todo.length ? h`<div class="ios-list">${todo.map(function (s, i) { return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${F.SKILL_STATUS_HELP[p.skills[s.id]]}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row"><span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div>`}
+          <p class="ios-gf">${v ? 'At your visit on ' + MON3[v.getMonth()] + ' ' + v.getDate() + ', show your care team to grow to stage ' + nx.n + '.' : 'Show your care team at your next visit to grow to stage ' + nx.n + '.'}</p></section>` : ''}
+        <section class="ios-sec" data-rise style="--d:4"><p class="ios-gf">Your plant is private. Your care team and adult doctors never see it.</p></section>
+      </div>` };
+  }
+  function careSection(p) {
+    var tasks = p.careTasks || []; if (!tasks.length) return '';
+    var done = tasks.filter(function (t) { return t.done; }).length;
+    return h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="mc-h"><h2 class="ios-gh" id="mc-h">${tile(ic('visit', 18), 2, true)}<span>Run my care</span></h2>
+      <div class="ios-list">${tasks.map(function (t) { return h`<div class="ios-row mc-task ${t.done ? 'done' : ''}" data-key="mc-${t.id}"><input type="checkbox" id="mc-${t.id}" ${t.done ? 'checked' : ''} data-change="careTask" data-id="${t.id}"><label class="ios-rt" for="mc-${t.id}"><b>${t.label}</b><small>${t.detail}</small></label><button type="button" class="ios-round" data-action="careRemind" data-id="${t.id}" aria-label="Add a reminder for ${t.label}">${xi('calendar', 20)}</button></div>`; })}</div>
+      <p class="ios-gf">${done} of ${tasks.length} done yourself. These are the jobs that land on you at 18. The calendar button reminds you three weeks before and the day before.</p></section>`;
+  }
+  function medsSection(p) {
+    var meds = p.meds || [], c = p.medsConfirmed, stale = sel.medsStale(p);
+    return h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="md-h"><h2 class="ios-gh" id="md-h">${tile(xi('heart', 18), 2, true)}<span>Medications and supplies</span></h2>
+      <div class="ios-list">${meds.map(function (m) { return h`<button type="button" class="ios-row has-tile" data-action="editMed" data-id="${m.id}" aria-label="${m.name}. Edit">${tile(m.kind === 'supply' ? ic('card', 22) : xi('heart', 22), m.kind === 'supply' ? 3 : 2)}<span class="ios-rt"><b>${m.name}</b><small>${(m.kind === 'supply' ? 'Supply' : 'Medication') + (m.detail ? ' · ' + m.detail : '')}</small></span>${CHEV}</button>`; })}
+        <button type="button" class="ios-row has-tile ios-addrow" data-action="editMed">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add a medication or supply</b></span></button></div>
+      <p class="ios-gf ${stale ? 'meds-stale' : ''}">${!meds.length ? 'Adult doctors see this list first, so keep it current.' : stale ? (c ? 'Changed since your care team last confirmed it. They check it at your next visit.' : 'Your care team confirms this list at your next visit.') : 'Confirmed by ' + c.by + ', ' + U.fmt(c.date) + '. Adult doctors see this first.'}</p></section>`;
+  }
+
+  F.actions.careTask = function (el) {
+    var t = A.toggleCareTask(pid(), el.dataset.id); if (!t) return;
+    if (t.done) { N.haptic('success'); U.toast(plantOn() ? 'Done yourself. Your plant grew a leaf.' : 'Done yourself. Nice.', true); }
+  };
+  F.actions.careRemind = function (el) {
+    var p = me(), t = (p.careTasks || []).filter(function (x) { return x.id === el.dataset.id; })[0]; if (!t) return;
+    U.formModal({ title: 'Add a reminder', lead: 'Pick when it is due. Your calendar reminds you three weeks before and the day before.', cta: 'Add to Calendar',
+      fields: [{ name: 'iso', label: 'Due date', type: 'date', req: true }],
+      onSubmit: function (d) { var f = N.ics({ iso: d.iso + 'T09:00', where: '', note: t.detail }, null, p.id + '-' + t.id, { summary: t.label, alarms: ['-P21D', '-P1D'] }); if (f) N.openCalendar(f); else U.toast('Pick a date first'); } });
+  };
+  F.actions.editMed = function (el) {
+    var p = me(), id = el && el.dataset ? el.dataset.id || '' : '', it = id ? (p.meds || []).filter(function (x) { return x.id === id; })[0] || {} : {};
+    U.formModal({ title: id ? 'Edit ' + it.name : 'Add a medication or supply', lead: 'Your care team confirms changes at your next visit.',
+      fields: [{ name: 'name', label: 'Name', value: it.name, req: true, ph: 'Rapid-acting insulin' }, { name: 'kind', label: 'Type', type: 'select', options: ['Medication', 'Supply'], value: it.kind === 'supply' ? 'Supply' : 'Medication' }, { name: 'detail', label: 'Details', value: it.detail, ph: 'How or when you use it' }],
+      destructive: id ? { label: 'Remove', body: 'Adult doctors will no longer see it.', run: function () { A.removeMed(p.id, id); } } : null,
+      onSubmit: function (d) { A.editMed(p.id, { id: id || undefined, name: d.name, kind: d.kind === 'Supply' ? 'supply' : 'medication', detail: d.detail || '' }); U.toast('Saved. Your care team confirms it next visit.'); } });
+  };
+  F.actions.freezeCard = function () {
+    var p = me(), on = p.card.status === 'active';
+    U.confirmModal({ title: on ? 'Freeze your card?' : 'Unfreeze your card?', body: on ? 'Nobody can open your profile with it until you unfreeze it.' : 'Your card opens your profile again.', cta: on ? 'Freeze' : 'Unfreeze', danger: on,
+      onOk: function () { if (on) A.deactivateCard(p.id); else A.reactivateCard(p.id); N.haptic('success'); U.toast(on ? 'Card frozen' : 'Card unfrozen'); } });
+  };
+  F.actions.newCardLink = function () {
+    var p = me();
+    U.confirmModal({ title: 'Get a new card link?', body: 'Your old card stops working right away. Ask your clinic to print a new one.', cta: 'Get new link', danger: true,
+      onOk: function () { A.replaceCard(p.id); cardFile = null; N.haptic('success'); U.toast('New card link made. Your old card no longer works.'); } });
+  };
+  F.actions.motiv = function (el) { if (!F.Plant) return; F.Plant.setMode(el.dataset.v); N.haptic('light'); U.toast('Motivation style: ' + F.Plant.MODES[el.dataset.v]); };
+
+  /* =====================================================================
      Router and persistent shell
      ===================================================================== */
-  var ROUTES = [['/', home], ['/levels', levels], ['/resources', resources], ['/resources/:id', resourceDetail], ['/about', about]];
+  var ROUTES = [['/', home], ['/levels', levels], ['/levels/plant', plantPage], ['/resources', resources], ['/resources/:id', resourceDetail], ['/about', about]];
   function notFound() { return { title: 'Not found', html: h`${large('Not found', 'That page is not in Folio.')}<div class="ios-body"><div class="ios-sec"><a class="ios-btn" href="#/">Go to Home</a></div></div>` }; }
   function parse(hash) {
     var hs = (hash == null ? location.hash : hash).replace(/^#/, '') || '/', qi = hs.indexOf('?'), path = qi < 0 ? hs : hs.slice(0, qi), q = {};

@@ -485,7 +485,7 @@
         if (tip && !tip.isConnected) tip = null;
         if (path === '/') { applyGreeting(pg, p); rigCard(pg, p); ticketFun(pg, p); }
         if (path === '/' || path === '/levels') checkLevel(pg, p);
-        if (path === '/levels') stickerSheet(pg, p); else watchStickersElsewhere(p);
+        if (path === '/levels') { if (!(F.Plant && F.Plant.mode() === 'bar')) stickerSheet(pg, p); } else watchStickersElsewhere(p);
       }
       wrapPractise();
     } catch (e) { if (window.console) console.warn('fun-home', e); }

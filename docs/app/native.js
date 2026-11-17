@@ -195,15 +195,18 @@
     }
     out.push(cur); return out.join('\r\n');
   }
-  N.ics = function (v, questions, uidSeed) {
+  N.ics = function (v, questions, uidSeed, opts) {
+    opts = opts || {};
     var d = new Date(v.iso); if (isNaN(d.getTime())) return null;
     var end = new Date(d.getTime() + 3600000), now = new Date();
     var desc = (v.note ? v.note + '\n\n' : '') + (questions && questions.length ? 'Questions to ask:\n' + questions.map(function (q) { return '- ' + q; }).join('\n') + '\n\n' : '') + 'Added from Folio.';
     var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Folio//Patient app//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
       'UID:folio-visit-' + String(uidSeed || 'me').replace(/[^\w-]/g, '') + '-' + utc(d).slice(0, 8) + '@folio.app', 'DTSTAMP:' + utc(now),
-      'DTSTART:' + utc(d), 'DTEND:' + utc(end), 'SUMMARY:' + icsEsc('Visit: ' + (v.where || 'My care team'))];
+      'DTSTART:' + utc(d), 'DTEND:' + utc(end), 'SUMMARY:' + icsEsc(opts.summary || 'Visit: ' + (v.where || 'My care team'))];
     if (v.where) L.push('LOCATION:' + icsEsc(v.where));
-    L.push('DESCRIPTION:' + icsEsc(desc), 'BEGIN:VALARM', 'TRIGGER:-P1D', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc('Visit tomorrow: ' + (v.where || 'My care team')), 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR');
+    L.push('DESCRIPTION:' + icsEsc(desc));
+    (opts.alarms || ['-P1D']).forEach(function (t) { L.push('BEGIN:VALARM', 'TRIGGER:' + t, 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(opts.summary ? 'Coming up: ' + opts.summary : 'Visit tomorrow: ' + (v.where || 'My care team')), 'END:VALARM'); });
+    L.push('END:VEVENT', 'END:VCALENDAR');
     var text = L.map(fold).join('\r\n') + '\r\n';
     try { return new File([text], 'folio-visit.ics', { type: 'text/calendar' }); } catch (e) { try { var b = new Blob([text], { type: 'text/calendar' }); b.name = 'folio-visit.ics'; return b; } catch (e2) { return null; } }
   };
