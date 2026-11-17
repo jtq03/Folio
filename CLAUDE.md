@@ -38,11 +38,22 @@ Scripts are plain `<script>` tags on a `window.Folio` namespace so it works on f
 - Level system is 10 levels from the Figma wireframes. The video drew 7 steps. Settle the count as a team.
 - Figma wireframes mix "Crohn's/GI" and "Type 1 diabetes" for Maya. The code uses Type 1 diabetes (matches the level system and MVP flow).
 - Wireframe sign-off lets a clinician advance with a skill still Learning plus a note. Visit mode keeps that, behind an explicit override.
-- The 47% stat chip from the video is intentionally not used: its source (Shulman 2018 vs Toulany 2022) is unconfirmed.
+- The 47% stat source is now confirmed: Shulman, Shah, Fu, Chafe and Guttmann (2018), Diabetic Medicine 35(11), 1515 to 1522, https://doi.org/10.1111/dme.13782. In an Ontario cohort, 47% of youth with diabetes went more than a year without diabetes care during transition. The chip can be used with this citation.
 - Off-palette video pieces (yellow star, sun, clock) are not used.
 - Fonts load from Google Fonts. Offline, the app falls back to Georgia and system-ui until fonts are cached.
 - Compliance wording in Settings is a prototype checklist, not legal advice.
 - Prototype type still needs instructor approval before committing to this build as the graded deliverable.
+
+## v2 research update (branch samantha/v2-research)
+Changes come from Team 9's interviews, classroom tests and instructor critique. The README section "Why each feature exists" gives the reason for each.
+- New patient fields (all optional, defaults in `F.defaults` in data.js): `meds`, `medsConfirmed`, `supportThisVisit`, `decisionSupport`, `careTasks`, `plant.events`. Handoff notes can carry `fields` (meds, referrals, upcoming, managed, watch).
+- `store.js` runs `migrate()` on load, so saved demo data gains the new fields and loses the old GI wording without a reset.
+- New store actions: `editMed`, `removeMed`, `confirmMeds`, `toggleCareTask`, `readGuide`, `setDecisionSupport`, `saveHandoff`. `practise` and `advance` also record plant growth.
+- Adult view: no level numbers, a consent screen before the profile opens, medications above the fold, "Where X may need support in this visit", "Make big decisions: with help", a status legend, and drafts never shown (`sel.notesFor(p, 'adult')` filters them).
+- Patient app: a growing plant (`docs/app/plant.js`, `plant.css`) with a Motivation style switch in About me > Prototype (plant, stickers, level only), stored as the device setting `motivation`. Stage = signed-off level. Leaves = practice, guides read and Run my care tasks since the last sign-off. Nothing ever shrinks, and it is never tied to glucose or A1C. Private: never shown in the portal or adult view.
+- Patient app: Run my care checklist with calendar reminders (three weeks and one day before), a medications and supplies list, card freeze and new card link, and draft type 1 diabetes guides linked to skills (marked for diabetes educator review).
+- Portal: confirm the medication list, edit support notes and big-decision support, a structured handoff form (draft or shared), the status legend and the attention reason.
+- Flag for the team: Level 3 no longer asks for a glucose log (pumps and sensors already log), and the guides need review by a diabetes educator.
 
 ## Haptics on iOS
 - Web pages cannot trigger haptics from script on current iOS (a programmatic click on a hidden switch stopped working around iOS 26.5; there is no Vibration API on iOS). Only a finger landing on a real, rendered `<input type="checkbox" switch>` gets the system tick.

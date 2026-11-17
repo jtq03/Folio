@@ -40,4 +40,23 @@ Install the patient app on a phone: open `/app/` on the published site, then use
 - Paper is for structure and motion (binder tabs, sheets, tape, stamps). Data stays flat and readable.
 - Accessibility first: text scales (Settings), high contrast mode, reduced motion respected, full keyboard use, visible focus, status never shown by colour alone.
 
+## Why each feature exists (v2 research update)
+
+Each change below comes from Team 9's research: interviews with a paediatrician, a family doctor, a former ER nurse, a patient experience specialist, a young adult with type 1 diabetes and an analogous-setting participant, two classroom think-aloud tests, and instructor critique. Strong means three or more sources, moderate two, early one.
+
+| ID | Change | Why (paraphrased) | Evidence |
+|---|---|---|---|
+| A1 | No level numbers in the adult view | Classroom testers could not tell what a level number meant or what separated one level from the next | Strong |
+| A2 | Draft notes never reach adult teams | Testers and the AI pilot flagged unfinished notes as confusing and risky | Early |
+| A3 | One-line meaning for On my own, With help and Learning | Testers could not tell With help from Learning | Early |
+| A4 | Where the patient may need support in this visit, and who helps with big decisions | The redesigned adult view with these sections read correctly to a young adult reviewer, and the nurse asked to show who makes health decisions | Moderate |
+| A5 | Consent screen before the profile opens | Teens choose what is shared, and every open is logged | Moderate |
+| A6 | Type 1 diabetes wording everywhere | Leftover GI wording (flare plan) confused the story | Team fix |
+| C1 | Run my care: blood work, supplies, prescriptions, funding, with reminders | The hardest change at 18 was logistics, not speaking up, and some of it was handled unseen by a parent | Strong |
+| C2 | Medications and supplies list above the fold, with a confirmation date | Three professionals asked for it, hospitals rely on patients to know their medications, and an undated list is a safety risk | Strong |
+| C3 | Structured handoff note | The family doctor needs repeats and referrals to book in time, and the paediatrician asked for upcoming appointments | Strong |
+| C9 | Freeze the card and get a new link from the app | Lost cards were raised by the nurse and a classroom tester | Moderate |
+| C11 | Short type 1 diabetes guides linked to skills | The young adult wanted to learn day-to-day management and was learning it from social media instead | Early |
+| C12 | A growing plant, switchable with stickers or level only | The young adult described a plant that grows as you do tasks, while classmates preferred stickers, so the team can test both | Early, mixed |
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how the four of us work in it, and [CLAUDE.md](CLAUDE.md) for the technical map.
