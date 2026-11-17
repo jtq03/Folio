@@ -33,6 +33,24 @@
   F.actions.editContact = listForm({ list: 'contacts', noun: 'family contact', fields: [{ name: 'name', label: 'Name', req: true }, { name: 'rel', label: 'Relationship', req: true }, { name: 'phone', label: 'Phone', type: 'tel' }], after: function (d, it) { d.visible = it.visible !== false; return d; } });
   F.actions.editTeam = listForm({ list: 'careTeam', noun: 'care team member', fields: [{ name: 'name', label: 'Name', req: true }, { name: 'role', label: 'Role', req: true }, { name: 'phone', label: 'Phone', type: 'tel' }] });
   F.actions.editLink = listForm({ list: 'links', noun: 'linked record', fields: [{ name: 'title', label: 'Title', req: true }, { name: 'sub', label: 'Source or description' }, { name: 'url', label: 'Link (opens outside Folio)', type: 'url', req: true }] });
+  /* v2 research update: support in this visit, big decisions, medication confirmation, structured handoff */
+  F.actions.editSupport = listForm({ list: 'supportThisVisit', noun: 'support note', fields: [{ name: 'label', label: 'Short label', req: true, ph: 'Big decisions' }, { name: 'text', label: 'How to help in the visit', type: 'textarea', req: true }],
+    after: function (d) { d.by = 'Peds team: ' + sel.me().name; d.date = U.monthYear(new Date().toISOString()); return d; } });
+  F.actions.editDecision = function (el) {
+    var p = sel.patient(el.dataset.pid), d0 = p.decisionSupport || {};
+    U.formModal({ title: 'Who helps with big decisions?', lead: 'Shows in the adult view as "Make big decisions: with help". Leave the name empty if ' + p.first + ' decides alone.', fields: [{ name: 'name', label: 'Name', value: d0.name }, { name: 'rel', label: 'Relationship', value: d0.rel, ph: 'Mother, sibling, partner, support worker' }],
+      onSubmit: function (d) { A.setDecisionSupport(p.id, d); U.toast('Saved'); } });
+  };
+  F.actions.confirmMeds = function (el) { var p = sel.patient(el.dataset.pid); A.confirmMeds(p.id); U.toast('Medication list confirmed. Adult doctors see today\'s date.'); };
+  F.actions.saveHandoff = function (d) {
+    var p = sel.patient(d.pid); A.saveHandoff(p.id, d, !!d.final);
+    U.toast(d.final ? 'Handoff note shared. Adult teams see it when ' + p.first + ' taps the card.' : 'Handoff draft saved. Adult teams do not see drafts.');
+  };
+  function handoffDl(f) {
+    var rows = [['meds', 'Medications and repeats'], ['referrals', 'Referrals and who takes over'], ['upcoming', 'Upcoming and due'], ['managed', 'How diabetes has been managed'], ['watch', 'What to watch']].filter(function (r) { return f && f[r[0]]; });
+    return rows.length ? h`<dl class="kv" style="margin-top:.5rem">${rows.map(function (r) { return h`<dt>${r[1]}</dt><dd>${f[r[0]]}</dd>`; })}</dl>` : '';
+  }
+  function legend() { return h`<dl class="legend small">${['own', 'help', 'learning'].map(function (k) { return h`<div><dt>${U.skillPill(k)}</dt><dd>${F.SKILL_STATUS_HELP[k]}</dd></div>`; })}</dl>`; }
   F.actions.removeItem = function (el) {
     U.confirmModal({ title: 'Remove this?', body: 'You can add it again later.', cta: 'Remove', danger: true, onOk: function () { A.remove(el.dataset.pid, el.dataset.list, el.dataset.id); U.toast('Removed'); } });
   };
@@ -50,22 +68,49 @@
         <section class="sec"><div class="sec-head"><h2>Skills at this level</h2><a class="btn btn-sm btn-primary" href="#/visit/${p.id}">Start visit</a></div>
           ${F.SKILLS.map(function (s) { return h`<div class="skillrow"><div class="nm"><b>${s.name}</b><span class="small muted">${s.sub}</span></div>${U.skillPill(p.skills[s.id])}</div>`; })}
           <p class="small muted">Skills are signed off in person during a visit.</p>
+          ${legend()}
+        </section>
+        <section class="sec"><div class="sec-head"><h2>Medications and supplies</h2>${sel.medsStale(p) ? U.pill('May be out of date', 'attn') : U.pill('Confirmed', 'green')}</div>
+          ${(p.meds || []).length ? h`<ul class="card-list">${p.meds.map(function (m) { return h`<li><div class="grow"><b>${m.name}</b><div class="small muted">${m.kind === 'supply' ? 'Supply' : 'Medication'}${m.detail ? ' · ' + m.detail : ''}</div></div></li>`; })}</ul>` : U.empty('No list yet', p.first + ' adds medications and supplies in the app.')}
+          <div class="row between wrap" style="margin-top:.75rem"><span class="small muted">${p.medsConfirmed ? 'Last confirmed ' + U.fmtFull(p.medsConfirmed.date) + ' by ' + p.medsConfirmed.by + '.' : 'Not confirmed yet.'} ${p.first} keeps this list in the app. Adult doctors see it first.</span><button class="btn btn-sm btn-primary" data-action="confirmMeds" data-pid="${p.id}">${ic('check', 16)} Confirm list</button></div>
         </section>
       </div>
       <div class="stack">
         <section class="sec"><div class="sec-head"><h2>How to work with ${p.first}</h2><button class="btn btn-sm" data-action="addWorkWith" data-pid="${p.id}">${ic('plus', 16)} Add</button></div>
           ${p.howToWork.map(function (w) { return h`<div class="note ${w.by.indexOf('Patient') === 0 ? 'patient' : 'peds'}"><div class="meta"><b>${w.by}</b><span class="muted">${w.date}</span></div>${w.text}</div>`; })}
         </section>
+        <section class="sec"><div class="sec-head"><h2>Where ${p.first} may need support in a visit</h2><button class="btn btn-sm" data-action="editSupport" data-pid="${p.id}">${ic('plus', 16)} Add</button></div>
+          <p class="small muted">Shows above the fold in the adult view.</p>
+          ${(p.supportThisVisit || []).map(function (x) { return h`<div class="note peds"><div class="meta"><b>${x.label}</b><span class="muted">${x.by || ''}${x.date ? ' · ' + x.date : ''}</span><button class="btn btn-sm btn-quiet" data-action="editSupport" data-pid="${p.id}" data-id="${x.id}" aria-label="Edit ${x.label}">${ic('edit', 16)}</button><button class="btn btn-sm btn-quiet" data-action="removeItem" data-list="supportThisVisit" data-pid="${p.id}" data-id="${x.id}" aria-label="Remove ${x.label}">${ic('trash', 16)}</button></div>${x.text}</div>`; })}
+          ${(p.supportThisVisit || []).length ? '' : U.empty('Nothing added', 'Add how a new clinician can help ' + p.first + ' in a visit.')}
+          <div class="row between wrap" style="margin-top:.75rem"><span><b>Big decisions:</b> ${p.decisionSupport ? 'with help from ' + p.decisionSupport.name + (p.decisionSupport.rel ? ', ' + p.decisionSupport.rel.toLowerCase() : '') : 'on their own'}</span><button class="btn btn-sm" data-action="editDecision" data-pid="${p.id}">${ic('edit', 16)} Edit</button></div>
+        </section>
         <section class="sec"><h2>In ${p.first}'s words</h2><div class="eyebrow" style="margin:.75rem 0 .25rem">What I want my doctor to know</div><p>${p.wantDoctorKnow}</p>
           ${p.questions.length ? h`<div class="eyebrow" style="margin:.75rem 0 .25rem">Questions for this visit</div><ul>${p.questions.map(function (x) { return h`<li>${x}</li>`; })}</ul>` : ''}</section>
       </div>
     </div>`;
   }
+  function handoffForm(p) {
+    var d = p.notes.filter(function (n) { return n.kind === 'Handoff note' && n.draft; })[0] || {}, f = d.fields || {};
+    var fl = function (name, label, ph) { return h`<label for="ho-${name}">${label}</label><textarea id="ho-${name}" name="${name}" rows="2" placeholder="${ph}">${f[name] || ''}</textarea>`; };
+    return h`<div class="divider-label" style="margin-top:1.5rem"><span class="eyebrow">Handoff note for the adult team</span></div>
+      <p class="small muted">Structured so a receiving doctor can find each answer fast. Drafts stay here until you share them.</p>
+      <form data-submit="saveHandoff"><input type="hidden" name="pid" value="${p.id}">
+        <label for="ho-summary">Summary</label><textarea id="ho-summary" name="summary" rows="2" required placeholder="One or two lines for the adult team">${d.text || ''}</textarea>
+        ${fl('meds', 'Current medications and how long repeats last', 'Repeats last until...')}
+        ${fl('referrals', 'Referrals made and who takes over each specialty', 'Adult endocrinology referral sent...')}
+        ${fl('upcoming', 'Upcoming appointments and what is due', 'Blood work due...')}
+        ${fl('managed', 'How diabetes has been managed', 'Pump and sensor, A1C trend in linked records')}
+        ${fl('watch', 'What to watch', 'Lows after sports...')}
+        <label class="check"><input type="checkbox" name="final"><span>Ready to share with adult teams (otherwise saved as a draft)</span></label>
+        <button class="btn btn-primary">Save handoff note</button>
+      </form>`;
+  }
   function notes(p) {
     return h`
     <div class="grid2" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
       <section class="sec"><h2>Notes</h2><p class="small muted">Labelled by who wrote them. ${p.first} sees every note. ${p.first} decides who else does.</p>
-        ${sel.notesFor(p).map(function (n) { return h`<article class="note ${n.role}"><div class="meta"><b>${n.kind}</b>${n.draft ? U.pill('Draft', 'blue') : ''}${n.shared ? U.pill('Shown to future care teams', 'green') : U.pill('Not shared onward', 'neutral')}<span class="muted">${n.author} · ${ROLE[n.role]} · ${U.fmt(n.date)}</span></div><p style="margin:0">${n.text}</p></article>`; })}
+        ${sel.notesFor(p).map(function (n) { return h`<article class="note ${n.role}"><div class="meta"><b>${n.kind}</b>${n.draft ? U.pill('Draft', 'blue') : ''}${n.shared ? U.pill('Shown to future care teams', 'green') : U.pill('Not shared onward', 'neutral')}<span class="muted">${n.author} · ${ROLE[n.role]} · ${U.fmt(n.date)}</span></div><p style="margin:0">${n.text}</p>${n.fields ? handoffDl(n.fields) : ''}</article>`; })}
       </section>
       <section class="sec"><h2>Add a note</h2>
         <form data-submit="addNote"><input type="hidden" name="pid" value="${p.id}">
@@ -73,7 +118,8 @@
           <label for="nt">Note</label><textarea id="nt" name="text" rows="5" required placeholder="What should ${p.first} take away, work on for Level ${Math.min(p.level + 1, 10)}, or what should the adult team know?"></textarea>
           <label class="check"><input type="checkbox" name="shared" checked><span>Show to future care teams</span></label>
           <button class="btn btn-primary">Save note</button>
-        </form></section>
+        </form>
+        ${handoffForm(p)}</section>
     </div>`;
   }
   function care(p) {
@@ -107,7 +153,7 @@
       <a class="crumb" href="#/patients">${ic('back', 16)} All patients</a>
       <section class="hero" data-rise><span class="tape" aria-hidden="true"></span>
         <div class="hero-av">${U.avatar(p, 112)}</div>
-        <div class="grow"><div class="eyebrow">Folio ID ${sel.fid(p.folioId)}</div><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span>${U.pill(p.condition, 'blue')}${U.statusPill(p)}<span class="muted">Level ${p.level} · ${sel.level(p.level).name}</span></div></div>
+        <div class="grow"><div class="eyebrow">Folio ID ${sel.fid(p.folioId)}</div><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span>${U.pill(p.condition, 'blue')}${U.statusPill(p)}${p.attention && p.attentionReason ? h`<span class="small">${p.attentionReason}</span>` : ''}<span class="muted">Level ${p.level} · ${sel.level(p.level).name}</span></div></div>
         <div class="row wrap"><button class="btn" data-action="editPatient" data-pid="${p.id}">${ic('edit', 16)} Edit info</button><a class="btn btn-primary" href="#/visit/${p.id}">${ic('visit', 16)} Start visit</a></div>
       </section>
       <div class="subtabs" role="tablist" aria-label="Patient sections">${tabs.map(function (t) { return h`<button role="tab" aria-selected="${String(F.ui.pt === t[0])}" data-action="ptab" data-v="${t[0]}">${t[1]}</button>`; })}</div>

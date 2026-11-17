@@ -45,7 +45,7 @@
     var stepper = h`<ol class="stepper" aria-label="Visit steps">${steps.map(function (s, i) { var n = i + 1; return h`<li class="${n < v.step ? 'done' : ''}" ${n === v.step ? h`aria-current="step"` : ''}><b>${n < v.step ? '✓' : n}</b>${s}</li>`; })}</ol>`;
     var body;
     if (v.step === 1) {
-      body = h`<h2>Review skills at Level ${p.level}</h2><p class="muted">Ask ${p.first} to show you, then set where each skill is today. Changes save as you go.</p>
+      body = h`<h2>Review skills at Level ${p.level}</h2><p class="muted">Ask ${p.first} to show you, then set where each skill is today. Changes save as you go. On my own means ${p.first} does it without being reminded.</p>
         ${F.SKILLS.map(function (s) { return h`<div class="visit-skill"><div><b>${s.name}</b><div class="small muted">${s.sub}</div></div>
           <div class="seg" role="group" aria-label="${s.name} status">${['learning', 'help', 'own'].map(function (k) { return h`<button data-action="vskill" data-pid="${p.id}" data-sid="${s.id}" data-v="${k}" aria-pressed="${String(p.skills[s.id] === k)}">${F.SKILL_STATUS[k]}</button>`; })}</div></div>`; })}
         <div class="row between" style="margin-top:1.25rem"><span class="muted">${own} of 5 on their own · ${req} needed to advance</span><button class="btn btn-primary" data-action="vstep" data-v="2">Next: decide ${ic('arrow', 16)}</button></div>`;
