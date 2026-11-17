@@ -93,3 +93,13 @@ html[data-contrast="high"] .note-sticky{background:#fff !important;border:2px so
 .cols .sheetc::after{display:none}
 .msg .art svg{opacity:1}
 @media print{.sheetc,.work,.who,.sk2 .it2,body{background:#fff !important;box-shadow:none !important}.who .btn{display:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+
+/* v2 research update: medication list, status legend, structured handoff, consent screen */
+.meds .stale{color:var(--text);background:var(--beige-200);border-left:4px solid var(--red-500);padding:.5rem .75rem;border-radius:8px;display:flex;gap:.4rem;align-items:flex-start;flex-wrap:wrap}
+.meds .stale .ic{flex:none;margin-top:.15rem}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.5rem 1rem;margin:1rem 0 0;padding-top:.9rem;border-top:1px solid var(--line)}
+.legend div{display:flex;gap:.6rem;align-items:flex-start}.legend dt{flex:none}.legend dd{margin:0;color:var(--text-muted)}
+.handoff{display:grid;gap:.45rem;margin:.6rem 0 0}.handoff div{display:grid;grid-template-columns:minmax(9rem,13rem) 1fr;gap:.75rem}
+.handoff dt{font:700 .72rem/1.5 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}.handoff dd{margin:0}
+@media(max-width:600px){.handoff div{grid-template-columns:1fr;gap:.1rem}}
+.consent .seelist{margin:.4rem 0 0;padding-left:1.2rem}.consent .seelist li{margin:.2rem 0}
