@@ -1,0 +1,77 @@
+/* Folio design system v4: adult care-team view (clinical density). Loaded after card.css and shared/css/v4.css. */
+body { background: var(--bg-page); background-image: none; }
+.bar { background: var(--green-800); background-image: none; box-shadow: none; }
+.bar .tag { color: rgba(252,248,241,.75); font: 700 .75rem var(--font-ui); letter-spacing: .08em; }
+.bar .wordmark { font-size: 1.25rem; }
+.bar .via { background: var(--lime); color: var(--green-900); }
+.bar .tsz button { border: 2px solid rgba(252,248,241,.45); color: var(--beige-50); border-radius: 999px; min-width: 40px; min-height: 40px; }
+.bar .tsz button[aria-pressed="true"] { background: var(--beige-50); color: var(--green-900); border-color: var(--beige-50); }
+.bar .btn { border-color: rgba(252,248,241,.6); color: var(--beige-50); background: transparent; }
+.bar .btn:hover { background: rgba(252,248,241,.12); }
+.ring { background: rgba(252,248,241,.18); }
+.demo-banner { background: var(--info-bg); color: var(--info-fg); font-weight: 700; }
+
+/* Clinical cards: Beige 50, 14px, flat */
+.sheetc { background: var(--bg-surface); background-image: none; border-radius: var(--radius-clinical); box-shadow: none; }
+.sheetc:first-of-type::after { display: none; }
+.sheetc h2 { font: 600 1.5rem/1.2 var(--font-display); color: var(--fg-headline); border-bottom: 1px solid var(--line); }
+.pt-av .avatar { box-shadow: none; }
+.facts { color: var(--fg-2); }
+.work, .who, .sk2 .it2, .gl-i { background: var(--bg-inset); background-image: none; box-shadow: none; border-radius: var(--radius-clinical); }
+.work .by, .who .rl, .gl-i dt { color: var(--fg-2); font: 700 .75rem/1rem var(--font-ui); letter-spacing: .08em; }
+.work .by span { color: var(--fg-2); }
+
+/* Voices: the patient's words are always Blue 100, the care team's Beige 200 */
+.work.voice-patient { background: var(--voice-patient); border-radius: 20px 20px 20px 8px; }
+.work.voice-team { background: var(--voice-care-team); border-radius: 20px 20px 8px 20px; }
+
+/* At a glance: allergies get the attention tile (error tint with an icon), never alarming red */
+.gl-i { border-left: 0; }
+.gl-i.gl-alert { background: var(--error-bg); }
+.gl-i dt { display: flex; align-items: center; gap: .35rem; }
+.gl-i.gl-alert dt { color: var(--error-fg); }
+.gl-i.gl-flag { background: var(--info-bg); }
+.gl-i.gl-flag dt { color: var(--info-fg); }
+.gl-v { color: var(--fg-1); }
+.gl-src { color: var(--fg-2); }
+
+/* Medications may be out of date: a warning notice with an icon and words */
+.meds .stale { background: var(--warning-bg); color: var(--warning-fg); border-left: 0; border-radius: var(--radius-clinical); }
+.meds .stale .ic { color: var(--warning-fg); }
+
+.fold { color: var(--fg-2); }
+.fold::before, .fold::after { border-top-color: var(--line); }
+.legend { border-top-color: var(--line); }
+.handoff dt { color: var(--fg-2); }
+.consent .seelist li::marker { color: var(--green-500); }
+.consent .what { color: var(--fg-2); }
+textarea[aria-invalid="true"], input[aria-invalid="true"] { border-color: var(--error-fg); }
+.msg .art svg { filter: none; }
+
+/* The sticky-note look from v2 gives way to the v4 voices: patient Blue 100, care team Beige 200, flat */
+.note-sticky.voice-patient { background: var(--voice-patient) !important; border-radius: 20px 20px 20px 8px !important; box-shadow: none !important; transform: none !important; color: var(--fg-1); }
+.note-sticky.voice-team { background: var(--voice-care-team) !important; border-radius: 20px 20px 8px 20px !important; box-shadow: none !important; transform: none !important; color: var(--fg-1); }
+.note-sticky .by span { color: var(--fg-2); }
+@media print { .note-sticky.voice-patient, .note-sticky.voice-team { background: #fff !important; border: 1px solid #999; } }
+
+/* Session warning on the dark bar uses Butter, the focus ring is the v4 ring with a cream gap so it shows on Green 800 */
+.sess.warn .ring i { background: conic-gradient(var(--butter) calc(var(--p, 1) * 360deg), transparent 0); }
+.sess.warn #sess-left { color: var(--butter); }
+.sess.warn [data-action="extend"] { border-color: var(--butter); }
+.bar .tsz button:focus-visible, .bar .btn:focus-visible, .key:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--beige-50), 0 0 0 6px var(--focus-ring); }
+
+/* On a phone the bar stays compact and scrolls away, so the profile gets the screen */
+@media (max-width: 480px) {
+  .bar { position: relative; }
+  .bar .in { gap: .4rem .6rem; padding-block: .5rem; }
+  .bar .sess { gap: .4rem; font-size: .8125rem; }
+  .bar .sess .ring { display: none; }
+  .bar .tsz { gap: 4px; }
+  .bar .tsz button { min-width: 40px; min-height: 40px; }
+}
+
+/* v5: the teen's 3 sentences open At a glance, in the patient voice */
+.gl-words { background: var(--voice-patient); border-radius: 20px 20px 20px 8px; padding: .85rem 1.1rem; margin: .25rem 0 .75rem; }
+.gl-words .by { font: 700 .75rem/1rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-1); display: flex; flex-wrap: wrap; gap: .25rem .75rem; }
+.gl-words .by span { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--fg-2); }
+.gl-words p { margin: .35rem 0 0; font-size: 1.0625rem; line-height: 1.5; color: var(--fg-1); }
