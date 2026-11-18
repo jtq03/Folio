@@ -1,0 +1,271 @@
+/* Folio design system v4: teen patient app. Loaded last. Layout and behaviour stay the same.
+   v4 teen density: Fraunces headings, 28px cards, 20px rows, pill buttons, lime for progress and the active tab,
+   flat surfaces (shadow only on floating things), the mascot and plants. Red is only the star and the mascot. */
+
+/* ---------- Palette: the app's own variables point at v4 ---------- */
+:root {
+  --paper: var(--beige-100); --sheet: var(--beige-50); --glass: var(--beige-50); --hi: transparent;
+  --ink: var(--green-900); --ink2: var(--blue-700); --line: var(--beige-300); --line2: var(--line-strong);
+  --tint: var(--green-900); --tint-ink: var(--beige-50); --edge: transparent; --shadow: rgba(31,47,22,.18);
+  --desk: var(--beige-200); --obj: var(--beige-50); --obj-ink: var(--green-900); --obj2: var(--blue-700);
+  --sticky-a: var(--voice-care-team); --sticky-b: var(--voice-care-team); --sticky-c: var(--voice-patient);
+  --grain: none; --fibre: none; --mottle: none; --linen: none;
+  --g-bg: linear-gradient(var(--sheet), var(--sheet)); --g-blur: none; --g-edge: linear-gradient(transparent, transparent);
+  --g-hi: 0 0 0 0 transparent; --g-shadow: 0 0 0 0 transparent;
+  --spring: var(--ease); --out: var(--ease); --push: var(--ease);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #16241D; --sheet: #1F3128; --glass: #1F3128; --ink: #F3EDE0; --ink2: #B9C7BD; --line: #34493D; --line2: #6E8275;
+    --tint: var(--lime); --tint-ink: var(--green-900); --desk: #29402F; --obj: #1F3128; --obj-ink: #F3EDE0; --obj2: #B9C7BD;
+    --g-bg: linear-gradient(var(--sheet), var(--sheet));
+  }
+}
+:root[data-contrast="high"] { --ink2: var(--ink); --line: var(--line2); }
+
+/* ---------- Page ---------- */
+body, .ios-device { background: var(--paper); background-image: none; }
+body { color: var(--ink); font-family: var(--font-ui); font-weight: 500; }
+.ios-large h1 { font: 600 2rem/1.15 var(--font-display); color: var(--fg-headline); text-shadow: none; letter-spacing: -.01em; }
+@media (prefers-color-scheme: dark) { .ios-large h1 { color: var(--ink); } }
+.ios-large h1 em { font-style: italic; font-weight: 400; }
+.ios-sub { color: var(--ink2); }
+.ios-eyebrow, .ios-gh { font: 700 .75rem/1rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
+.ios-eyebrow.red { color: var(--ink2); }
+.ios-cap, .ios-gf { color: var(--ink2); }
+:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--focus-ring) !important; }
+
+/* ---------- Lists: Beige 50 rows on Beige 100, 20px radius, 56px rows ---------- */
+.ios-list { background: var(--sheet); background-image: none; border: 0; border-radius: var(--radius-row); box-shadow: none; }
+.ios-row { min-height: 56px; }
+.ios-row.destructive, .ios-row .destr, .ios-as-btn.danger, .ios-ctx-item.danger { color: var(--error-fg); }
+.ios-swipe-actions .rm { background: var(--error-fg); } .ios-swipe-actions .edit { background: var(--blue-700); }
+.ios-addrow { color: var(--ink); }
+
+/* Icon tiles: colour by meaning (Blue 100 visits, Butter bloodwork, Lime 100 meds, Beige 200 notes) */
+.ios-tile { box-shadow: none; background-image: none; border-radius: 12px; color: var(--green-900); transform: none; }
+.ios-tile.t1 { background: var(--blue-100); } .ios-tile.t2 { background: var(--butter); } .ios-tile.t3 { background: var(--lime-100); }
+.ios-tile.t4 { background: var(--beige-200); } .ios-tile.t5 { background: var(--success-bg); }
+
+/* Status chips (app): pill, 5/12 padding, icon always on */
+.ios-st { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px 4px 9px; border-radius: 999px; font: 700 .8125rem/1.2 var(--font-ui); color: var(--green-900); }
+.ios-st .ic { flex: none; }
+.ios-st.s-own { background: var(--lime); color: var(--green-900); }
+.ios-st.s-help { background: var(--blue-100); color: var(--green-900); }
+.ios-st.s-learning { background: var(--beige-200); color: var(--green-900); }
+.ios-rt .ios-st { margin-top: 6px; align-self: flex-start; }
+.ios-chip { background: var(--info-bg); color: var(--info-fg); box-shadow: none; border-radius: 999px; }
+
+/* ---------- Buttons: pill, 48 tall, one primary per screen ---------- */
+.ios-btn { min-height: 48px; border-radius: 999px; background: var(--tint); background-image: none; color: var(--tint-ink); font: 700 .9375rem/1.25 var(--font-ui); box-shadow: none; margin-bottom: 0; transition: transform var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease); }
+.ios-btn:active { transform: scale(.97); box-shadow: none; background: var(--action-press); }
+.ios-btn.sec, .ios-btn.glass-btn { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
+.ios-btn.sec:active, .ios-btn.glass-btn:active { background: var(--desk); box-shadow: inset 0 0 0 2px var(--ink); }
+.ios-btn.glass-btn::after { display: none; }
+.ios-btn.light { background: var(--lime); color: var(--green-900); box-shadow: none; }
+.ios-btn.light:active { background: var(--highlight-press); box-shadow: none; }
+.ios-btn.sm { min-height: 44px; }
+.ios-round, .ios-gbtn { width: 48px; height: 48px; border-radius: 50%; background: var(--desk); background-image: none; box-shadow: none; color: var(--ink); }
+.ios-gbtn.glass::after { display: none; }
+.ios-add { min-height: 56px; border-radius: var(--radius-row); border: 2px dashed var(--line2); background: transparent; color: var(--ink); box-shadow: none; }
+
+/* Switch: 52 x 30, on = Green 500 track with a lime knob */
+.ios-sw { width: 52px; height: 30px; border-radius: 999px; background: var(--switch-off); box-shadow: none; }
+.ios-sw::before { top: 3px; left: 3px; width: 24px; height: 24px; background: var(--beige-50); box-shadow: none; transition: transform var(--dur-fast) var(--ease); }
+.ios-sw:checked { background: var(--green-500); }
+.ios-sw:checked::before { transform: translateX(22px); background: var(--lime); }
+
+/* Segmented control: Beige 200 track, selected Beige 50 */
+.ios-seg { background: var(--beige-200); border-radius: 999px; padding: 4px; box-shadow: none; }
+.ios-seg::before { top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / var(--n, 4)); border-radius: 999px; background: var(--beige-50); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 2px rgba(31,47,22,.16); }
+.ios-seg button { font: 700 .8125rem var(--font-ui); color: var(--green-900); }
+@media (prefers-color-scheme: dark) { .ios-seg { background: #29402F; } .ios-seg::before { background: #3A5446; } .ios-seg button { color: var(--ink); } }
+
+/* Fields: 2px border, 16px radius, focus = Green 900 border + ring */
+.ios-field input, .ios-field select, .ios-field textarea { font-family: var(--font-ui); }
+.ios-searchbox { background: var(--sheet); border-radius: 999px; box-shadow: inset 0 0 0 2px var(--line); }
+.ios-story textarea { border: 2px solid var(--line2); border-radius: var(--radius-input); background: var(--sheet); background-image: none; box-shadow: none; font-family: var(--font-ui); }
+.ios-story textarea:focus-visible { border-color: var(--ink); }
+.ios-ferr, .ios-field.bad .ios-fl { color: var(--error-fg); }
+
+/* ---------- Top bar and tab bar ---------- */
+.ios-nav { background: var(--paper); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+.ios-nav.col { box-shadow: inset 0 -1px 0 var(--line); }
+.ios-nav-t { font: 600 1.25rem/1.2 var(--font-display); color: var(--ink); }
+.ios-back .ios-gbtn { width: 40px; height: 40px; }
+/* Tab bar: 4 tabs, labels always on, the active tab gets a 56 x 32 lime pill behind its icon */
+.ios-tabs { left: 0; right: 0; bottom: 0; height: calc(64px + var(--sb)); padding: 6px 4px var(--sb); border-radius: 0; background: var(--sheet); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 1px 0 var(--line); }
+.ios-tabs.glass::after { display: none; }
+.ios-bubble { display: none !important; }
+.ios-tabs a { min-height: 54px; gap: 3px; border-radius: 12px; color: var(--ink2); font: 600 .75rem/1.2 var(--font-ui); }
+.ios-tabs a .ios-ti { display: grid; place-items: center; width: 56px; height: 32px; border-radius: 999px; transition: background var(--dur-fast) var(--ease); }
+.ios-tabs a[aria-current="page"] { color: var(--green-900); font-weight: 700; }
+.ios-tabs a[aria-current="page"] .ios-ti { background: var(--lime); }
+@media (prefers-color-scheme: dark) { .ios-tabs a[aria-current="page"] { color: var(--ink); } .ios-tabs a[aria-current="page"] .ios-ti { color: var(--green-900); } }
+#toasts { bottom: calc(64px + var(--sb) + 14px); }
+.ios-scroll { padding-bottom: calc(64px + var(--sb) + 24px); }
+
+/* ---------- Cards ---------- */
+/* The level / plant card */
+.ios-index { margin: 8px 16px 0; padding: 22px 20px 20px; color: var(--ink); background: var(--sheet); border-radius: var(--radius-card); }
+.ios-index::before, .ios-index::after, .ios-tape { display: none !important; }
+.ios-index .ios-eyebrow, .ios-index .ios-cap { color: var(--ink2); }
+.ios-num { font-family: var(--font-display); color: var(--ink); text-shadow: none; }
+/* Levels bars (v4): earned bars in blues and greens, the current bar lime with a dark ring, upcoming Beige 200 */
+.ios-stairs i, .ios-big-stairs li { background: var(--beige-200); background-image: none; box-shadow: none; border-radius: 8px 8px 4px 4px; color: var(--green-900); }
+.ios-stairs i.done, .ios-big-stairs li.done { background: var(--blue-300); }
+.ios-stairs i.done:nth-child(3n+2), .ios-big-stairs li.done:nth-child(3n+2) { background: var(--blue-500); color: var(--beige-50); }
+.ios-stairs i.done:nth-child(3n), .ios-big-stairs li.done:nth-child(3n) { background: var(--green-500); color: var(--beige-50); }
+.ios-stairs i.cur, .ios-big-stairs li.cur { background: var(--lime); color: var(--green-900); box-shadow: inset 0 0 0 2px var(--green-900); }
+.ios-stairwrap { background: var(--sheet); background-image: none; border-radius: var(--radius-card); box-shadow: none; }
+.ios-stairwrap::before, .ios-stairwrap::after { display: none; }
+.ios-meter i { background: var(--beige-300); box-shadow: none; border-radius: 999px; }
+.ios-meter i.on { background: var(--green-500); }
+.ios-lvn { box-shadow: inset 0 0 0 2px var(--line); font-family: var(--font-display); }
+.ios-lvn.done { background: var(--green-500); color: var(--beige-50); }
+.ios-row.cur .ios-lvn { background: var(--lime); color: var(--green-900); box-shadow: inset 0 0 0 2px var(--green-900); }
+.ios-up { background: var(--lime-100); background-image: none; border-radius: var(--radius-card); box-shadow: none; color: var(--green-900); }
+.ios-up .ios-eyebrow { color: var(--green-500); }
+@media (prefers-color-scheme: dark) { .ios-up { background: #2C3B20; color: var(--ink); } .ios-up .ios-eyebrow { color: var(--lime); } }
+
+/* Notes on Home: the care team's voice is Beige 200 with an 8px bottom-right corner */
+.ios-sticky, .ios-sticky.b, .ios-sticky.c { margin: 0 16px; padding: 18px 18px 16px; border-radius: 20px 20px 8px 20px; background: var(--voice-care-team); background-image: none; box-shadow: none; transform: none; }
+.ios-sticky::after { display: none; }
+.ios-sticky .ios-eyebrow, .ios-sticky .ios-cap { color: var(--ink2); }
+.ios-sticky p { font: 500 1.0625rem/1.5 var(--font-ui); color: var(--ink); }
+/* The teen's own questions are the patient voice: Blue 100 with an 8px bottom-left corner */
+.ios-qcard, .ios-qcard:nth-child(odd), .ios-qcard:nth-child(even) { background: var(--voice-patient); background-image: none; box-shadow: none; transform: none; border-radius: 20px 20px 20px 8px; }
+
+/* Next visit: the visit event card (Blue 100) */
+.ios-ticket-sh { filter: none; }
+.ios-ticket { background: var(--blue-100); background-image: none; color: var(--green-900); border-radius: var(--radius-card); -webkit-mask-image: none; mask-image: none; }
+.ios-ticket .stub { background: var(--blue-300); border-right: 0; }
+.ios-ticket .stub .m, .ios-ticket .stub .w, .ios-ticket .main .ios-eyebrow, .ios-ticket p { color: var(--green-900); }
+.ios-ticket .stub .d { text-shadow: none; color: var(--green-900); }
+@media (prefers-color-scheme: dark) { .ios-ticket { background: #263A55; color: var(--ink); } .ios-ticket .stub { background: #2F4A6E; } .ios-ticket .stub .m, .ios-ticket .stub .w, .ios-ticket .stub .d, .ios-ticket .main .ios-eyebrow, .ios-ticket p { color: var(--ink); } }
+
+/* The card pocket: the card itself carries the colour now */
+.ios-pocket { margin: 0 16px; padding: 18px 16px 16px; border-radius: var(--radius-card); background: var(--sheet); background-image: none; color: var(--ink); box-shadow: none; }
+.ios-pocket::before { display: none; }
+.ios-pocket .ios-eyebrow, .ios-pcap { color: var(--ink2); }
+.ios-pocket .ios-list { background: var(--paper); }
+
+/* Profile */
+.ios-av-hero .avatar { box-shadow: none; }
+.ios-av-badge { background: var(--green-900); color: var(--beige-50); box-shadow: 0 0 0 3px var(--paper); }
+.ios-complete, .ios-story, .ios-qcards { box-shadow: none; }
+.ios-complete { background: var(--sheet); background-image: none; border-radius: var(--radius-card); }
+.ios-ring-fg { stroke: var(--green-500); }
+.ios-checks .box { border-color: var(--green-500); border-radius: 7px; }
+.ios-checks .done .box { background: var(--green-500); }
+.ios-timeline .dot { box-shadow: none; }
+
+/* ---------- Floating things: toast, sheets, menus get the one float shadow ---------- */
+.toast { background: var(--green-900); background-image: none; color: var(--beige-50); border-radius: 18px; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--shadow-float); }
+.toast::after { display: none; }
+.ios-sheet { background: var(--paper); background-image: none; border-radius: 32px 32px 0 0; box-shadow: var(--shadow-float); }
+.ios-grab { width: 40px; height: 5px; border-radius: 999px; background: var(--line2); }
+.ios-scrim { background: var(--scrim); }
+.ios-sheet-head { background: var(--paper); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ios-nbtn { background: var(--desk); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; min-height: 44px; }
+.ios-nbtn::after { display: none; }
+.ios-nbtn.bold { background: var(--tint); color: var(--tint-ink); }
+.ios-actionsheet .ios-list { background: var(--sheet); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--shadow-float); }
+.ios-actionsheet .ios-list::after { display: none; }
+.ios-ctx { box-shadow: var(--shadow-float); }
+
+/* ---------- Level up: the celebration card (Green 800, mascot, lime action) ---------- */
+.ios-lvlup { background: var(--green-800); background-image: none; color: var(--beige-50); }
+.ios-lvlup h2 { font: 600 2.25rem/1.1 var(--font-display); color: var(--beige-50); }
+.ios-lvlup h2 em { font-style: italic; font-weight: 400; color: var(--lime); }
+.ios-lvlup .lv-sub { color: rgba(252,248,241,.75); margin: 0; font-weight: 600; }
+.ios-lvlup .ios-eyebrow { color: var(--lime); }
+.ios-lvlup .stamp { border: 0; border-radius: 999px; background: var(--lime); color: var(--green-900); transform: none; padding: 8px 14px; }
+.ios-changed { background: rgba(252,248,241,.08); box-shadow: none; border-radius: var(--radius-row); }
+.ios-btn.ghost { color: var(--beige-50); box-shadow: inset 0 0 0 2px rgba(252,248,241,.6); background: transparent; }
+.lv-mascot { margin-bottom: 4px; }
+.lv-mascot .mascot { display: block; animation: lvMascot var(--dur-celebrate) var(--ease-celebrate) both; }
+@keyframes lvMascot { from { transform: scale(.4) rotate(-30deg); opacity: 0; } to { transform: none; opacity: 1; } }
+:root[data-motion="reduce"] .lv-mascot .mascot { animation: none; }
+@media (prefers-reduced-motion: reduce) { .lv-mascot .mascot { animation: none; } }
+
+/* ---------- Plants (v4): one per level on the sky tile, 22% radius, never cropped ---------- */
+.plant-tile { position: relative; display: inline-block; width: var(--s); height: var(--s); border-radius: 22%; background: var(--plant-tile); flex: none; }
+.plant-tile img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: contain; }
+.plant-tile .pl-leaves { position: absolute; right: -6px; top: -6px; display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px 3px 6px; border-radius: 999px; background: var(--lime); color: var(--green-900); font: 700 .75rem/1 var(--font-ui); box-shadow: 0 0 0 3px var(--sheet); }
+.pl-card .pl-art { width: auto; }
+.pl-hero .pl-art { width: auto; }
+.ios-tile .plant-tile { width: 100%; height: 100%; border-radius: inherit; }
+.ios-tile .plant-tile .pl-leaves { display: none; }
+
+/* ---------- Brand: wordmark artwork with the star as the dot of the i ---------- */
+.wordmark { position: relative; display: inline-block; width: 3.4em; font-size: 1.9rem; line-height: 0; text-shadow: none; vertical-align: middle; }
+.wordmark img { display: block; width: 100%; height: auto; }
+.wordmark .wm-star { position: absolute; left: 59%; top: 16%; width: 15%; height: auto; transform: none; }
+.mascot { display: block; }
+/* Headings take focus for screen readers when a page opens; no ring for that */
+h1:focus-visible, h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { box-shadow: none !important; outline: none; }
+
+/* ---------- Review fixes ---------- */
+/* Card titles are Fraunces (v4: card title 20/24, display type 24px and up) */
+.pl-card h2, .pl-hero h2, .ios-lvl h2 { font: 600 1.5rem/1.15 var(--font-display); color: var(--ink); }
+.pl-link { color: var(--ink); }
+/* Checkbox: 24px, 7px radius, Green 500 */
+.mc-task input[type="checkbox"] { width: 24px; height: 24px; border-radius: 7px; accent-color: var(--green-500); }
+/* The celebration card already names the level, so the flip counter is not needed */
+.ios-lvlup .fx-flap { display: none; }
+.wordmark .wm-cream { display: none; }
+.wordmark.cream .wm-ink { display: none; }
+.wordmark.cream .wm-cream { display: block; }
+@media (prefers-color-scheme: dark) { .wordmark .wm-ink { display: none; } .wordmark .wm-cream { display: block; } }
+
+/* ---------- v4 improvements ---------- */
+/* Who can see this: outlined chip with an icon */
+.vis-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 8px; border-radius: 999px; border: 1.5px solid var(--line2); background: transparent; color: var(--ink); font: 700 .75rem/1.2 var(--font-ui); }
+.ios-sticky .vis-chip { margin-top: 12px; }
+.ios-story .vis-chip { margin-top: 8px; }
+/* Run my care: who does it now, and a "Take it on" handover */
+.mc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mc-body .ios-rt { flex: none; }
+.mc-own { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.own-chip { display: inline-flex; align-items: center; white-space: nowrap; padding: 3px 10px; border-radius: 999px; font: 700 .75rem/1.2 var(--font-ui); color: var(--green-900); }
+.own-chip.own-teen { background: var(--lime); }
+.own-chip.own-parent { background: var(--blue-100); }
+.own-chip.own-shared { background: var(--butter); }
+.mc-task .mc-take { min-height: 40px; padding: 0 16px; }
+/* A new plant every level: earned full colour, current ringed, upcoming at 40% */
+.pl-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px 6px; padding: 8px 0 12px; }
+.pl-item { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.pl-item b { font: 700 .75rem/1.2 var(--font-ui); color: var(--ink); margin-top: 4px; }
+.pl-item small { font-size: .72rem; line-height: 1.2; color: var(--ink2); }
+.pl-item.current .plant-tile { outline: 3px solid var(--ink); outline-offset: 3px; }
+.pl-item.upcoming .plant-tile { opacity: .4; }
+/* Offline notice: the dot takes the warning colour */
+.px-offline i { background: var(--warning-fg); }
+/* Profile ring: a small number, so Figtree (Fraunces is for headings 24px and up) and it fits inside the ring */
+.ios-ring b { font: 700 1rem/1 var(--font-ui); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+/* ---------- v5: goals, readiness check, Coming up, 3-sentence summary ---------- */
+.goal-stack { display: grid; gap: 12px; }
+.goal-card .gstep { gap: 12px; align-items: center; min-height: 52px; }
+.goal-card .gstep input[type="checkbox"] { width: 24px; height: 24px; margin: 0; flex: none; accent-color: var(--green-500); }
+.goal-card .gstep .ios-rt b { font-weight: 500; line-height: 1.35; }
+.goal-card .gstep.done .ios-rt b { text-decoration: line-through; text-decoration-thickness: 1.5px; color: var(--ink2); }
+.goal-card.all { box-shadow: inset 0 0 0 2px var(--lime); }
+.ios-gf a { color: inherit; font-weight: 700; text-underline-offset: 3px; }
+.cu-row { gap: 14px; }
+.cu-date { flex: none; width: 48px; height: 52px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--green-900); line-height: 1; }
+.cu-date .m { font: 700 .66rem/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.cu-date .d { font: 600 1.375rem/1.05 var(--font-display); margin-top: 3px; }
+.cu-date.k-task { background: var(--blue-100); }
+.cu-date.k-refill { background: var(--butter); }
+.ck-skills { display: grid; gap: 10px; }
+.ck-skill summary { list-style: none; cursor: pointer; gap: 12px; }
+.ck-skill summary::-webkit-details-marker { display: none; }
+.ck-skill summary .ios-st { flex: none; }
+.ck-skill .ck-ans .ios-rt b { font-weight: 500; line-height: 1.35; }
+.ck-skill[open] summary { border-bottom: 1px solid var(--line); }
+.ios-s3 { padding: 16px 18px 14px; border-radius: 20px 20px 20px 8px; background: var(--voice-patient); color: var(--ink); display: grid; gap: 10px; }
+.ios-s3 ol { margin: 0; padding-left: 1.25rem; display: grid; gap: 6px; line-height: 1.45; }
+.ios-s3 .vis-chip { justify-self: start; }
+.s3-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }

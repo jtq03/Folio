@@ -19,7 +19,7 @@
      - A real tap on a native switch (or its label) always ticks. That is why visible toggles are real switches (html.nsw).
      - A programmatic label.click() on a hidden switch ticked on iOS 17.4 to 26.4; Apple blocked it in iOS 26.5.
      - Android and others use navigator.vibrate patterns.
-     Feature-detected (never by user agent alone), never throws, never moves focus or scroll. Test sheet: haptics.js. */
+     Feature-detected (never by user agent alone), never throws, never moves focus or scroll. Test sheet: hapticLab in polish.js. */
   var H = N.haptics = {};
   var swSupport = (function () {
     try {
@@ -132,7 +132,7 @@
   }
   function grain(c, w, hh, alpha) { c.save(); for (var i = 0; i < w * hh / 90; i++) { c.fillStyle = 'rgba(90,70,40,' + (Math.random() * alpha) + ')'; c.fillRect(Math.random() * w, Math.random() * hh, 1.4, 1.4); } c.restore(); }
   function fontsReady() {
-    var p = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('600 80px Fraunces'), document.fonts.load('italic 400 80px Fraunces'), document.fonts.load('400 40px Prompt'), document.fonts.load('700 30px Prompt')]) : Promise.resolve();
+    var p = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('600 80px Fraunces'), document.fonts.load('italic 400 80px Fraunces'), document.fonts.load('400 40px Figtree'), document.fonts.load('700 30px Figtree')]) : Promise.resolve();
     /* Never wait long: offline the fonts may never arrive, and the fallbacks are fine for an image */
     return Promise.race([p, new Promise(function (r) { setTimeout(r, 1500); })]).catch(function () {});
   }
@@ -149,13 +149,13 @@
       var W = 1200, H = 756, k = canvas(W, H); if (!k) return null; var cv = k.cv, c = k.c;
       rr(c, 0, 0, W, H, 56); c.save(); c.clip(); c.fillStyle = '#F0E3CE'; c.fillRect(0, 0, W, H); grain(c, W, H, .12);
       var g = c.createRadialGradient(W * .3, 0, 50, W * .3, 0, W); g.addColorStop(0, 'rgba(255,250,238,.55)'); g.addColorStop(1, 'rgba(255,250,238,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H); c.restore();
-      c.fillStyle = '#CE3B3B'; c.font = '700 26px Prompt, system-ui, sans-serif'; c.textBaseline = 'alphabetic';
+      c.fillStyle = '#CE3B3B'; c.font = '700 26px Figtree, system-ui, sans-serif'; c.textBaseline = 'alphabetic';
       c.fillText('YOUR STORY, CARRIED FORWARD', 80, 110);
       c.fillStyle = '#1F2F16'; c.font = '600 118px Fraunces, Georgia, serif'; c.fillText('fol', 80, 250); var w1 = c.measureText('fol').width, wi = c.measureText('\u0131').width;
       c.fillText('\u0131', 80 + w1, 250); star(c, 80 + w1 + wi / 2, 128, 22); c.fillText('o', 80 + w1 + wi, 250);
-      c.fillStyle = '#CE3B3B'; c.font = '700 26px Prompt, system-ui, sans-serif'; c.fillText('FOLIO ID', 80, 520);
+      c.fillStyle = '#CE3B3B'; c.font = '700 26px Figtree, system-ui, sans-serif'; c.fillText('FOLIO ID', 80, 520);
       c.fillStyle = '#1F2F16'; c.font = '600 130px Fraunces, Georgia, serif'; c.fillText(fid, 80, 640);
-      c.font = '600 38px Prompt, system-ui, sans-serif'; c.fillText(p.first + ' ' + p.last, 80, 700);
+      c.font = '600 38px Figtree, system-ui, sans-serif'; c.fillText(p.first + ' ' + p.last, 80, 700);
       stackMark(c, 820, 470, 270); rr(c, 3, 3, W - 6, H - 6, 54); c.strokeStyle = 'rgba(31,47,22,.18)'; c.lineWidth = 3; c.stroke();
       return toFile(cv, 'folio-card.png');
     });
@@ -167,13 +167,13 @@
       var g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2C4636'); g.addColorStop(1, '#1F2F16'); c.fillStyle = g; c.fillRect(0, 0, W, H);
       c.globalAlpha = .06; for (var i = 0; i < H; i += 4) { c.fillStyle = '#000'; c.fillRect(0, i, W, 1); } c.globalAlpha = 1;
       stackMark(c, W / 2 - 220, 170, 440, true);
-      c.textAlign = 'center'; c.fillStyle = '#C5D1EB'; c.font = '700 34px Prompt, system-ui, sans-serif'; c.fillText('I REACHED', W / 2, 700);
+      c.textAlign = 'center'; c.fillStyle = '#C5D1EB'; c.font = '700 34px Figtree, system-ui, sans-serif'; c.fillText('I REACHED', W / 2, 700);
       c.fillStyle = '#F0E3CE'; c.font = '600 128px Fraunces, Georgia, serif'; c.fillText('Level ' + level.n, W / 2, 840);
       /* Shrink long level names so they never run off the card */
       var fs = 112; c.font = 'italic 400 ' + fs + 'px Fraunces, Georgia, serif'; while (c.measureText(level.name).width > W - 120 && fs > 56) { fs -= 4; c.font = 'italic 400 ' + fs + 'px Fraunces, Georgia, serif'; }
       c.fillText(level.name, W / 2, 960);
-      c.font = '400 38px Prompt, system-ui, sans-serif'; c.fillStyle = '#E9DCC3'; c.fillText('My care team signed me off.', W / 2, 1050);
-      c.save(); c.translate(W / 2, 1150); c.rotate(-.06); rr(c, -190, -44, 380, 88, 18); c.strokeStyle = '#E4605F'; c.lineWidth = 7; c.stroke(); c.fillStyle = '#F4B1AC'; c.font = '700 30px Prompt, system-ui, sans-serif'; c.fillText('SIGNED OFF', 20, 11); star(c, -128, 0, 22, '#E4605F'); c.restore();
+      c.font = '400 38px Figtree, system-ui, sans-serif'; c.fillStyle = '#E9DCC3'; c.fillText('My care team signed me off.', W / 2, 1050);
+      c.save(); c.translate(W / 2, 1150); c.rotate(-.06); rr(c, -190, -44, 380, 88, 18); c.strokeStyle = '#E4605F'; c.lineWidth = 7; c.stroke(); c.fillStyle = '#F4B1AC'; c.font = '700 30px Figtree, system-ui, sans-serif'; c.fillText('SIGNED OFF', 20, 11); star(c, -128, 0, 22, '#E4605F'); c.restore();
       c.fillStyle = '#F0E3CE'; c.font = '600 54px Fraunces, Georgia, serif'; c.fillText('folio', W / 2, 1275);
       return toFile(cv, 'folio-level-' + level.n + '.png');
     });

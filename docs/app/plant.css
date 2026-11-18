@@ -8,7 +8,6 @@
 .pl-leaf { fill: var(--green-500); stroke: var(--green-900); stroke-width: 1.2; }
 .pl-leaf.pl-new { fill: var(--blue-300); }
 .pl-crown circle { fill: var(--green-500); stroke: var(--green-900); stroke-width: 2; }
-.pl-star rect { fill: var(--red-500); }
 
 /* Home card and the My plant page sit on the same paper sheet as the level card */
 .pl-card { display: grid; grid-template-columns: auto 1fr; gap: 14px 18px; align-items: center; }
@@ -35,7 +34,7 @@
 .st-legend { margin: 10px 4px 0; display: grid; gap: 6px; }
 .st-legend div { display: flex; gap: 8px; align-items: baseline; }
 .st-legend b { flex: none; min-width: 6.5em; }
-.meds-stale { display: flex; gap: 6px; align-items: flex-start; border-left: 4px solid var(--red-500); padding-left: 8px; }
+.meds-stale { display: flex; gap: 6px; align-items: flex-start; padding: 10px 14px; border-radius: 16px; background: var(--warning-bg); color: var(--warning-fg); }
 .pl-celebrate { display: flex; justify-content: center; margin: 4px 0 8px; }
 
 .pl-shoot { stroke-width: 2.5; }

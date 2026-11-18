@@ -4,9 +4,9 @@
    - Fonts, icons and launch images are cached as they are used (cache-first).
    - Navigations fall back to the cached app page when offline.
    Bump VERSION when the list of app files changes. */
-var VERSION = 'folio-app-v8';
+var VERSION = 'folio-app-v12';
 var RUNTIME = 'folio-runtime-v2';
-var SHELL = ['./', 'index.html', 'ios.css', 'app.js', 'native.js', 'fun-ui.css', 'fun-ui.js', 'fun-home.css', 'fun-home.js', 'intro.css', 'intro.js', 'haptic-tap.js', 'polish.js', 'polish.css', 'plant.js', 'plant.css', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
+var SHELL = ['./', 'index.html', 'ios.css', 'app.js', 'native.js', 'fun-ui.css', 'fun-ui.js', 'fun-home.css', 'fun-home.js', 'intro.css', 'intro.js', 'haptic-tap.js', 'polish.js', 'polish.css', 'plant.js', 'plant.css', 'welcome.js', 'welcome.css', 'v4.css', '../shared/img/logo/folio-wordmark.png', '../shared/img/logo/folio-wordmark-cream.png', '../shared/img/plants/01.jpg', '../shared/img/plants/02.jpg', '../shared/img/plants/03.jpg', '../shared/img/plants/04.jpg', '../shared/img/plants/05.jpg', '../shared/img/plants/06.jpg', '../shared/img/plants/07.jpg', '../shared/img/plants/08.jpg', '../shared/img/plants/09.jpg', '../shared/img/plants/10.jpg', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
   '../shared/css/tokens.css', '../shared/css/card.css',
   '../shared/js/data.js', '../shared/js/store.js', '../shared/js/ui.js', '../shared/favicon.svg'];
 var APP_FILE = /\.(html|js|css|webmanifest)$|\/$/;

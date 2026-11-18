@@ -18,8 +18,10 @@
   function reduced() {
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.getAttribute('data-motion') === 'reduce'; } catch (e) { return false; }
   }
-  function seen() { try { return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
-  function markSeen() { try { sessionStorage.setItem(KEY, '1'); } catch (e) {} }
+  /* Once per device, not once per session: people opening Folio several times a day do not need to watch it again.
+     Add ?intro=1 to the address to replay it for a demo. */
+  function seen() { try { if (/[?&]intro=1/.test(location.search)) return false; return localStorage.getItem(KEY) === '1' || sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+  function markSeen() { try { localStorage.setItem(KEY, '1'); sessionStorage.setItem(KEY, '1'); } catch (e) {} }
   function svg(cls, vb, body) { return '<svg class="' + cls + '" viewBox="' + vb + '" aria-hidden="true">' + body + '</svg>'; }
   function letters(withStar) {
     return '<span>f</span><span>o</span><span>l</span><span class="fi-ri">ı' + (withStar ? svg('fi-istar', '-12 -12 24 24', STAR_WORD) : '') + '</span><span>o</span>';
@@ -29,7 +31,7 @@
     try { document.fonts.forEach(function (f) { if (/Fraunces/i.test(f.family) && f.status === 'loaded' && (f.weight === '600' || / /.test(f.weight))) ok = true; }); } catch (e) {}
     return ok;
   }
-  function loadFonts() { try { document.fonts.load('600 72px "Fraunces"'); document.fonts.load('500 12px "Prompt"'); } catch (e) {} }
+  function loadFonts() { try { document.fonts.load('600 72px "Fraunces"'); document.fonts.load('500 12px "Figtree"'); } catch (e) {} }
 
   function mount(host) {
     var fixed = !host || host === document.body;
