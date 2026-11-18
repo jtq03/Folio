@@ -230,8 +230,9 @@ h1:focus-visible, h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus, [tabindex="-
 .mc-own { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
 .own-chip { display: inline-flex; align-items: center; white-space: nowrap; padding: 3px 10px; border-radius: 999px; font: 700 .75rem/1.2 var(--font-ui); color: var(--green-900); }
 .own-chip.own-teen { background: var(--lime); }
-.own-chip.own-parent { background: var(--blue-100); }
-.own-chip.own-shared { background: var(--butter); }
+.own-chip.own-parent { background: var(--tint-blue); color: var(--on-tint); }
+.own-chip.own-shared { background: var(--tint-butter); color: var(--on-tint); }
+@media (prefers-color-scheme: dark) { .own-chip.own-parent, .own-chip.own-shared { box-shadow: inset 0 0 0 1px var(--line2); } }
 .mc-task .mc-take { min-height: 40px; padding: 0 16px; }
 /* A new plant every level: earned full colour, current ringed, upcoming at 40% */
 .pl-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px 6px; padding: 8px 0 12px; }
