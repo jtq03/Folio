@@ -77,6 +77,8 @@
   function greeting(p) {
     var hr = new Date().getHours(), tod = hr < 5 ? 'night' : hr < 12 ? 'morning' : hr < 17 ? 'afternoon' : hr < 22 ? 'evening' : 'night';
     var own = ownCount(p), pool;
+    /* v3: the first Home after setup is not a "welcome back" */
+    try { if (sessionStorage.getItem('folio.app.new') === p.id) return 'Welcome to Folio, {n}'; } catch (e) {}
     if (p.transferred || (p.level >= 10 && own === 5)) pool = GREET.top;
     else if (own >= 4 || p.level >= 9) pool = GREET.near.concat(GREET[tod]);
     else pool = GREET[tod].concat(GREET.any);
@@ -485,7 +487,9 @@
         if (tip && !tip.isConnected) tip = null;
         if (path === '/') { applyGreeting(pg, p); rigCard(pg, p); ticketFun(pg, p); }
         if (path === '/' || path === '/levels') checkLevel(pg, p);
-        if (path === '/levels') stickerSheet(pg, p); else watchStickersElsewhere(p);
+        /* One reward system at a time: the sticker book only shows when the teen chose stickers */
+        var stk = !F.Plant || F.Plant.mode() === 'stickers';
+        if (path === '/levels') { if (stk) stickerSheet(pg, p); else if (sheetEl && sheetEl.parentNode) sheetEl.parentNode.removeChild(sheetEl); } else if (stk) watchStickersElsewhere(p);
       }
       wrapPractise();
     } catch (e) { if (window.console) console.warn('fun-home', e); }

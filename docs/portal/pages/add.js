@@ -7,7 +7,7 @@
   F.actions.addBack = function () { F.ui.add.step--; F.rerender(true); };
   F.actions.add3 = function (d) {
     var x = F.ui.add.d, skip = d.skip === 'on';
-    var p = A.addPatient({ first: x.first, last: x.last, age: x.age, condition: x.condition, level: x.level, guardian: x.guardian, relation: x.relation, phone: x.phone, shape: skip ? '' : d.shape });
+    var p = A.addPatient({ first: x.first, last: x.last, age: x.age, condition: x.condition, level: x.level, guardian: x.guardian, relation: x.relation, phone: x.phone, shape: skip ? '' : 'rounded' });
     F.ui.add.created = p.id; F.rerender(true); U.toast(p.first + ' is enrolled', true);
   };
   F.actions.addAnother = function () { fresh(); F.rerender(true); };
@@ -20,6 +20,7 @@
     if (a.created) {
       var p = sel.patient(a.created);
       body = h`<div class="done-sheet"><div class="eyebrow red">Enrolled</div><h2 style="margin:.5rem 0">${sel.full(p)} is in Folio</h2><p class="muted" style="margin-inline:auto">Folio ID <b>${sel.fid(p.folioId)}</b> · Level ${p.level}, ${sel.level(p.level).name}.</p>
+        <p class="notice" style="max-width:34rem;margin:0 auto 1rem;text-align:left">${ic('info')}<span>Give ${p.first} this Folio ID. They open the Folio app on their own phone, choose Set up Folio and type it in. A parent can connect from the same app, and sees only what ${p.first} turns on.</span></p>
         <div class="row wrap" style="justify-content:center"><a class="btn btn-primary" href="#/patients/${p.id}">Open profile</a><a class="btn" href="#/cards">Manage cards</a><button class="btn btn-quiet" data-action="addAnother">Add another</button></div></div>`;
     } else if (a.step === 1) {
       body = h`<h2>Who is joining Folio?</h2><form data-submit="add1" novalidate>
@@ -39,9 +40,8 @@
         <label class="check"><input type="checkbox" name="cl" ${d.consentLinks ? 'checked' : ''} required><span>Everyone understands Folio links to records and stores none of them.</span></label>
         <div class="row between" style="margin-top:1.25rem"><button type="button" class="btn" data-action="addBack">${ic('back', 16)} Back</button><button class="btn btn-primary">Next: Folio card ${ic('arrow', 16)}</button></div></form>`;
     } else {
-      body = h`<h2>Assign a Folio card</h2><p class="muted">The card opens ${d.first || 'their'} profile for an ER or adult clinic when tapped or scanned. Choose a shape now or assign it later.</p><form data-submit="add3">
-        <div class="chips" role="radiogroup" aria-label="Card shape" style="margin:.75rem 0">${Object.keys(F.CARD_SHAPES).map(function (k) { return h`<label class="chip" style="margin:0;display:inline-flex;gap:.5rem;align-items:center"><input type="radio" name="shape" value="${k}" ${k === d.shape ? 'checked' : ''} style="accent-color:var(--green-500)">${F.CARD_SHAPES[k]}</label>`; })}</div>
-        <label class="check"><input type="checkbox" name="skip"><span>Assign the card later</span></label>
+      body = h`<h2>Give ${d.first || 'them'} a Folio card</h2><p class="muted">The card opens ${d.first ? d.first + "'s" : 'their'} profile for an ER or adult clinic when tapped or scanned. Issue it now to hand over at this visit, or later from Cards.</p><form data-submit="add3">
+        <label class="check"><input type="checkbox" name="skip"><span>Issue the card later</span></label>
         <div class="row between" style="margin-top:1.25rem"><button type="button" class="btn" data-action="addBack">${ic('back', 16)} Back</button><button class="btn btn-cta">Enrol ${d.first || 'patient'}</button></div></form>`;
     }
     return { title: 'Add patient', html: h`${F.Pages.head('Enrolment', h`Add a <em class="it">patient</em>`, 'Three short steps. Patient and guardian both consent.')}${a.created ? '' : stepper}<section class="sec" style="max-width:780px">${body}</section>` };

@@ -1,56 +1,97 @@
-/* Folio design tokens. Source: Figma "Folio Brand Package", Colour + Typography pages.
-   Change values here and the whole prototype follows. */
+/* Folio design tokens, design system v4 ("Folio Design System Redesign", Nov 2026).
+   Source of truth: design_handoff_folio_design_system/tokens/*.css. Token names from v4 are kept as is.
+   The older names below them (--bg, --surface, --text, --text-muted ...) now point at v4 values so the
+   existing pages keep working while they pick up the new look. */
 :root {
-  /* Colour */
-  --blue-100: #C5D1EB;   /* soft wash, tints, ribbons. Too pale for text */
-  --blue-300: #92AFD7;   /* sheets, highlights, secondary shapes */
-  --blue-500: #5A7684;   /* icons, lines, large secondary text (4.2:1, not small text) */
-  --green-500: #395B50;  /* primary brand: panels, buttons */
-  --green-900: #1F2F16;  /* text, wordmark, deep backgrounds */
-  --red-500: #CE3B3B;    /* the star, alerts, ONE call to action at most. Never a background */
-  --beige-100: #F7F0E2;  /* page background */
-  --beige-200: #F0E3CE;  /* default light neutral. Used instead of white */
-  --beige-300: #E9DCC3;  /* dividers, pressed states */
+  /* Core palette (brand package) */
+  --blue-100: #C5D1EB; --blue-300: #92AFD7; --blue-500: #5A7684; --blue-700: #3F5966;
+  --green-500: #395B50; --green-800: #23392F; --green-900: #1F2F16;
+  --red-500: #CE3B3B; /* the star and the mascot only. Never for interface colour */
+  --beige-50: #FCF8F1; --beige-100: #F7F0E2; --beige-200: #F0E3CE; --beige-300: #E9DCC3;
+  --lime: #D4E875; --lime-100: #EFF6C6; --butter: #F6D978; --line-strong: #8E876B; --plant-tile: #AFE1DF;
 
-  /* Semantic */
-  --bg: var(--beige-100);
-  --surface: var(--beige-200);
+  /* Semantic status: always with an icon and words */
+  --success-bg: #DDEBD3; --success-fg: #2F5D3A;
+  --info-bg: #DCE5F5;    --info-fg: #2F5585;
+  --warning-bg: #FBEFC4; --warning-fg: #6E5200;
+  --error-bg: #F7DCD8;   --error-fg: #A8302F;
+
+  /* Voices: the patient is always Blue 100, the care team always Beige 200 */
+  --voice-patient: var(--blue-100);
+  --voice-care-team: var(--beige-200);
+
+  --bg-page: var(--beige-100);
+  --bg-surface: var(--beige-50);
+  --bg-sunken: var(--beige-200);
+  --bg-inset: var(--beige-100);
+  --bg-inverse: var(--green-800);
+  --fg-1: var(--green-900);
+  --fg-2: var(--blue-700);
+  --fg-headline: var(--green-500);
+  --fg-inverse: var(--beige-50);
+  --fg-disabled: #6B6858;
+  --action: var(--green-900); --action-hover: var(--green-500); --action-press: #152010; --on-action: var(--beige-50);
+  --highlight: var(--lime); --highlight-hover: #C6DC5E; --highlight-press: #B5CB4C; --on-highlight: var(--green-900);
+  --switch-off: #C9BFA6;
+  --focus-ring: #3F64A8;
+
+  /* Type: Fraunces for headings 24px and up, Figtree for everything else */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-ui: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Space, shape, depth */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+  --radius-clinical: 14px; --radius-input: 16px; --radius-row: 20px; --radius-card: 28px; --radius-sheet: 40px; --radius-pill: 999px; --radius-status: 6px;
+  --target-min: 48px; --target-min-dense: 40px;
+  --shadow-float: 0 12px 32px rgba(31,47,22,.18);
+  --scrim: rgba(31,47,22,.55);
+
+  /* Motion */
+  --ease: cubic-bezier(.2,.7,.2,1); --ease-exit: cubic-bezier(.4,0,1,1); --ease-celebrate: cubic-bezier(.34,1.56,.64,1);
+  --dur-fast: 120ms; --dur: 220ms; --dur-slow: 320ms; --dur-celebrate: 420ms;
+
+  /* Older names, now pointing at v4 */
+  --bg: var(--bg-page);
+  --surface: var(--bg-inset);
   --line: var(--beige-300);
-  --text: var(--green-900);
-  --text-muted: var(--green-500);
-  --accent: var(--red-500);
-  --primary: var(--green-500);
-  --on-primary: var(--beige-100);
+  --text: var(--fg-1);
+  --text-muted: var(--fg-2);
+  --accent: var(--error-fg);
+  --primary: var(--action);
+  --on-primary: var(--on-action);
+  --border-strong: var(--line-strong);
+  --focus: var(--focus-ring);
+  --r-sm: 14px; --r-md: 16px; --r-lg: 28px; --r-pill: 999px;
+  --shadow-paper: none; --shadow-lift: none; --card-shadow: none;
+  --ease-spring: var(--ease-celebrate);
+  --t-fast: var(--dur-fast); --t-med: var(--dur); --t-slow: var(--dur-slow);
+  /* v4 has no paper textures: surfaces are flat colour */
+  --grain: none; --linen: none; --edge-stack: none; --metal: none;
+}
+@media (prefers-reduced-motion: reduce) { :root { --dur: 1ms; --dur-slow: 1ms; --dur-celebrate: 1ms; } }
+:root[data-motion="reduce"] { --dur: 1ms; --dur-slow: 1ms; --dur-celebrate: 1ms; }
 
-  /* Type */
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-ui: "Prompt", system-ui, -apple-system, "Segoe UI", sans-serif;
-
-  /* Shape + space */
-  --r-sm: 10px; --r-md: 16px; --r-lg: 24px; --r-pill: 999px;
-  --shadow-paper: 0 1px 0 rgba(31,47,22,.06), 0 6px 18px -8px rgba(31,47,22,.18);
-  --shadow-lift: 0 1px 0 rgba(31,47,22,.06), 0 14px 28px -12px rgba(31,47,22,.28);
-
-  /* Motion: soft, paper-like. Nothing bounces hard. */
-  --ease: cubic-bezier(.2,.7,.2,1);
-  --ease-spring: cubic-bezier(.34,1.4,.5,1);
-  --t-fast: 140ms; --t-med: 280ms; --t-slow: 560ms;
+/* Dark mode for all three surfaces (v4 values). Lime becomes the primary action. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: #16241D; --bg-surface: #1F3128; --bg-sunken: #29402F; --bg-inset: #1A2B22;
+    --fg-1: #F3EDE0; --fg-2: #B9C7BD; --fg-headline: #F3EDE0; --fg-disabled: #8A978D;
+    --line: #34493D; --line-strong: #6E8275;
+    --action: var(--lime); --action-hover: #C6DC5E; --action-press: #B5CB4C; --on-action: var(--green-900);
+    --focus-ring: #8FB0F0; --switch-off: #4A5E52;
+    --voice-patient: #2B3A55; --voice-care-team: #3A3427;
+    --success-bg: #22402C; --success-fg: #A9D8A0;
+    --info-bg: #1F3350;    --info-fg: #A8C4F0;
+    --warning-bg: #3D3214; --warning-fg: #F2D27A;
+    --error-bg: #47201E;   --error-fg: #F4A9A1;
+  }
 }
 
-/* Derived: a slightly deeper green so secondary text clears ~7:1 on Beige 100 (Green 500 is ~6.3:1). */
-:root { --text-muted: #2D493E; --focus: #1F2F16; --border-strong: rgba(31,47,22,.28); }
-:root[data-contrast="high"] {
-  --text-muted: #1F2F16; --line: #1F2F16; --border-strong: #1F2F16; --blue-500: #1F2F16; --bg: #FFFBF2; --surface: #F7F0E2;
-}
+/* High contrast: deeper secondary text and stronger lines */
+:root[data-contrast="high"] { --fg-2: var(--fg-1); --text-muted: var(--fg-1); --line: var(--line-strong); --border-strong: var(--fg-1); }
 :root[data-text="sm"] { font-size: 93.75%; }
 :root[data-text="md"] { font-size: 100%; }
 :root[data-text="lg"] { font-size: 118%; }
 :root[data-text="xl"] { font-size: 137.5%; }
-
-/* Textures (inline SVG, no image files). Paper grain + fibres, and green cloth for the binder cover. */
-:root {
-  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='a'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .36  0 0 0 0 .27  0 0 0 0 .14  0 0 0 .17 0'/></filter><filter id='b'><feTurbulence type='fractalNoise' baseFrequency='.012 .5' numOctaves='2' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .34  0 0 0 0 .2  0 0 0 .08 0'/></filter><rect width='100%' height='100%' filter='url(%23a)'/><rect width='100%' height='100%' filter='url(%23b)'/></svg>");
-  --linen: repeating-linear-gradient(0deg, rgba(0,0,0,.09) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255,255,255,.055) 0 1px, transparent 1px 3px), radial-gradient(120% 90% at 30% 10%, rgba(255,255,255,.1), transparent 60%);
-  --edge-stack: 1px 1px 0 #e6d9be, 2px 2px 0 #f3ead7, 3px 3px 0 #e1d3b6, 4px 4px 0 #f0e6d1, 5px 6px 0 #dccdae, 8px 12px 22px rgba(10,20,8,.45);
-  --metal: linear-gradient(180deg, #f7f8f4 0%, #aab2ac 38%, #eef1ee 52%, #7c867f 100%);
-}
+h1:focus { outline: none; }

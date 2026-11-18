@@ -21,3 +21,18 @@
 .fcard.back{justify-content:center}
 .fcard.back .fc-right{padding-left:calc(40cqw + .9rem);padding-right:.1rem}
 .fcard.inactive{filter:grayscale(1) opacity(.55)}
+
+/* ---------- v4 card face: Green 800, cream wordmark, Blue 300 circle ---------- */
+.fcard { border-radius: 18px; box-shadow: none; }
+.fcard.front { background: var(--green-800); color: var(--beige-50); }
+.fcard.back { background: var(--green-900); color: var(--beige-50); }
+.fcard .fc-circle { position: absolute; right: -14%; top: 22%; width: 62%; aspect-ratio: 1; border-radius: 50%; background: var(--blue-300); }
+.fcard .fc-top { position: relative; display: flex; align-items: flex-start; justify-content: space-between; }
+.fcard .fc-brand .wordmark { font-size: clamp(.9rem, 7.5cqw, 1.5rem); }
+.fcard .fc-nfc { color: var(--beige-50); opacity: .9; }
+.fcard .fc-bottom { position: relative; }
+.fcard .fc-name { font: 600 clamp(.7rem, 4.4cqw, .9rem)/1.2 var(--font-ui); color: var(--beige-50); }
+.fcard .fc-id { font: 600 clamp(1.3rem, 11cqw, 2rem)/1.05 var(--font-display); letter-spacing: .02em; color: var(--beige-50); margin-top: .15rem; }
+.fcard .fc-tag, .fcard.back .fc-tag { color: var(--lime); font: 700 clamp(.5rem, 3cqw, .62rem)/1.2 var(--font-ui); letter-spacing: .12em; text-transform: uppercase; margin-top: .25rem; }
+.fcard.back p b { color: var(--lime); }
+.fcard.back p { color: var(--beige-200); }

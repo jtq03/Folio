@@ -1,0 +1,133 @@
+/* First-run welcome, parent view and the v3 Home pieces. App variables and brand tokens only, so it follows
+   dark mode, increased contrast and the text size settings. Every control is at least 44px tall. */
+.fw { position: absolute; inset: 0; z-index: 100; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; background-color: var(--paper); background-image: var(--grain), var(--fibre), var(--mottle); color: var(--ink); }
+.fw-scr { min-height: 100%; display: flex; flex-direction: column; gap: 16px; max-width: 560px; margin: 0 auto; padding: calc(var(--st) + 56px) 20px calc(var(--sb) + 28px); animation: fw-in .35s var(--out) both; }
+@keyframes fw-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+:root[data-motion="reduce"] .fw-scr, .fw-same .fw-scr { animation: none; }
+@media (prefers-reduced-motion: reduce) { .fw-scr { animation: none; } }
+
+.fw h1 { font: 600 1.85rem/1.18 var(--font-display); letter-spacing: -.01em; margin: 0; outline: none; text-wrap: balance; }
+.fw-lead { font-size: 1.0625rem; line-height: 1.45; color: var(--ink2); margin: 0; }
+.fw-note { font-size: .85rem; line-height: 1.4; color: var(--ink2); margin: 0; }
+.fw-step { font: 700 .706rem/1.2 var(--font-ui); letter-spacing: .18em; text-transform: uppercase; color: var(--ink2); margin: 0; }
+.fw-hello { justify-content: center; text-align: center; }
+.fw-center { align-items: center; text-align: center; }
+.fw-center .fw-acts, .fw-center .fw-points, .fw-center .fw-back { align-self: stretch; text-align: left; }
+.fw-center .fw-back { align-self: flex-start; }
+.fw-brand { display: flex; justify-content: center; font-size: 1.7rem; }
+.fw-art { display: flex; justify-content: center; margin: 4px 0; }
+.fw-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.fw-link { min-height: 44px; font-weight: 600; color: var(--ink2); text-decoration: underline; text-underline-offset: 3px; }
+.fw-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px 0 4px; margin: -12px 0 -4px -4px; font-weight: 600; color: var(--ink); }
+
+/* Find your profile */
+.fw-lbl { display: block; font-size: .82rem; font-weight: 600; color: var(--ink2); margin-bottom: 4px; }
+.fw .ios-field input { font-size: 1.35rem; letter-spacing: .06em; min-height: 36px; }
+.fw-err { display: flex; gap: 8px; align-items: flex-start; margin: 0; padding: 10px 14px; border-radius: var(--radius-input, 16px); background: var(--error-bg); color: var(--error-fg); font-weight: 600; line-height: 1.4; }
+.fw-err svg { flex: none; margin-top: 2px; }
+.fw-demo summary { min-height: 44px; display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink2); cursor: pointer; list-style: none; }
+.fw-demo summary::-webkit-details-marker { display: none; }
+.fw-demo summary::before { content: ""; width: 8px; height: 8px; border-right: 2.2px solid currentColor; border-bottom: 2.2px solid currentColor; transform: rotate(-45deg); transition: transform .2s; }
+.fw-demo[open] summary::before { transform: rotate(45deg); }
+.fw-demo .ios-list { margin-top: 6px; }
+.fw-av { display: flex; justify-content: center; }
+.fw-name { font: 600 1.4rem/1.2 var(--font-display); margin: -6px 0 0; }
+
+/* Plain-words points with a tile */
+.fw-points { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.fw-points li { display: flex; gap: 14px; align-items: flex-start; line-height: 1.45; }
+.fw-points .ios-tile { flex: none; }
+
+/* Make it yours: progress style cards */
+.fw-opts { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; min-width: 0; }
+.fw-opts legend, .fw-check legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
+.fw-opt { position: relative; display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 10px 14px; border-radius: var(--radius-row, 20px); background-color: var(--sheet); background-image: none; border: 2px solid var(--line); cursor: pointer; }
+.fw-opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.fw-opt:has(input:checked) { border-color: var(--green-500); box-shadow: inset 0 0 0 1.5px var(--green-500); background: var(--lime-100); }
+.fw-opt:has(input:checked) .fw-opt-t b::after { content: " · chosen"; font-weight: 500; color: var(--ink2); }
+.fw-opt:focus-within { outline: 3px solid var(--blue-300); outline-offset: 2px; }
+.fw-opt-art { width: 64px; height: 64px; display: grid; place-items: center; flex: none; color: var(--ink); }
+.fw-opt-art .pl-svg { width: 56px; height: auto; }
+.fw-opt-t small { display: block; color: var(--ink2); font-size: .85rem; line-height: 1.35; margin-top: 2px; }
+
+/* What do you already do: three-way pills per skill */
+.fw-check { border: 0; margin: 6px 0 0; padding: 0; min-width: 0; }
+.fw-check legend b { display: block; }
+.fw-check legend small { display: block; font-weight: 400; color: var(--ink2); font-size: .85rem; line-height: 1.35; }
+.fw-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.fw-pills label { position: relative; display: block; }
+.fw-pills input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.fw-pills span { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 6px; border-radius: 999px; border: 2px solid var(--line2); font-weight: 700; font-size: .9rem; text-align: center; }
+.fw-pills input:checked + span { background: var(--green-900); color: var(--beige-50); border-color: var(--green-900); }
+.fw-pills input:focus-visible + span { outline: 3px solid var(--blue-300); outline-offset: 2px; }
+
+/* Parent view */
+.fw-parent { gap: 24px; padding-top: calc(var(--st) + 48px); }
+.fw-ph { display: flex; align-items: center; justify-content: space-between; font-size: 1.35rem; }
+.fw-tag { font: 700 .706rem/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; padding: 7px 10px; border-radius: 999px; background-color: var(--sheet); border: .5px solid var(--line2); }
+.fw-who { display: flex; gap: 14px; align-items: center; }
+.fw-who h1 { font-size: 1.6rem; }
+.fw-who p { margin: 4px 0 0; color: var(--ink2); }
+.fw-sec { display: flex; flex-direction: column; }
+.fw-task { flex-wrap: wrap; gap: 8px; }
+.fw-own { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; padding: 3px; border-radius: 12px; background: var(--line); }
+.fw-own button { min-height: 44px; border-radius: 10px; font-size: .88rem; font-weight: 600; color: var(--ink); text-align: center; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.fw-own button[aria-pressed="true"] { background-color: var(--paper); box-shadow: 0 1px 2px var(--shadow); }
+.fw-foot { margin-top: 4px; }
+
+/* Teen Home: who can see, the next step, who does each care task */
+.pv-line { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background-color: var(--sheet); border: .5px solid var(--line2); color: var(--ink); font-size: .9rem; line-height: 1.4; text-decoration: none; min-height: 44px; }
+.pv-line svg { flex: none; margin-top: 1px; }
+.mc-owner { display: block; margin-top: 4px; font-weight: 600; color: var(--ink2); }
+/* The card pocket is dark green with light text. The "card on its way" row sits on a light list, so it needs dark text. */
+.ios-pocket .ios-list { color: var(--ink); }
+/* Levels: the full list of 10 levels is reference, so it stays folded */
+.lv-all > summary { list-style: none; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.lv-all > summary::-webkit-details-marker { display: none; }
+.lv-all > summary::after { content: ""; margin-left: auto; width: 9px; height: 9px; border-right: 2.2px solid currentColor; border-bottom: 2.2px solid currentColor; transform: rotate(45deg); transition: transform .2s; }
+.lv-all[open] > summary::after { transform: rotate(-135deg); }
+/* v4 */
+.fw h1 { color: var(--fg-headline); }
+@media (prefers-color-scheme: dark) { .fw h1 { color: var(--ink); } }
+.fw-mascot .mascot { display: block; }
+.fw-own { background: var(--beige-200); border-radius: 999px; }
+.fw-own button { border-radius: 999px; }
+.fw-own button[aria-pressed="true"] { background: var(--beige-50); }
+.fw-tag { background: var(--lime); border: 0; color: var(--green-900); }
+.pv-line { background: var(--info-bg); color: var(--info-fg); border: 0; border-radius: var(--radius-row, 20px); }
+
+/* ---------- v5 readiness check: one question per screen, results per skill, goal picker ---------- */
+.fw-qtop { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin: -12px 0 -4px; }
+.fw-qtop .fw-back { margin: 0 0 0 -4px; }
+.fw-close { margin-left: auto; }
+.fw-prog { height: 8px; border-radius: 999px; background: var(--beige-200); overflow: hidden; margin-top: -6px; }
+.fw-prog i { display: block; height: 100%; border-radius: inherit; background: var(--green-500); transition: width var(--dur, .25s) var(--out, ease); }
+.fw-qskill { display: flex; align-items: center; gap: 8px; margin: 6px 0 -6px; font: 700 .8125rem/1.2 var(--font-ui); letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); }
+.fw-qh { font: 600 1.75rem/1.2 var(--font-display); text-wrap: balance; margin: 0; }
+.fw-ans { display: grid; gap: 10px; margin-top: 4px; }
+.fw-an { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 72px; padding: 12px 18px; border-radius: var(--radius-row, 20px); border: 2px solid var(--line); background: var(--sheet); color: var(--ink); text-align: left; cursor: pointer; }
+.fw-an b { font: 700 1.0625rem/1.25 var(--font-ui); }
+.fw-an small { font-size: .875rem; color: var(--ink2); }
+.fw-an:hover { border-color: var(--line2); }
+.fw-an[aria-pressed="true"] { border-color: var(--green-900); box-shadow: inset 0 0 0 1.5px var(--green-900); background: var(--lime-100); }
+.fw-an:focus-visible { outline: 3px solid var(--blue-300); outline-offset: 2px; }
+.fw-q .fw-link { align-self: center; }
+.fw-res .ios-row { gap: 12px; }
+.fw-res .ios-st { flex: none; }
+.fw-goals { display: grid; gap: 10px; }
+.fw-goal { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; border-radius: var(--radius-row, 20px); border: 2px solid var(--line); background: var(--sheet); cursor: pointer; }
+.fw-goal input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.fw-gbox { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line2); display: grid; place-items: center; color: transparent; }
+.fw-goal:has(input:checked) { border-color: var(--green-900); box-shadow: inset 0 0 0 1.5px var(--green-900); background: var(--lime-100); }
+.fw-goal:has(input:checked) .fw-gbox { background: var(--green-900); border-color: var(--green-900); color: var(--beige-50); }
+.fw-goal:focus-within { outline: 3px solid var(--blue-300); outline-offset: 2px; }
+.fw-gt { flex: 1; min-width: 0; }
+.fw-gt b { display: block; font-weight: 700; line-height: 1.3; }
+.fw-gt small { display: block; color: var(--ink2); font-size: .85rem; line-height: 1.35; margin-top: 2px; }
+.fw-sugg { flex: none; align-self: flex-start; font: 700 .72rem/1 var(--font-ui); padding: 5px 8px; border-radius: 999px; background: var(--blue-100); color: var(--green-900); }
+/* Dark: selected answers and goals sit on the raised dark surface with a lime edge (Lime 100 is a light-only tint) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fw-an[aria-pressed="true"], :root:not([data-theme="light"]) .fw-goal:has(input:checked), :root:not([data-theme="light"]) .fw-opt:has(input:checked) { background: #29402F; border-color: var(--lime); box-shadow: inset 0 0 0 1.5px var(--lime); }
+  :root:not([data-theme="light"]) .fw-goal:has(input:checked) .fw-gbox { background: var(--lime); border-color: var(--lime); color: var(--green-900); }
+  :root:not([data-theme="light"]) .fw-prog { background: #34493D; }
+}

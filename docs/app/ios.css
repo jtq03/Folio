@@ -5,7 +5,7 @@
 /* Fallback faces sized to match Fraunces and Prompt, so text does not jump when the web fonts arrive (or stay offline) */
 @font-face { font-family: "Fraunces Fallback"; src: local("Georgia"), local("Times New Roman"), local("Liberation Serif"); size-adjust: 110%; ascent-override: 88.9%; descent-override: 23.2%; line-gap-override: 0%; }
 @font-face { font-family: "Prompt Fallback"; src: local("Helvetica Neue"), local("Arial"), local("Liberation Sans"), local("Roboto"); size-adjust: 112.7%; ascent-override: 96.7%; descent-override: 37.4%; line-gap-override: 0%; }
-:root { --font-display: "Fraunces", "Fraunces Fallback", Georgia, serif; --font-ui: "Prompt", "Prompt Fallback", system-ui, -apple-system, sans-serif; }
+:root { --font-display: "Fraunces", "Fraunces Fallback", Georgia, serif; --font-ui: "Figtree", "Prompt Fallback", system-ui, -apple-system, sans-serif; }
 /* Dynamic Type: iOS body size follows Settings > Display and Text Size. Needs (0,2,0) to beat tokens.css :root[data-text]. */
 html, :root[data-text] { font-size: 17px; color-scheme: light dark; -webkit-text-size-adjust: 100%; }
 @supports (font: -apple-system-body) { html, :root[data-text="md"] { font: -apple-system-body; } }

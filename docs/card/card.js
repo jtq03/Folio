@@ -4,13 +4,15 @@
   var h = F.UI.h, ic = F.UI.ic, S = F.Store, sel = S.sel, U = F.UI, A = S.act;
   var app = document.getElementById('app'), params = new URLSearchParams(location.search);
   var token = params.get('t'), demo = params.get('demo') === '1', via = params.get('via') === 'qr' ? 'Card tap (QR)' : 'Card tap (NFC)';
-  var pid = null, deadline = 0, ended = false, timer = null, warned = false, openedAt = new Date();
+  var pid = null, deadline = 0, ended = false, timer = null, warned = false, openedAt = new Date(), viewer = '';
 
   function minutes() { return (S.get().program.timeout || 10); }
   function startSession(p, how) {
     pid = p.id; ended = false; deadline = Date.now() + minutes() * 60000;
     var k = 'folio.logged.' + p.id + '.' + how;
-    try { if (!sessionStorage.getItem(k)) { sessionStorage.setItem(k, '1'); A.log(p.id, demo ? 'Demo entry (team)' : 'Adult clinic (ER or clinic tap)', how); } } catch (e) { A.log(p.id, 'Adult clinic', how); }
+    /* v3: the viewer can name themselves on the consent screen, so the teen sees exactly who looked */
+    var who = viewer ? viewer + (demo ? ' (demo)' : '') : demo ? 'Demo entry (team)' : 'Adult clinic (ER or clinic tap)';
+    try { if (!sessionStorage.getItem(k)) { sessionStorage.setItem(k, '1'); A.log(p.id, who, how); } } catch (e) { A.log(p.id, who, how); }
     clearInterval(timer); timer = setInterval(tick, 1000);
   }
   function tick() {
@@ -42,7 +44,7 @@
   };
   function bar(p, how) {
     var sz = S.a11y.get().text;
-    return h`<div class="bar"><div class="in"><span>${U.wordmark()}</span><span class="tag">Care team view</span>
+    return h`<div class="bar"><div class="in"><span>${U.wordmark('', true)}</span><span class="tag">Care team view</span>
       <div class="sess">${p ? h`<span class="via" title="How this profile was opened">${ic('check', 14)} Opened by ${demo ? 'demo entry' : how.toLowerCase()} at ${openedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span><span class="ring" aria-hidden="true"><i id="sess-ring" style="--p:${Math.max(0, deadline - Date.now()) / (minutes() * 60000)}"></i></span><span>Session ends in <b id="sess-left" aria-live="off">${clock()}</b></span><button class="btn btn-sm key" data-action="extend">Keep open</button>` : ''}
       <div class="tsz" role="group" aria-label="Text size">${[['md', 'A'], ['lg', 'A+'], ['xl', 'A++']].map(function (t) { return h`<button data-action="textSize" data-v="${t[0]}" aria-pressed="${String(sz === t[0])}" aria-label="Text size ${t[1]}">${t[1]}</button>`; })}</div></div></div></div>${demo && p ? h`<div class="demo-banner" role="note">Demo mode for the Folio team. This is not a real card tap.</div>` : ''}`;
   }
@@ -51,6 +53,75 @@
     return h`${bar(null)}<main id="main" class="center msg"><div class="art">${U.raw(ART[art || "invalid"])}</div><h1 style="font-size:2rem;margin-bottom:.75rem">${title}</h1><p class="muted" style="margin-inline:auto">${body}</p>${extra || ''}</main>`;
   }
 
+  /* C2: medications and supplies, kept by the patient and confirmed by the paediatric team */
+  function medsSection(p) {
+    var meds = p.meds || [], stale = sel.medsStale(p), c = p.medsConfirmed;
+    if (!meds.length) return '';
+    var group = function (kind, title) { var l = meds.filter(function (m) { return (m.kind || 'medication') === kind; }); return l.length ? h`<div><div class="eyebrow">${title}</div>${l.map(function (m) { return h`<div class="it2"><b>${m.name}</b>${m.detail ? h`<span>${m.detail}</span>` : ''}</div>`; })}</div>` : ''; };
+    return h`<section class="sheetc meds" style="--d:1" aria-labelledby="meds-h"><h2 id="meds-h">Medications, supplies and allergies</h2>
+      <p class="small ${stale ? 'stale' : 'muted'}">${stale ? h`${ic('info', 16)} <b>May be out of date.</b> ${c ? 'Last confirmed ' + U.fmtFull(c.date) + ' by ' + c.by + '.' : 'Not yet confirmed by the care team.'} Check with ${p.first}.` : 'Last confirmed ' + U.fmtFull(c.date) + ' by ' + c.by + '.'}</p>
+      <div class="sk2" style="margin-top:.6rem">${group('medication', 'Medications')}${group('supply', 'Supplies')}</div>
+      <div style="margin-top:.6rem"><div class="eyebrow">Allergies</div><div class="it2"><b>${(p.allergies || []).length ? p.allergies.map(function (a) { return a.name + (a.reaction ? ' (' + a.reaction.toLowerCase() + ')' : ''); }).join(', ') : p.noAllergies ? 'No known allergies' : 'Not recorded'}</b></div></div></section>`;
+  }
+
+  /* v3 At a glance: what an ER or new clinic needs in the first minute (Callahan 2023, PS-CA, P1, P3, C2).
+     Every item says who it came from and when, because clinicians judge patient-held notes on that (West 2017). */
+  function glance(p) {
+    var meds = p.meds || [], c = p.medsConfirmed, ok = c && !sel.medsStale(p);
+    var src = ok ? 'Confirmed by ' + c.by + ', ' + U.fmtFull(c.date) : 'From ' + p.first + ', not yet confirmed by the care team';
+    var insulin = meds.filter(function (m) { return (m.kind || 'medication') === 'medication'; }).map(function (m, i) { return i ? m.name.charAt(0).toLowerCase() + m.name.slice(1) : m.name; });
+    var devices = meds.filter(function (m) { return m.kind === 'supply'; }).map(function (m) { return m.name; });
+    var al = p.allergies || [], alTxt = al.length ? al.map(function (a) { return a.name + (a.reaction ? ' (' + a.reaction.toLowerCase() + ')' : ''); }).join(', ') : p.noAllergies ? 'No known allergies' : 'Not recorded. Ask ' + p.first + '.';
+    var ec = p.contacts.filter(function (x) { return x.visible && x.phone; })[0];
+    var ho = sel.notesFor(p, 'adult').filter(function (n) { return n.kind === 'Handoff note' && n.fields; })[0];
+    var fd = p.careTeam.filter(function (t) { return /family doctor/i.test(t.role) && t.name && t.name !== 'Not added yet'; })[0];
+    var item = function (label, value, from, cls, extra) { return h`<div class="gl-i ${cls || ''}"><dt>${cls === 'gl-alert' ? ic('alert', 14) : cls === 'gl-flag' ? ic('info', 14) : ''}${label}</dt><dd><span class="gl-v">${value}</span>${extra || ''}<span class="gl-src">${from}</span></dd></div>`; };
+    var s3 = p.summary3;
+    return h`<section class="sheetc glance" style="--d:1" aria-labelledby="gl-h"><h2 id="gl-h">At a glance</h2>
+      ${s3 ? h`<div class="gl-words voice-patient"><div class="by">In ${p.first}'s words<span>From ${p.first}, ${U.fmtFull(s3.date)}</span></div><p>${[s3.s1, s3.s2, s3.s3].filter(Boolean).join(' ')}</p></div>` : ''}
+      <dl class="gl">
+        ${item('Allergies', alTxt, al.length || p.noAllergies ? src : 'Not on file', al.length ? 'gl-alert' : '')}
+        ${item('Condition and insulin', p.condition + (insulin.length ? '. ' + insulin.join(', ') : ''), meds.length ? src : 'Not on file')}
+        ${devices.length ? item('Devices', devices.map(function (d, i) { return i ? d.charAt(0).toLowerCase() + d.slice(1) : d; }).join(', '), src) : ''}
+        ${ec ? item('Emergency contact', ec.name + ', ' + ec.rel.split(',')[0].toLowerCase(), 'From ' + p.first, '', h`<a class="btn btn-sm btn-primary key gl-call" href="tel:${ec.phone.replace(/[^\d+]/g, '')}">${ic('phone', 16)} Call ${ec.phone}</a>`) : item('Emergency contact', p.first + ' has not shared a family contact.', 'From ' + p.first)}
+        ${p.decisionSupport ? item('Big decisions', 'With help from ' + p.decisionSupport.name + (p.decisionSupport.rel ? ', ' + p.decisionSupport.rel.toLowerCase() : ''), 'Paediatric team') : ''}
+        ${item('Adult care', (ho && ho.fields.referrals ? ho.fields.referrals + ' ' : '') + (fd ? 'Family doctor: ' + fd.name + '.' : ho && /family doctor/i.test(ho.fields.referrals || '') ? '' : 'No adult family doctor yet.'), ho ? 'Handoff note, ' + ho.author + ', ' + U.fmtFull(ho.date) : 'Care team list', fd ? '' : 'gl-flag')}
+      </dl></section>`;
+  }
+  /* A3: one plain line per status */
+  function legend() {
+    return h`<dl class="legend small" aria-label="What the labels mean">${['own', 'help', 'learning'].map(function (k) { return h`<div><dt>${U.skillPill(k)}</dt><dd>${F.SKILL_STATUS_HELP[k]}</dd></div>`; })}</dl>`;
+  }
+  /* C3: structured handoff note */
+  function handoff(f) {
+    var rows = [['meds', 'Medications and repeats'], ['referrals', 'Referrals and who takes over'], ['upcoming', 'Upcoming and due'], ['managed', 'How diabetes has been managed'], ['watch', 'What to watch']].filter(function (r) { return f[r[0]]; });
+    return rows.length ? h`<dl class="handoff">${rows.map(function (r) { return h`<div><dt>${r[1]}</dt><dd>${f[r[0]]}</dd></div>`; })}</dl>` : '';
+  }
+  /* A5: the patient's consent screen, shown before the profile opens */
+  var pending = null;
+  function consentPage(p, how) {
+    var st = S.get();
+    return h`${bar(null)}<main id="main" class="center msg consent"><div class="art">${U.avatar(p, 88)}</div>
+      <h1 style="font-size:2rem;margin-bottom:.5rem">${sel.full(p)} shared their Folio profile with your team</h1>
+      <p class="muted" style="margin-inline:auto">Age ${p.age} · ${p.condition}. Shared using ${p.first}'s own sharing settings.</p>
+      <p class="small what" style="margin-inline:auto">Folio is a transition program from ${st.clinic.org}. It links to health records and stores none. Each part says who wrote it and when.</p>
+      <form class="sheetc" style="text-align:left;max-width:34rem;margin:1.2rem auto" data-submit="consentOpen"><div class="eyebrow">You will see</div>
+        <ul class="seelist"><li>Allergies, medications and who to call, at a glance</li><li>How to work with ${p.first}, and where they may need support today</li><li>Family and care team contacts ${p.first} chose to share</li><li>What ${p.first} can and cannot do on their own</li><li>Records and resources ${p.first} linked</li><li>Notes from the paediatric team</li></ul>
+        <label for="vw" style="margin-top:1rem">Your name and clinic <span class="muted">(optional)</span></label>
+        <input id="vw" name="who" type="text" autocomplete="name" maxlength="80" aria-describedby="vw-h">
+        <p class="small muted" id="vw-h" style="margin:.35rem 0 0">${p.first} sees who opened their profile. This visit is logged and the profile closes after ${minutes()} minutes.</p>
+        <p class="row" style="justify-content:center;gap:.75rem;margin:1.1rem 0 0"><button class="btn btn-primary">Open profile</button><button type="button" class="btn" data-action="consentDecline">Not now</button></p></form></main>`;
+  }
+  F.actions.consentOpen = function (d) { if (!pending) return; var x = pending; pending = null; viewer = String((d && d.who) || '').trim().slice(0, 80); startSession(x.p, x.how); render(); var m = document.getElementById('main'); if (m) m.focus && m.focus(); };
+  F.actions.consentDecline = function () {
+    if (!pending) return; var x = pending; pending = null;
+    var nm = document.getElementById('vw'), who = nm && nm.value.trim() ? nm.value.trim().slice(0, 80) + (demo ? ' (demo)' : '') : demo ? 'Demo entry (team)' : 'Adult clinic (ER or clinic tap)';
+    A.log(x.p.id, who, x.how + ', not opened');
+    app.innerHTML = msgPage('Profile not opened', 'Nothing was shown. Tap or scan the card again if you need it.', demo ? h`<p><a class="btn btn-primary" href="?demo=1">Back to demo entry</a></p>` : '', 'ended').s;
+  };
+
+  /* Priority order: at a glance, how to work with them, support today, the paediatric handoff, the full medication list.
+     Below the fold: what they can do on their own, contacts, records, and adding a note. */
   function view(p, how) {
     var notes = sel.notesFor(p, 'adult'), vis = p.contacts.filter(function (c) { return c.visible; });
     var own = F.SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; }), still = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
@@ -58,24 +129,29 @@
     var contact = function (c, role) { return h`<div class="who"><span class="rl">${role}</span><div><b>${c.name}</b></div>${c.phone ? h`<div class="muted">${c.phone}</div><div class="acts"><a class="btn btn-sm btn-primary key" href="tel:${c.phone.replace(/[^\d+]/g, '')}">${ic('phone', 16)} Call</a><a class="btn btn-sm key" href="sms:${c.phone.replace(/[^\d+]/g, '')}">${ic('message', 16)} Message</a></div>` : h`<div class="muted">No phone on file</div>`}</div>`; };
     return h`${bar(p, how)}<main id="main" class="wrap">
       <section class="sheetc" style="--d:0"><div class="pt-head"><div class="pt-av">${U.avatar(p, 104)}</div><div class="grow"><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span><span aria-hidden="true">·</span><span>Folio ID ${sel.fid(p.folioId)}</span></div><div>${U.pill(p.condition, 'blue')}</div></div></div>
-        <div style="margin-top:1.1rem" class="facts"><span class="eyebrow">Level ${p.level} of 10 · ${L.name}</span>${U.lvbar(p.level)}</div>
-        ${p.levelSignoff ? h`<p class="small muted" style="margin:.4rem 0 0">Signed off Level ${p.levelSignoff.level} by ${p.levelSignoff.by}, ${U.monthYear(p.levelSignoff.date)}.</p>` : ''}</section>
+        ${p.levelSignoff ? h`<p class="small muted" style="margin:1rem 0 0">Skills last signed off by ${p.levelSignoff.by}, ${U.monthYear(p.levelSignoff.date)}.</p>` : ''}</section>
+      ${glance(p)}
       <section class="sheetc" style="--d:1"><h2>How to work with ${p.first}</h2><p class="small muted">Things that change how your team should interact</p>
-        ${p.howToWork.map(function (w) { return h`<div class="work note-sticky"><div class="by">${w.by}<span>${w.date}</span></div><p>${w.text}</p></div>`; })}</section>
-      <div class="fold">Fold: below this line is context, reached by scrolling</div>
+        ${p.howToWork.map(function (w) { return h`<div class="work note-sticky ${/^Patient/.test(w.by) ? 'voice-patient' : 'voice-team'}"><div class="by">${w.by}<span>${w.date}</span></div><p>${w.text}</p></div>`; })}</section>
+      ${(p.supportThisVisit || []).length ? h`<section class="sheetc" style="--d:1"><h2>Where ${p.first} may need support in this visit</h2><p class="small muted">How to help today, from ${p.first} and the paediatric team</p>
+        ${p.supportThisVisit.map(function (x) { return h`<div class="work voice-team"><div class="by">${x.label}<span>${x.by ? x.by + (x.date ? ', ' + x.date : '') : ''}</span></div><p>${x.text}</p></div>`; })}</section>` : ''}
+      <section class="sheetc" style="--d:6"><h2>Notes from the paediatric team</h2><p class="small muted">Read-only history, so you can see what has been working.</p>
+        ${notes.length ? notes.map(function (n) { return h`<div class="work"><div class="by">${n.kind}<span>${n.author} · ${U.fmt(n.date)}</span></div><div><p>${n.text}</p>${n.fields ? handoff(n.fields) : ''}</div></div>`; }) : h`<p class="muted">No shared notes.</p>`}</section>
+      ${medsSection(p)}
+      ${demo ? h`<div class="fold">Fold: below this line is context, reached by scrolling</div>` : h`<div class="fold" aria-hidden="true"></div>`}
+      <section class="sheetc" style="--d:5"><h2>Skills ${p.first} has and is building</h2><div class="sk2" style="margin-top:.75rem">
+        <div><div class="eyebrow">Does on their own</div>${own.length ? own.map(function (s) { return h`<div class="it2"><b>${s.name}</b><span>${s.sub}</span></div>`; }) : h`<p class="muted">None yet at this level.</p>`}</div>
+        <div><div class="eyebrow">Still working on</div>${still.length ? still.map(function (s) { return h`<div class="it2"><b>${s.name} ${U.skillPill(p.skills[s.id])}</b><span>${s.sub}</span></div>`; }) : h`<p class="muted">Everything at this level.</p>`}
+          ${p.decisionSupport ? h`<div class="it2"><b>Make big decisions ${U.pill('With help', 'help')}</b><span>${p.decisionSupport.name}${p.decisionSupport.rel ? ', ' + p.decisionSupport.rel.toLowerCase() : ''}, helps with major decisions.</span></div>` : ''}</div></div>
+        ${legend()}</section>
       <div class="cols" style="margin-bottom:1.1rem">
         <section class="sheetc" style="--d:2"><h2>Family contacts</h2>${vis.length ? vis.map(function (c) { return contact(c, c.rel); }) : h`<p class="muted">${p.first} has chosen not to share family contacts.</p>`}</section>
-        <section class="sheetc" style="--d:3"><h2>Past and current care team</h2>${p.careTeam.map(function (c) { return contact(c, c.role); })}</section>
+        <section class="sheetc" style="--d:3"><h2>Past and current care team</h2>${p.careTeam.filter(function (c) { return c.name && c.name !== 'Not added yet'; }).map(function (c) { return contact(c, c.role); })}</section>
       </div>
       <section class="sheetc" style="--d:4"><h2>Records and resources ${p.first} has linked</h2><p class="small muted">${F.COPY.noRecords}</p>
         ${p.links.length ? p.links.map(function (l) { return h`<div class="who row"><div class="grow"><b>${l.title}</b><div class="small muted">${l.sub}</div></div><a class="btn btn-sm" href="${l.url}" target="_blank" rel="noopener noreferrer">Open ${ic('ext', 14)}</a></div>`; }) : h`<p class="muted">Nothing linked yet.</p>`}</section>
-      <section class="sheetc" style="--d:5"><h2>Skills ${p.first} has and is building</h2><div class="sk2" style="margin-top:.75rem">
-        <div><div class="eyebrow">Does on their own</div>${own.length ? own.map(function (s) { return h`<div class="it2"><b>${s.name}</b><span>${s.sub}</span></div>`; }) : h`<p class="muted">None yet at this level.</p>`}</div>
-        <div><div class="eyebrow">Still working on</div>${still.length ? still.map(function (s) { return h`<div class="it2"><b>${s.name} ${U.skillPill(p.skills[s.id])}</b><span>${s.sub}</span></div>`; }) : h`<p class="muted">Everything at this level.</p>`}</div></div></section>
-      <section class="sheetc" style="--d:6"><h2>Notes from the paediatric team</h2><p class="small muted">Read-only history, so you can see what has been working.</p>
-        ${notes.length ? notes.map(function (n) { return h`<div class="work"><div class="by">${n.kind}${n.draft ? ' · Draft' : ''}<span>${n.author} · ${U.fmt(n.date)}</span></div><p>${n.text}</p></div>`; }) : h`<p class="muted">No shared notes.</p>`}</section>
       <section class="sheetc add-note" style="--d:7"><h2>Add a clinician note</h2><p class="small muted">${p.first} sees this in their app.</p>
-        <form data-submit="clinNote"><label for="cw">Your name and clinic</label><input id="cw" name="who" type="text" placeholder="Dr. Rivera, Westside Clinic" required><label for="cn">Note</label><textarea id="cn" name="text" rows="3" required></textarea><button class="btn btn-primary key" style="margin-top:1rem">Save note</button><p id="note-ok" class="ok" tabindex="-1" hidden>Saved. Your note is now in the list above.</p></form></section>
+        <form data-submit="clinNote"><label for="cw">Your name and clinic</label><input id="cw" name="who" type="text" placeholder="Dr. Rivera, Westside Clinic" value="${viewer}" required><label for="cn">Note</label><textarea id="cn" name="text" rows="3" required></textarea><button class="btn btn-primary key" style="margin-top:1rem">Save note</button><p id="note-ok" class="ok" tabindex="-1" hidden>Saved. Your note is now in the list above.</p></form></section>
     </main>`;
   }
 
@@ -94,7 +170,7 @@
     document.title = 'Folio · Care team view';
     if (demo && !params.get('p')) {
       var pts = S.get().patients.filter(function (x) { return x.card.status === 'active'; });
-      app.innerHTML = h`${bar(null)}<main id="main" class="center">${U.mark(64)}<div class="eyebrow red">Demo mode</div><h1 style="font-size:2rem;margin:.4rem 0 .6rem">Pick a patient to preview</h1><p class="muted" style="margin-inline:auto">For the Folio team only. A real card opens straight to the profile, and carries an unguessable link, never a name.</p>
+      app.innerHTML = h`${bar(null)}<main id="main" class="center">${U.mark(64)}<div class="eyebrow red">Demo mode</div><h1 style="font-size:2rem;margin:.4rem 0 .6rem">Pick a patient to preview</h1><p class="muted" style="margin-inline:auto">For the Folio team only. A real card opens to the patient's consent screen, and carries an unguessable link, never a name.</p>
         <div class="pick">${pts.map(function (x) { return h`<a href="?demo=1&p=${x.id}">${U.avatar(x, 40)}<span><b>${sel.full(x)}</b><br><span class="small muted">Folio ID ${sel.fid(x.folioId)}</span></span></a>`; })}</div></main>`.s;
       return;
     }
@@ -104,8 +180,9 @@
       app.innerHTML = msgPage(inactive ? 'This card is not active' : 'We could not open this card', inactive ? 'It may have been replaced or turned off. Ask the patient or their clinic for help.' : 'The link is not recognised. Tap or scan the card again. If it keeps happening, contact the patient\'s clinic.', '', inactive ? 'inactive' : 'invalid').s;
       return;
     }
-    startSession(p, demo ? 'Demo entry' : via);
-    render();
+    pending = { p: p, how: demo ? 'Demo entry' : via };
+    app.innerHTML = consentPage(p, pending.how).s;
+    var b = app.querySelector('.consent .btn-primary'); if (b) b.focus();
   }
   S.sub(function () { if (pid && !ended && !document.querySelector('dialog[open]') && !document.activeElement.matches('textarea,input')) render(); });
   boot();

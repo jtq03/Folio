@@ -9,7 +9,7 @@
   };
 
   F.Pages.access = function () {
-    var ui = F.ui, all = S.get().access, q = (ui.aq || '').toLowerCase();
+    var ui = F.ui, all = S.get().access.slice().sort(function (a, b) { return a.time < b.time ? 1 : -1; }), q = (ui.aq || '').toLowerCase();
     var rows = all.filter(function (a) { var p = sel.patient(a.pid), nm = p ? sel.full(p).toLowerCase() : ''; return (ui.af === 'all' || (ui.af === 'tap' ? a.how.indexOf('Card') === 0 : a.how === 'Portal')) && (!q || nm.indexOf(q) >= 0 || a.who.toLowerCase().indexOf(q) >= 0); });
     var chip = function (v, l) { return h`<button class="chip" data-action="afilter" data-v="${v}" aria-pressed="${String(ui.af === v)}">${l}</button>`; };
     return { title: 'Access log', html: h`
@@ -32,11 +32,12 @@
   F.actions.prevRes = function (el) { var r = S.get().resources.filter(function (x) { return x.id === el.dataset.id; })[0]; U.modal(h`<div class="eyebrow">${r.kind} · ${r.mins}</div><h2 style="margin:.4rem 0 .75rem">${r.title}</h2><p>${r.body}</p><div class="mform-actions"><button class="btn btn-primary" data-close>Done</button></div>`); };
 
   F.Pages.resources = function () {
-    var rs = S.get().resources;
+    /* Priority: draft guides waiting for a diabetes educator's review come first */
+    var rs = S.get().resources.map(function (r, i) { return { r: r, i: i }; }).sort(function (a, b) { return (b.r.review ? 1 : 0) - (a.r.review ? 1 : 0) || a.i - b.i; }).map(function (x) { return x.r; });
     return { title: 'Resources', html: h`
       ${F.Pages.head('Library', h`<em class="it">Resources</em>`, 'Curate what patients see in their app. Unpublish to hide without deleting.', h`<button class="btn btn-primary" data-action="addResource">${ic('plus')} Add resource</button>`)}
       <div class="table-wrap sec plain" style="padding:.5rem"><table class="data"><caption class="sr">Resources</caption><thead><tr><th scope="col">Title</th><th scope="col">Type</th><th scope="col">Topic</th><th scope="col">Published</th><th scope="col"><span class="sr">Actions</span></th></tr></thead>
-      <tbody>${rs.map(function (r) { return h`<tr><td><b>${r.title}</b><div class="tiny muted">${r.mins}</div></td><td>${r.kind}</td><td>${r.tags.join(', ')}</td>
+      <tbody>${rs.map(function (r) { return h`<tr><td><b>${r.title}</b><div class="tiny muted">${r.mins}${r.review ? h` · ${U.pill('Needs educator review', 'attn')}` : ''}</div></td><td>${r.kind}</td><td>${r.tags.join(', ')}</td>
         <td><label class="switch"><input type="checkbox" ${r.published ? 'checked' : ''} data-change="togglePub" data-id="${r.id}" aria-label="Published: ${r.title}"><span class="track"></span></label></td>
         <td style="text-align:right"><button class="btn btn-sm" data-action="prevRes" data-id="${r.id}">Preview</button> <button class="btn btn-sm btn-quiet" data-action="rmRes" data-id="${r.id}" aria-label="Remove ${r.title}">${ic('trash', 16)}</button></td></tr>`; })}</tbody></table></div>` };
   };

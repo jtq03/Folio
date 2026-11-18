@@ -33,11 +33,108 @@ Install the patient app on a phone: open `/app/` on the published site, then use
 2. Open the patient app in another tab. Maya sees the level-up celebration.
 3. Portal > Cards > Open tap view. That is what an ER sees. It is logged in Access log and times out.
 
-## Design rules (from the Figma brand package)
+## Design rules (Folio design system v4)
 
-- Colour: three blues, two greens, one red, warm beige instead of white. Red is for the star, alerts and one call to action per screen. Never a background.
-- Type: Fraunces for headlines (sentence case, italic on one or two words), Prompt for UI and body (16px minimum).
-- Paper is for structure and motion (binder tabs, sheets, tape, stamps). Data stays flat and readable.
-- Accessibility first: text scales (Settings), high contrast mode, reduced motion respected, full keyboard use, visible focus, status never shown by colour alone.
+The full-size plant images from the v4 design system, one per level, are in [`design-system/plants/`](design-system/plants/). The app uses smaller copies in `docs/shared/img/plants/`.
+
+- Colour: Greens 500, 800 and 900, Blues 100 to 700, Lime, Butter and Beiges 50 to 300 in place of white. Red 500 is the star and the mascot. Errors use the error pair (Red 700 on a light red) with an icon and words.
+- Type: Fraunces for headings 24px and up (sentence case, italic on one or two words), Figtree for UI and body (16px minimum).
+- Surfaces are flat. Only floating things (sheets, toasts, the card) get a shadow. Clinical screens use a 14px radius, the teen app 20px rows and 28px cards. Buttons are pills with 48px targets.
+- Voices: the patient's words sit on Blue 100, the care team's on Beige 200. Chips say who will see a note.
+- One plant per level, from Tiny sprout to Giant oak, on the plant tile.
+- Accessibility first: text scales (Settings), high contrast mode, reduced motion respected, full keyboard use, a 3px focus ring with a cream gap, status always an icon plus words, dark mode follows the device.
+
+## Why each feature exists (v2 research update)
+
+Each change below comes from Team 9's research: interviews with a paediatrician, a family doctor, a former ER nurse, a patient experience specialist, a young adult with type 1 diabetes and an analogous-setting participant, two classroom think-aloud tests, and instructor critique. Strong means three or more sources, moderate two, early one.
+
+| ID | Change | Why (paraphrased) | Evidence |
+|---|---|---|---|
+| A1 | No level numbers in the adult view | Classroom testers could not tell what a level number meant or what separated one level from the next | Strong |
+| A2 | Draft notes never reach adult teams | Testers and the AI pilot flagged unfinished notes as confusing and risky | Early |
+| A3 | One-line meaning for On my own, With help and Learning | Testers could not tell With help from Learning | Early |
+| A4 | Where the patient may need support in this visit, and who helps with big decisions | The redesigned adult view with these sections read correctly to a young adult reviewer, and the nurse asked to show who makes health decisions | Moderate |
+| A5 | Consent screen before the profile opens | Teens choose what is shared, and every open is logged | Moderate |
+| A6 | Type 1 diabetes wording everywhere | Leftover GI wording (flare plan) confused the story | Team fix |
+| C1 | Run my care: blood work, supplies, prescriptions, funding, with reminders | The hardest change at 18 was logistics, not speaking up, and some of it was handled unseen by a parent | Strong |
+| C2 | Medications and supplies list above the fold, with a confirmation date | Three professionals asked for it, hospitals rely on patients to know their medications, and an undated list is a safety risk | Strong |
+| C3 | Structured handoff note | The family doctor needs repeats and referrals to book in time, and the paediatrician asked for upcoming appointments | Strong |
+| C9 | Freeze the card and get a new link from the app | Lost cards were raised by the nurse and a classroom tester | Moderate |
+| C11 | Short type 1 diabetes guides linked to skills | The young adult wanted to learn day-to-day management and was learning it from social media instead | Early |
+| C12 | A growing plant, switchable with stickers or level only | The young adult described a plant that grows as you do tasks, while classmates preferred stickers, so the team can test both | Early, mixed |
+
+## Why each first-run change exists (v3 first-run update)
+
+A persona walkthrough on a wiped phone and browser found that Folio had no first run. The app opened on another teen's Home and the portal opened already signed in as Dr. Okafor. Each change below is backed by Team 9's interviews (participant codes) or by published research. The full walkthrough, sources and plan are in [notes/first-run-walkthrough-and-change-plan.md](notes/first-run-walkthrough-and-change-plan.md). AI personas were used as hypotheses only and are not counted as evidence.
+
+| ID | Change | Why (paraphrased) | Evidence |
+|---|---|---|---|
+| F1 | Teen welcome: find your profile with the Folio ID, confirm it is you | The app showed another teen's health details on a fresh phone. Clinics should pre-fill the clinical part so teens do not start from scratch (Canadian Paediatric Society 2022) | Walkthrough, guideline |
+| F2 | "Your space, your call" privacy screen in four short lines | Teens expect privacy and confidentiality (CPS 2023, ISPAD). Privacy notes should be short, layered and say "change it any time" (Privacy Commissioner of Canada) | Guideline |
+| F3 | Progress style chosen in setup, including "Just my level" | Use of gamified teen apps faded over time (Goyal 2017). Autonomy supports behaviour change (Ntoumanis 2021). The young adult suggested the plant, classmates preferred stickers | Trials, mixed |
+| F4 | Skippable "What do you already do?" self-check, shown in Visit mode as the teen's view | A capable older teen read Level 4 as "not even halfway there" (C2, P4). Teen and clinician ratings only weakly agree, so it never changes the level (Al Khalifah 2022) | Moderate |
+| F5 | No notification request in setup. Reminders go to the calendar | Apple and Google advise against asking at launch. The young adult relies on calendar reminders weeks ahead (P4) | Guidance, early |
+| F6 | Home: one level line, a strength-first sentence, one named next step, drafts hidden, honest note labels, "card on its way" | A new teen's first sentence was "Family does everything. 0 of 5". A draft note was labelled "Shown to future care teams" | Walkthrough |
+| F7 | Parent setup and parent home: level, skills, who does what, next visit, tips. The teen switches each part on and always sees it | Parents stay involved after 18 and worry about their role (Pritlove 2020). Controlling talk backfires (Goethals 2019). Teens should see when they are being monitored (UK Children's Code) | Small studies, guideline |
+| F8 | Adult view: consent says what Folio is and whose settings apply, optional viewer name for the access log | Testers asked who wrote the profile (C1). The old wording overstated what the teen chose at the tap | Moderate |
+| F9 | Adult view "At a glance": allergies, insulin, devices, emergency contact with Call, big decisions, adult care, the teen's own words. Each item says who and when | ER and family doctors need a quick handoff (P1, P3). Canada's patient summary needs allergies. Clinicians trust patient-held notes by source and date (West 2017) | Strong |
+| F10 | Portal: mock hospital sign-in, a one-time welcome card per role, "Handoffs shared" and "Cards to hand out" | Clinicians fear extra paperwork (P3). Folio should record checks they already do (P1). Tutorials did not help users (NN/g 2020), so there is no tour | Moderate |
+| F11 | "Find an adult family doctor" in Run my care, and "no family doctor yet" in the adult view | In Ontario, having no primary care at transition was linked with more DKA or death (Shulman 2018) | Large study |
+
+## Usability pass (v3, after the first-run update)
+
+Every screen was reviewed against the interviews, the persona walkthrough and the published research. The rule: put what each person needs first, and take out what nobody in the research asked for. Things the team decided on purpose (the plant versus stickers test, the 10 levels, the "time saved" stub) were kept.
+
+| ID | Change | Why (paraphrased) |
+|---|---|---|
+| U1 | Card shape choice removed from Add patient and Cards | Clinicians and coordinators never asked for it. It added a step to enrolment and a column to every row |
+| U2 | "Asthma, Epilepsy, Cystic fibrosis: soon" removed from Levels and skills | Placeholders for packages that do not exist |
+| U3 | Haptics test hidden (add ?debug=1 to see it) | A team test tool, not something teens use |
+| U4 | Sticker book only shows when the teen chose stickers | Plant mode showed two reward systems at once |
+| U5 | The full list of 10 levels is folded on Levels, and phase words (Aware, Involved) are gone from the teen app | Reference detail pushed the skills to work on down the page. The young adult did not care about levels |
+| U6 | Intro animation plays once per device (?intro=1 replays it) | It cost about 2.5 seconds on every new session |
+| U7 | Home stats show the real number at once | The count-up showed 0 for the first second |
+| U8 | Teen Home order: status, a new note, a visit in the next 14 days, the next step, then the rest | Action and time-sensitive items first |
+| U9 | Levels order: skills still to do, Run my care, what the next level unlocks, then progress art | Logistics were the hardest part at 18 (P4) |
+| U10 | Resources: guides for the skills being learned come first | Teens should not search 16 guides for the right one |
+| U11 | Allergies added to the teen's list, first. "Add your adult family doctor" prompt replaces an empty row | The adult view and ER need allergies first. Losing primary care was linked with more DKA (Shulman 2018) |
+| U12 | Portal Patients sorted by who needs action first | Clinicians look for who needs a check-in |
+| U13 | Cards sorted with cards to hand out first | The coordinator's next job |
+| U14 | Patient profile: the teen's questions for this visit, skills and medications first. Level reference folded | The visit is about the teen's questions. "In Maya's words should be at the top" (C2) |
+| U15 | Visit mode shows the teen's questions and a medication check | Earlier review: these were on other tabs and got missed |
+| U16 | Adult view: handoff notes above the full medication list, skills above contacts, no duplicate "In Maya's words", no empty care team rows | P3 wants repeats, referrals and who takes over first |
+| U17 | Portal Resources: guides waiting for a diabetes educator's review come first | They are drafts and should not go live unchecked |
+| U18 | Access log newest first across every patient | It was grouped by patient, which hid recent opens |
+
+## Design system v4
+
+Every screen now uses the v4 design system from Claude Design. Screens behave the same as after the usability pass. A few small changes came from the system itself:
+
+| ID | Change | Why |
+|---|---|---|
+| V1 | Notes carry a chip that says who will see them (You + care team, or Future care teams) | v4 notes pattern: visibility is always shown, so a teen knows what a new doctor reads |
+| V2 | Run my care shows who owns each task, and a Take it on button for jobs the parent holds | v4 reminders pattern has an owner chip. It makes the hand-over from parent to teen a tap |
+| V3 | My plant shows all ten plants, earned in colour and the next ones faded | v4 gives each level its own plant, so the teen can see what is ahead |
+| V4 | The adult view's top bar is shorter on a phone and scrolls away | An ER doctor opens the card on a phone. The bar took a quarter of the screen |
+| V5 | "On track" status has an icon like the other statuses | v4: status is always an icon plus words |
+| V6 | Reduce motion now also stops smooth page scrolling | The old rule skipped the page itself |
+
+Open questions for the team (plant in clinical tables, blood sugar chart, red star as a UI marker, card shapes, calendar view, icon set) are listed in [CLAUDE.md](CLAUDE.md) under Design system v4.
+
+## Readiness check, goals and more (v5, from a competitor review)
+
+We compared Folio with MyTransition (McMaster Children's Hospital and CanChild), a general transition app. We kept what works and made it specific to type 1 diabetes:
+
+| ID | Change | Why |
+|---|---|---|
+| R1 | Setup step 4 is now a readiness check: 15 questions, 3 for each Folio skill, one per screen | MyTransition opens with the 14-item TRANSITION-Q. That scale is licensed (sold by CanChild) and not diabetes-specific, so Folio uses its own questions, shaped by Folio's five skills and the four READDY domains (Corathers et al. 2020) |
+| R2 | Answers are Not yet, With help or On my own. Each skill shows the middle of its 3 answers. No single score | A bare number ("56") does not say what to work on and can feel like a grade. The words match the statuses clinicians already use |
+| R3 | The teen retakes the check from Levels. Home prompts a retake when a visit is 2 weeks away and the last check is over 3 weeks old | MyTransition tracks its score over time. The care team sees the latest answers in Visit mode. The check never changes a level |
+| R4 | Up to 3 goals from the check, each with 3 small steps and a guide. Goals replace the single next step on Home | MyTransition links goals to tips. Folio's steps are diabetes-specific and each ticked step grows the plant |
+| R5 | My diabetes in 3 sentences, in About me. Adult doctors see it first, as "In Maya's words" | MyTransition's 3-sentence summary. Summarising your own history is a core transition skill |
+| R6 | Coming up on Home: blood work, care tasks and refill dates, soonest first | MyTransition has a calendar of appointments and prescriptions. Folio uses the dates it already holds and phone calendar reminders |
+| R7 | Four draft guides: alcohol, driving, sex and relationships, planning for pregnancy | A READDY study (Kamoun et al. 2022) found teens least confident about alcohol, tobacco, sexual health and pregnancy |
+
+The questions, goal steps and new guides are drafts for a diabetes educator to review.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how the four of us work in it, and [CLAUDE.md](CLAUDE.md) for the technical map.

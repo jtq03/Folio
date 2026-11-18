@@ -1,0 +1,126 @@
+/* Folio design system v4: paediatric portal. Loaded after portal.css and fun.css. Layout and behaviour stay the same. */
+
+/* ---------- Sidebar: Green 800, active item Green 500, badge lime ---------- */
+.side { top: 0; left: 0; bottom: 0; width: 240px; border-radius: 0; padding: 1.25rem .85rem 1rem; background: var(--green-800); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border: 0; color: var(--beige-50); }
+:root[data-contrast="high"] .side { background: var(--green-900); }
+.side .brand { display: flex; align-items: center; gap: .55rem; padding: .25rem .5rem .35rem; color: var(--beige-50); }
+.side .brand .mark { flex: none; }
+.side .wordmark { font-size: 1.45rem; }
+.side .brand .portal-chip { font: 700 .7rem var(--font-ui); padding: 3px 8px; border-radius: 999px; border: 1.5px solid rgba(252,248,241,.5); color: var(--beige-50); letter-spacing: 0; }
+.side .clinic { color: var(--beige-50); border-bottom: 1px solid rgba(252,248,241,.14); padding: .5rem .55rem .9rem; }
+.side .clinic strong { font-weight: 700; }
+.side .clinic span, .nav-h { color: rgba(252,248,241,.68); }
+.nav { gap: .9rem; }
+.nav-bubble { display: none !important; }
+.nav-i { min-height: 44px; padding: 0 .7rem; border-radius: 12px; color: var(--beige-50); font: 600 .9375rem var(--font-ui); background: transparent; box-shadow: none; }
+.nav-i:hover, .nav-i.on:hover { background: rgba(252,248,241,.08); }
+.nav-i.on { background: var(--green-500); box-shadow: none; font-weight: 700; }
+.nav-i .tile, .nav-i.on .tile, .nav-i:hover .tile { width: 26px; height: 26px; background: transparent !important; color: var(--beige-50); transform: none !important; box-shadow: none; }
+.nav-i .tile .ic { width: 20px; height: 20px; }
+.side-foot { border-top: 1px solid rgba(252,248,241,.14); }
+.me, .me strong { color: var(--beige-50); }
+.me span { color: rgba(252,248,241,.7); }
+.me .signout { color: var(--beige-50); border-color: transparent; }
+.me .signout:hover { background: rgba(252,248,241,.1); }
+.demo-links a { color: rgba(252,248,241,.75); }
+.page { margin-left: 240px; padding: 40px clamp(1.25rem, 3.4vw, 2rem) 96px; }
+.page-in { max-width: 1200px; }
+@media (max-width: 960px) {
+  .side { position: sticky; top: 0; width: auto; margin: 0; border-radius: 0; }
+  .page { margin-left: 0; padding: 24px 1rem 80px; }
+}
+
+/* ---------- Page headers ---------- */
+.page-head h1 { font: 600 clamp(2.1rem, 3.6vw, 3rem)/1.08 var(--font-display); color: var(--fg-headline); }
+.page-head p { color: var(--fg-2); font-size: 1.0625rem; }
+.crumb { color: var(--fg-2); }
+.crumb:hover { color: var(--fg-1); }
+
+/* ---------- Cards: Beige 50, 14px, flat ---------- */
+.sec, .panel, .sec.plain, .tabpanel .sec { background: var(--bg-surface); background-image: none; border-radius: var(--radius-clinical); box-shadow: none; }
+.sec-head { border-bottom: 1px solid var(--line); }
+.sec-head h2, .sec > h2 { font-size: 1.375rem; }
+.card-list li { border-bottom: 1px solid var(--line); }
+.card-list a.title { color: var(--fg-1); }
+
+/* Stats */
+.stat, .stat:hover { background: var(--bg-surface); background-image: none; border-radius: var(--radius-clinical); box-shadow: none; transform: none; }
+.stat .tile { width: 48px; height: 48px; border-radius: 12px; }
+.stat b { font: 600 2.5rem/1 var(--font-display); color: var(--fg-1); }
+.stat.attn b { color: var(--fg-1); }
+.stat.attn .tile { background: var(--warning-bg); color: var(--warning-fg); }
+.stat > span:not(.tile) { color: var(--fg-2); }
+
+/* Toolbar and tables (the clinical table pattern) */
+table.data th { border-bottom: 0; }
+table.data td { border-bottom: 1px solid var(--line); }
+table.data tr:hover td { background: var(--lime-100); }
+
+/* Profile hero */
+.hero { background: var(--bg-surface); background-image: none; border-radius: var(--radius-clinical); box-shadow: none; }
+.hero-av .avatar { box-shadow: none; }
+.hero h1 { color: var(--fg-headline); }
+
+/* Section tabs become underline tabs (v4 "Sidebar + tabs") */
+.subtabs { gap: 4px; padding: 0; border-radius: 0; background: transparent; box-shadow: none; border-bottom: 1px solid var(--line); }
+.subtabs button { border-radius: 0; background: transparent; box-shadow: none; color: var(--fg-2); font: 600 .9375rem var(--font-ui); border-bottom: 3px solid transparent !important; min-height: 44px; }
+.subtabs button:hover { background: transparent; color: var(--fg-1); }
+.subtabs button[aria-selected="true"] { background: transparent; box-shadow: none; color: var(--fg-1); font-weight: 700; border-bottom-color: var(--fg-1) !important; }
+.skillrow { background: var(--bg-inset); box-shadow: none; border-radius: var(--radius-clinical); }
+
+/* ---------- Notes: the patient's voice is Blue 100, the care team's Beige 200 ---------- */
+.note, .note:nth-child(even), .note:hover, .note:nth-child(even):hover { transform: none !important; box-shadow: none; background: var(--voice-patient); background-image: none; border-radius: 20px 20px 20px 8px; padding: 1rem 1.1rem; margin: 0 0 .75rem; }
+.note::before { display: none; }
+.note.peds { background: var(--voice-care-team); border-radius: 20px 20px 8px 20px; }
+.note.adult { background: var(--info-bg); border-radius: 20px 20px 8px 20px; }
+.note .meta b { font: 700 .75rem var(--font-ui); letter-spacing: .08em; color: var(--fg-1); }
+.note .meta .muted { color: var(--fg-2); }
+.kv dt { color: var(--fg-2); font: 700 .75rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+
+/* ---------- Visit mode: numbered step counter, always naming the current step ---------- */
+.stepper li { color: var(--fg-2); font: 600 .9375rem var(--font-ui); background: transparent; box-shadow: none; }
+.stepper li b { background: var(--bg-surface); color: var(--fg-1); border: 2px solid var(--line-strong); box-shadow: none; }
+.stepper li[aria-current="step"] { color: var(--fg-1); font-weight: 700; background: transparent; }
+.stepper li[aria-current="step"] b { background: var(--fg-1); color: var(--bg-surface); border-color: var(--fg-1); }
+.stepper li.done b { background: var(--green-500); border-color: var(--green-500); color: var(--beige-50); }
+.visit-skill { border-bottom: 1px solid var(--line); }
+.done-sheet { background: var(--bg-surface); border-radius: var(--radius-card); box-shadow: none; }
+.hbar .t { background: var(--bg-sunken); box-shadow: none; }
+.hbar .t i { background: var(--green-500); }
+.hbar .t i.blue { background: var(--blue-300); }
+
+/* Notices: inline, info by default (icon + words) */
+.notice { background: var(--info-bg); background-image: none; color: var(--info-fg); border-radius: var(--radius-clinical); box-shadow: none; }
+.notice .ic { color: var(--info-fg); }
+.notice b, .notice span { color: inherit; }
+
+/* v3 pieces in v4 */
+.welcome-card { background: var(--lime-100); border-left: 0; }
+.signin-card { background: var(--bg-surface); border-radius: var(--radius-card); box-shadow: none; }
+.signin-acct { background: var(--bg-inset); border: 2px solid transparent; border-radius: var(--radius-row); }
+.signin-acct:hover, .signin-acct:focus-visible { border-color: var(--fg-1); }
+.vq, .vmeds { background: var(--bg-inset); border-radius: var(--radius-clinical); }
+.legend { border-top-color: var(--line); }
+.perm-grid .panel { background: var(--bg-inset); }
+
+/* Fun layer, made calm: no wobble on clinical cards, the soft ready pulse stays but in lime */
+.stat:hover .tile { animation: none; }
+.card-list li.is-ready::before, table.data tr.is-ready td:first-child::before { background: var(--lime); }
+.stairs-live li .cnt { background: var(--green-900); color: var(--beige-50); }
+.empty-art .ea-back, .empty-art .ea-front { background-image: none; }
+/* Sign out sits on its own line under the name in the dark sidebar */
+.me { flex-wrap: wrap; row-gap: .25rem; }
+.me > div { flex: 1; min-width: 0; }
+.me .signout { flex-basis: 100%; justify-content: flex-start; margin-left: 0; padding: 0 .4rem; min-height: 40px; color: rgba(252,248,241,.85); }
+/* In Visit mode the chosen status is a radio pill: selected = Green 900 fill */
+.visit-skill .seg button[aria-pressed="true"] { background: var(--fg-1); color: var(--bg-surface); box-shadow: none; }
+/* "Where patients are" bars: flat sunken bars, hover and focus fill Green 800 with cream text */
+.stairs-live li a { background-color: var(--bg-sunken); background-image: none; color: var(--fg-1); border-radius: 6px 6px 0 0; box-shadow: none; }
+.stairs-live li a:hover, .stairs-live li a:focus-visible { background-color: var(--action); color: var(--on-action); }
+/* v5: the teen's 3 sentences in their voice, and the readiness check answers in Visit mode */
+.s3-quote { background: var(--voice-patient); border-radius: 20px 20px 20px 8px; padding: .8rem 1rem; }
+.s3-quote p { margin: 0; color: var(--fg-1); }
+.ck-detail { margin-top: .35rem; }
+.ck-detail summary { cursor: pointer; font-weight: 700; color: var(--fg-2); min-height: 32px; display: inline-flex; align-items: center; }
+.ck-detail ul { margin: .25rem 0 0; padding-left: 1.1rem; display: grid; gap: .2rem; }
+.ck-detail li b { white-space: nowrap; }

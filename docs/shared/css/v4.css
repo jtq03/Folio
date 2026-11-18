@@ -1,0 +1,143 @@
+/* Folio design system v4, clinical density (portal and adult care view).
+   Loaded last on those surfaces. It restyles the existing markup. No behaviour changes here.
+   Rules from v4: flat surfaces (no shadow at rest), 14px clinical cards, pill buttons, 6px status pills
+   with icon + words, Figtree for UI, Fraunces only at 24px and up, red only in the star. */
+
+/* ---------- Page and type ---------- */
+html { background: var(--bg-page); }
+body { background: var(--bg-page); background-image: none; color: var(--fg-1); font: 500 16px/24px var(--font-ui); -webkit-font-smoothing: antialiased; }
+body::before { display: none; }
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; color: var(--fg-headline); letter-spacing: -.01em; text-shadow: none; }
+h1 { font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1.08; }
+h2 { font-size: 1.5rem; line-height: 1.2; }
+h3 { font-family: var(--font-ui); font-size: 1.05rem; font-weight: 700; color: var(--fg-1); letter-spacing: 0; }
+em.it, .it, h1 em, h2 em { font-style: italic; font-weight: 400; }
+p { color: var(--fg-1); }
+a { color: var(--fg-2); text-underline-offset: 3px; }
+.muted { color: var(--fg-2); }
+.small { font-size: .875rem; line-height: 1.25rem; }
+.tiny { font-size: .78rem; }
+.eyebrow, .eyebrow.red, .page-head .eyebrow, .label-tape { display: block; background: none; box-shadow: none; transform: none; text-shadow: none; padding: 0; color: var(--fg-2); font: 700 .75rem/1rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--bg-surface), 0 0 0 6px var(--focus-ring) !important; border-radius: inherit; }
+.ic { stroke-width: 2; }
+
+/* ---------- Buttons: pill, 48 tall, one primary per screen ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px; padding: 0 1.25rem; border-radius: 999px; border: 2px solid var(--fg-1); background: transparent; background-image: none; color: var(--fg-1); font: 700 .9375rem/1.25rem var(--font-ui); letter-spacing: 0; text-shadow: none; box-shadow: none; transform: none; transition: background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.btn:hover { background: var(--bg-sunken); transform: none; box-shadow: none; }
+.btn:active { transform: scale(.97); box-shadow: none; }
+.btn-primary { background: var(--action); border-color: var(--action); color: var(--on-action); }
+.btn-primary:hover { background: var(--action-hover); border-color: var(--action-hover); color: var(--on-action); }
+.btn-primary:active { background: var(--action-press); border-color: var(--action-press); }
+/* The old red call to action becomes the v4 highlight button */
+.btn-cta { background: var(--highlight); border-color: var(--highlight); color: var(--on-highlight); text-shadow: none; box-shadow: none; }
+.btn-cta:hover { background: var(--highlight-hover); border-color: var(--highlight-hover); }
+.btn-cta:active { background: var(--highlight-press); border-color: var(--highlight-press); }
+.btn-quiet { border-color: transparent; background: transparent; color: var(--fg-1); text-decoration: underline; text-underline-offset: 3px; }
+.btn-quiet:hover { background: var(--bg-sunken); text-decoration: none; }
+.btn-danger { border-color: var(--error-fg); color: var(--error-fg); background: transparent; }
+.btn-danger:hover { background: var(--error-bg); }
+.btn-sm { min-height: 40px; padding: 0 1rem; font-size: .875rem; }
+.btn-sm.btn-quiet { padding: 0 .75rem; }
+.btn[disabled], .btn[aria-disabled="true"] { background: var(--beige-300); border-color: var(--beige-300); color: var(--fg-disabled); opacity: 1; cursor: not-allowed; transform: none; }
+.btn-icon { width: 48px; padding: 0; border-radius: 50%; }
+
+/* ---------- Forms ---------- */
+label, .label { font: 700 .875rem/1.25rem var(--font-ui); color: var(--fg-1); letter-spacing: 0; }
+input[type=text], input[type=email], input[type=tel], input[type=number], input[type=search], input[type=url], input[type=date], input[type=datetime-local], select, textarea {
+  min-height: 48px; border: 2px solid var(--line-strong); border-radius: var(--radius-input); background: var(--bg-surface); background-image: none; color: var(--fg-1); font: 500 1rem/1.5rem var(--font-ui); box-shadow: none; padding: .6rem .9rem; }
+textarea { min-height: 96px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--fg-1); }
+input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--error-fg); }
+input[disabled], select[disabled], textarea[disabled] { background: var(--bg-page); }
+.search input { border-radius: 999px; background: var(--bg-surface); }
+.check input { accent-color: var(--green-500); width: 24px; height: 24px; }
+.choice { border: 2px solid var(--line); border-radius: var(--radius-clinical); background: var(--bg-surface); box-shadow: none; }
+.choice:has(input:checked) { border-color: var(--green-500); background: var(--lime-100); }
+
+/* Switch: 52 x 30, on = Green 500 track with a lime knob */
+.switch .track { width: 52px; height: 30px; border: 0; border-radius: 999px; background: var(--switch-off); box-shadow: none; }
+.switch .track::after { top: 3px; left: 3px; width: 24px; height: 24px; background: var(--beige-50); box-shadow: none; transition: transform var(--dur-fast) var(--ease); }
+.switch input:checked + .track { background: var(--green-500); }
+.switch input:checked + .track::after { transform: translateX(22px); background: var(--lime); }
+.switch input:focus-visible + .track { outline: none; box-shadow: 0 0 0 3px var(--bg-surface), 0 0 0 6px var(--focus-ring); }
+
+/* Chips (filters) and radio pills: selected = Green 900 fill */
+.chip { min-height: 40px; border: 2px solid var(--line-strong); background: transparent; background-image: none; box-shadow: none; color: var(--fg-1); font: 700 .875rem var(--font-ui); transform: none; }
+.chip:hover { background: var(--bg-sunken); }
+.chip:active { transform: scale(.97); }
+.chip[aria-pressed="true"], .chip[aria-checked="true"] { background: var(--fg-1); border-color: var(--fg-1); color: var(--bg-surface); box-shadow: none; }
+
+/* Segmented control: Beige 200 track, selected Beige 50 */
+.seg { border: 0; border-radius: 999px; padding: 4px; background: var(--bg-sunken); box-shadow: none; gap: 2px; }
+.seg button { border: 0 !important; border-radius: 999px; min-height: 36px; background: transparent; color: var(--fg-1); font: 700 .875rem var(--font-ui); }
+.seg button[aria-pressed="true"] { background: var(--bg-surface); color: var(--fg-1); box-shadow: 0 1px 2px rgba(31,47,22,.16); }
+.seg button:hover:not([aria-pressed="true"]) { background: transparent; text-decoration: underline; }
+
+/* ---------- Status pills (clinical): 6px radius, icon + words, max 2 words ---------- */
+.pill { display: inline-flex; align-items: center; gap: .3rem; padding: 3px 8px; border: 0; border-radius: var(--radius-status); background: var(--bg-sunken); color: var(--fg-1); font: 700 .75rem/1rem var(--font-ui); letter-spacing: 0; text-transform: none; box-shadow: none; transform: none; white-space: nowrap; }
+.pill .ic { flex: none; }
+.pill::before { display: none !important; content: none !important; }
+.pill-attn { background: var(--warning-bg); color: var(--warning-fg); border: 0; }
+.pill-ready, .pill-green { background: var(--success-bg); color: var(--success-fg); }
+.pill-done, .pill-neutral, .pill-track { background: var(--bg-sunken); color: var(--fg-1); }
+.pill-own { background: var(--lime); color: var(--green-900); }
+.pill-help { background: var(--blue-100); color: var(--green-900); }
+.pill-learning { background: var(--beige-200); color: var(--green-900); }
+.pill-blue { background: var(--info-bg); color: var(--info-fg); }
+.pill-dark { background: var(--green-800); color: var(--beige-50); }
+
+/* ---------- Tables: plain, 14px rows, sunken header ---------- */
+.table-wrap { background: var(--bg-surface); border-radius: var(--radius-clinical); border: 1px solid var(--line); box-shadow: none; overflow-x: auto; }
+table.data { background: transparent; border-collapse: separate; border-spacing: 0; box-shadow: none; }
+table.data th { background: var(--bg-sunken); color: var(--fg-2); font: 700 .75rem/1rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; border: 0; padding: .7rem .9rem; }
+table.data th:first-child { border-top-left-radius: 10px; } table.data th:last-child { border-top-right-radius: 10px; }
+table.data td { font-size: .875rem; border-bottom: 1px solid var(--line); padding: .7rem .9rem; background: transparent; }
+table.data tr:hover td { background: var(--lime-100); }
+table.data a.rowlink { color: var(--fg-1); font-weight: 700; }
+
+/* ---------- Toast, dialog ---------- */
+.toast { background: var(--green-900); color: var(--beige-50); border-radius: 18px; box-shadow: var(--shadow-float); background-image: none; font: 600 .9375rem/1.4 var(--font-ui); }
+dialog.modal::backdrop { background: var(--scrim); backdrop-filter: none; }
+.modal-sheet { background: var(--bg-surface); background-image: none; border-radius: var(--radius-card); box-shadow: var(--shadow-float); border: 0; }
+.modal-sheet::before { display: none; }
+
+/* ---------- Brand ---------- */
+.wordmark { position: relative; display: inline-block; width: 3.4em; font-size: 1.9rem; line-height: 0; text-shadow: none; vertical-align: middle; }
+.wordmark img { display: block; width: 100%; height: auto; }
+.wordmark .wm-star { position: absolute; left: 59%; top: 16%; width: 15%; height: auto; transform: none; }
+.empty { color: var(--fg-2); }
+
+/* ---------- Paper pieces become flat ---------- */
+.sheet, .panel, .panel-green, .panel-dark { background-image: none; box-shadow: none; }
+.tape, .sec.taped::before, .hero .tape { display: none !important; }
+.stamp { border: 2px solid var(--success-fg); color: var(--success-fg); background: var(--success-bg); border-radius: 999px; transform: none; box-shadow: none; padding: .5rem .9rem; }
+.stamp strong { color: var(--success-fg); }
+.divider-label::after { background: var(--line); }
+.lvbar i { background: var(--beige-300); box-shadow: none; border-radius: 3px; }
+.lvbar i.on { background: var(--green-500); }
+.avatar { box-shadow: none; }
+.tile { box-shadow: none; background-image: none; border-radius: 12px; transform: none; color: var(--green-900); }
+.tile.t1 { background: var(--blue-100); } .tile.t2 { background: var(--butter); } .tile.t3 { background: var(--lime-100); } .tile.t4 { background: var(--beige-200); } .tile.t5 { background: var(--success-bg); }
+/* Levels bars (v4): earned bars in blues and greens, the current bar lime */
+.stairs li { background: var(--beige-200); box-shadow: none; border-radius: 6px 6px 0 0; border: 0; }
+.stairs li.done { background: var(--blue-300); }
+.stairs li.done:nth-child(3n+2) { background: var(--blue-500); color: var(--beige-50); }
+.stairs li.done:nth-child(3n) { background: var(--green-500); color: var(--beige-50); }
+.stairs li.cur { background: var(--lime); color: var(--green-900); outline: 2px solid var(--green-900); outline-offset: -2px; }
+.stairs li .cnt { background: var(--green-900); color: var(--beige-50); box-shadow: none; }
+
+/* Plant tile (teen app pattern, also used small in clinical readiness) */
+.plant-tile { display: inline-block; width: var(--s); height: var(--s); border-radius: 22%; overflow: hidden; background: var(--plant-tile); flex: none; }
+.plant-tile img { display: block; width: 100%; height: 100%; object-fit: contain; }
+h1:focus-visible, h1[tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { box-shadow: none !important; outline: none; }
+/* Review fixes */
+input:not([type]) { min-height: 48px; border: 2px solid var(--line-strong); border-radius: var(--radius-input); background: var(--bg-surface); color: var(--fg-1); font: 500 1rem/1.5rem var(--font-ui); padding: .6rem .9rem; box-shadow: none; width: 100%; }
+input:not([type]):focus-visible { border-color: var(--fg-1); }
+.search input { padding-left: 2.6rem; }
+.stairs li { background: var(--bg-sunken); color: var(--fg-1); }
+.wordmark .wm-cream { display: none; }
+.wordmark.cream .wm-ink { display: none; }
+.wordmark.cream .wm-cream { display: block; }
+@media (prefers-color-scheme: dark) { .wordmark .wm-ink { display: none; } .wordmark .wm-cream { display: block; } }
+/* Who can see this: outlined chip with an icon (v4) */
+.vis-chip { display: inline-flex; align-items: center; gap: .3rem; padding: 3px 9px 3px 7px; border-radius: 999px; border: 1.5px solid var(--line-strong); color: var(--fg-1); font: 700 .75rem/1rem var(--font-ui); white-space: nowrap; }

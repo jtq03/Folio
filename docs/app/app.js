@@ -31,10 +31,15 @@
   function tile(inner, n, sm) { return h`<span class="ios-tile t${n} ${sm ? 'sm' : ''}" aria-hidden="true">${inner}</span>`; }
   var SKILL_ICON = { know: 'book', manage: 'clock', speak: 'message', run: 'visit', support: 'users' };
   /* Each skill's "learn how" link opens the resource that teaches it */
-  var SKILL_RES = { know: 'r1', manage: 'r8', speak: 'r3', run: 'r7', support: 'r2' };
+  var SKILL_RES = { know: 'r13', manage: 'r9', speak: 'r3', run: 'r14', support: 'r2' };
+  function plantOn() { return !!(F.Plant && F.Plant.mode() === 'plant'); }
+  var EV_ICON = { practice: ['check', 4], guide: ['book', 1], careTask: ['visit', 2], signOff: ['levels', 3], goal: ['check', 4], check: ['levels', 3] };
   var KIND_ICON = { Guide: ['book', 1], Checklist: ['visit', 2], Video: ['play', 3], Worksheet: ['edit', 5] };
   function kindTile(r) { var k = KIND_ICON[r.kind] || ['book', 1]; return tile(k[0] === 'play' ? xi('play', 22) : ic(k[0], 22), k[1]); }
-  function status(st) { return h`<span class="ios-st s-${st}"><i aria-hidden="true"></i>${F.SKILL_STATUS[st]}</span>`; }
+  /* v4 status chip: colour, icon and words together (On my own = lime + check, With help = Blue 100 + hand, Learning = Beige 200 + sprout) */
+  var ST_ICON = { own: 'circlecheck', help: 'hand', learning: 'sprout' };
+  function status(st) { return h`<span class="ios-st s-${st}">${ic(ST_ICON[st] || 'sprout', 16)}${F.SKILL_STATUS[st]}</span>`; }
+  F.app_status = status;
   var shareSvg = raw('<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15V3M8 7l4-4 4 4M7 11H5.500a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H17"/></svg>');
 
   /* ---------- Tab bar ---------- */
@@ -54,7 +59,8 @@
   function seenSet() { try { return JSON.parse(localStorage.getItem('folio.seen.' + pid()) || '[]'); } catch (e) { return []; } }
   function unread() { var seen = seenSet(); return sel.notesFor(me()).filter(function (n) { return n.role === 'peds' && seen.indexOf(n.id) < 0; }).length; }
   function updateBadge() { try { N.badge(unread() + (me().celebrate ? 1 : 0)); } catch (e) {} }
-  function markSeen() { var p = me(); try { localStorage.setItem('folio.seen.' + p.id, JSON.stringify(p.notes.map(function (n) { return n.id; }))); } catch (e) {} updateBadge(); render(false); }
+  /* Notes marked as read on this visit to Home stay "new" (and in place) until the teen leaves Home, so nothing jumps */
+  function markSeen() { var p = me(), seen = seenSet(); F.ui.freshNotes = p.notes.map(function (n) { return n.id; }).filter(function (id) { return seen.indexOf(id) < 0; }).concat(F.ui.freshNotes || []); try { localStorage.setItem('folio.seen.' + p.id, JSON.stringify(p.notes.map(function (n) { return n.id; }))); } catch (e) {} updateBadge(); render(false); }
 
   /* ---------- Shared builders ---------- */
   function large(title, sub) { return h`<header class="ios-large" data-rise><h1 tabindex="-1">${title}</h1>${sub ? h`<p class="ios-sub">${sub}</p>` : ''}</header>`; }
@@ -81,8 +87,8 @@
   });
 
   /* ---------- Home ---------- */
-  F.actions.practise = function () {
-    var p = me(), r = A.practise(p.id); N.haptic(r ? 'success' : 'light');
+  F.actions.practise = function (el) {
+    var p = me(), r = A.practise(p.id, el && el.dataset ? el.dataset.sid : ''); N.haptic(r ? 'success' : 'light');
     U.toast(r ? 'Nice. ' + r.name + ' moved to With help. Your doctor will see it.' : 'Your care team signs skills off at your next visit.');
   };
   var cardFile = null, cardKey = '';
@@ -162,47 +168,181 @@
   function home(params, q) {
     var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p);
     var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
-    var note = sel.notesFor(p).filter(function (n) { return n.role === 'peds'; })[0];
+    /* v3: drafts never show, and the slot holds a note to the teen. A shared handoff note gets its own sticky. */
+    var notes = sel.notesFor(p).filter(function (n) { return n.role === 'peds' && !n.draft; });
+    var note = notes.filter(function (n) { return n.kind !== 'Handoff note'; })[0], handoff = notes.filter(function (n) { return n.kind === 'Handoff note' && n.shared; })[0];
+    var mine = (p.selfCheck && p.selfCheck.skills) || {}, lrn = todo.filter(function (s) { return p.skills[s.id] === 'learning'; });
+    var next = lrn.filter(function (s) { return mine[s.id] !== 'own'; })[0] || lrn[0] || todo[0], rest = todo.filter(function (s) { return s !== next; });
+    /* Priority order: status, a new note from the care team, a visit in the next 14 days, the next step, then everything else */
+    var fresh = !!(note && (seenSet().indexOf(note.id) < 0 || (F.ui.freshNotes || []).indexOf(note.id) >= 0)), vd = visitDate(p.nextVisit), soon = !!(vd && vd.getTime() > Date.now() && vd.getTime() - Date.now() < 14 * 864e5);
+    var noteBlock = note ? h`<section data-rise style="--d:2" aria-label="${fresh ? 'New note' : 'Note'} from your care team"><article class="ios-sticky"><span class="ios-tape b" aria-hidden="true"></span><div class="ios-eyebrow">${fresh ? 'New · ' : ''}From ${note.author} · ${U.monthYear(note.date)}</div><p>${note.text}</p>${seenBy(p, note)}</article></section>` : '';
     return { title: 'Hi ' + (F.nickname ? F.nickname(p) : p.first),
       after: function (loc, isNav) { if (isNav && q && q.show === 'card') setTimeout(function () { history.replaceState(null, '', '#/'); F.actions.showQR(); }, 350); },
       html: h`
       ${large(h`Hi <em>${F.nickname ? F.nickname(p) : p.first}</em>`, 'You are building your own health team.')}
       <div class="ios-body">
-        <section class="ios-index" data-rise style="--d:1" aria-label="Your level"><span class="ios-tape" aria-hidden="true"></span>
+        ${plantOn() ? plantCard(p, L, own) : h`<section class="ios-index" data-rise style="--d:1" aria-label="Your level"><span class="ios-tape" aria-hidden="true"></span>
           <div class="ios-eyebrow">Your level</div>
-          <div class="ios-lvl" aria-hidden="true"><span class="ios-num">${p.level}</span><div><h2>${L.name}</h2><p>${L.phase} phase · level ${p.level} of 10</p></div></div>
-          <span class="ios-sr">Level ${p.level} of 10, ${L.name}. ${L.phase} phase.</span>
+          <div class="ios-lvl" aria-hidden="true"><span class="ios-num">${p.level}</span><div><h2>${L.name}</h2><p>Level ${p.level} of 10</p></div></div>
+          <span class="ios-sr">Level ${p.level} of 10, ${L.name}.</span>
           ${stairs(p.level)}
-          <p class="ios-cap">${p.transferred ? 'You have moved to adult care.' : L.leads + '. ' + own + ' of 5 skills on your own.'}</p></section>
-        ${ticket(p)}
-        ${nx && todo.length ? h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="wk"><h2 class="ios-gh" id="wk">${tile(ic('levels', 18), 4, true)}<span>Working toward Level ${nx.n}: ${nx.name}</span></h2>
-          <div class="ios-list">${todo.map(function (s) { var i = F.SKILLS.indexOf(s); return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[p.skills[s.id]]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>
-          <p class="ios-gf">Tap a skill to learn how.</p>
-          ${todo.some(function (s) { return p.skills[s.id] === 'learning'; }) ? h`<div style="margin-top:20px"><button type="button" class="ios-btn" data-action="practise">${xi('sparkle', 20)} I practised a skill</button><p class="ios-gf" style="text-align:center">Moves your next Learning skill to With help.</p></div>` : ''}</section>` : nx ? h`<section class="ios-sec" data-rise style="--d:2"><div class="ios-list"><div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div></section>` : ''}
-        ${note ? h`<section data-rise style="--d:3" aria-label="Note from your care team"><article class="ios-sticky"><span class="ios-tape b" aria-hidden="true"></span><div class="ios-eyebrow">From ${note.author} · ${U.monthYear(note.date)}</div><p>${note.text}</p><p class="ios-cap">${note.shared ? 'Shown to future care teams.' : 'Only you and your paediatric team see this.'}</p></article></section>` : ''}
-        <section class="ios-pocket" data-rise style="--d:4" aria-labelledby="pk"><div class="ios-eyebrow" id="pk">My Folio card</div>
-          <div class="ios-cardwrap">${U.cardFace(p, 'front')}</div>
-          <div class="ios-pbtns"><button type="button" class="ios-btn glass-btn" data-action="showQR">${ic('qr', 20)} Show QR</button><button type="button" class="ios-btn glass-btn" data-action="tapShare">${ic('nfc', 20)} Tap to share</button></div>
-          <p class="ios-pcap">Folio ID ${sel.fid(p.folioId)}</p></section>
+          <p class="ios-cap">${youLine(p, L, own)}</p></section>`}
+        ${parentLine(p)}
+        ${note && fresh ? noteBlock : ''}
+        ${soon ? ticket(p) : ''}
+        ${(p.goals || []).length ? goalsBlock(p) : nx && todo.length ? nextStep(p, todo) : ''}
+        ${checkPrompt(p, vd, soon)}
+        ${soon ? '' : ticket(p)}
+        ${comingUp(p)}
+        ${nx && rest.length ? h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="wk"><h2 class="ios-gh" id="wk">${tile(ic('levels', 18), 4, true)}<span>Also working toward Level ${nx.n}: ${nx.name}</span></h2>
+          <div class="ios-list">${rest.map(function (s) { var i = F.SKILLS.indexOf(s); return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[p.skills[s.id]]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>
+          <p class="ios-gf">Tap a skill to learn how. Your care team signs skills off with you in person.</p></section>` : nx && !todo.length ? h`<section class="ios-sec" data-rise style="--d:2"><div class="ios-list"><div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div></section>` : ''}
+        ${note && !fresh ? noteBlock : ''}
+        ${handoff ? h`<section data-rise style="--d:3" aria-label="Your handoff note"><article class="ios-sticky"><span class="ios-tape" aria-hidden="true"></span><div class="ios-eyebrow">Handoff note for your adult team · ${U.monthYear(handoff.date)}</div><p>${handoff.text}</p><p class="ios-cap">Written by ${handoff.author}</p>${seenBy(p, handoff)}</article></section>` : ''}
+        ${pocket(p)}
       </div>` };
+  }
+
+
+  /* ---------- v3 Home helpers ---------- */
+  function seenBy(p, n) { return n.shared && p.shareNotes !== false ? U.visChip('future') : U.visChip('team'); }
+  /* One clear next step: the first skill still at Learning, its guide, and a button that names it */
+  function nextStep(p, todo) {
+    /* Skip skills the teen told setup they already do (their view, still checked by the care team) */
+    var mine = (p.selfCheck && p.selfCheck.skills) || {}, learning = todo.filter(function (k) { return p.skills[k.id] === 'learning'; });
+    var s = learning.filter(function (k) { return mine[k.id] !== 'own'; })[0] || learning[0] || todo[0], st = p.skills[s.id], i = F.SKILLS.indexOf(s), said = mine[s.id];
+    var r = (S.get().resources || []).filter(function (x) { return x.id === SKILL_RES[s.id] && x.published !== false; })[0];
+    return h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="ns-h"><h2 class="ios-gh" id="ns-h">${tile(xi('sparkle', 18), 4, true)}<span>Your next step</span></h2>
+      <div class="ios-list ns-card"><div class="ios-row has-tile">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span></div>
+        ${r ? h`<a class="ios-row has-tile" href="#/resources/${r.id}">${tile(ic('book', 22), 1)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${CHEV}</a>` : ''}</div>
+      ${said ? h`<p class="ios-gf">You said: ${said === 'own' ? 'I do it' : said === 'help' ? 'with help' : 'not yet'}. Your care team talks it through with you at your next visit.</p>` : ''}
+      ${st === 'learning' ? h`<div style="margin-top:14px"><button type="button" class="ios-btn" data-action="practise" data-sid="${s.id}">${xi('sparkle', 20)} I practised this</button><p class="ios-gf" style="text-align:center">Moves ${s.name.toLowerCase()} to With help${plantOn() ? ' and grows a leaf' : ''}. Your care team checks it with you.</p></div>` : h`<p class="ios-gf">You are doing this with help. Your care team checks it at your next visit.</p>`}</section>`;
+  }
+  /* ---------- v5: goals, the readiness check prompt and Coming up ---------- */
+  function goalRes(q) { return q.res ? (S.get().resources || []).filter(function (x) { return x.id === q.res && x.published !== false; })[0] : null; }
+  function goalCard(p, g) {
+    var q = F.checkItem(g.id); if (!q) return '';
+    var sk = F.SKILLS.filter(function (k) { return k.id === q.skill; })[0], i = F.SKILLS.indexOf(sk), n = g.done.filter(Boolean).length, r = goalRes(q);
+    return h`<div class="ios-list goal-card ${n === 3 ? 'all' : ''}" data-key="goal-${g.id}">
+      <div class="ios-row has-tile">${tile(ic(SKILL_ICON[q.skill], 22), (i % 5) + 1)}<span class="ios-rt"><b>${q.goal}</b><small>${sk.name} · ${n === 3 ? 'All 3 steps done' : n + ' of 3 steps done'}</small></span></div>
+      ${q.steps.map(function (st, k) { return h`<div class="ios-row mc-task gstep ${g.done[k] ? 'done' : ''}" data-key="gs-${g.id}-${k}"><input type="checkbox" id="gs-${g.id}-${k}" ${g.done[k] ? 'checked' : ''} data-change="goalStep" data-id="${g.id}" data-i="${k}"><label class="ios-rt" for="gs-${g.id}-${k}"><b>${st}</b></label></div>`; })}
+      ${r ? h`<a class="ios-row has-tile" href="#/resources/${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${CHEV}</a>` : q.link ? h`<a class="ios-row has-tile" href="${q.link}">${tile(ic('arrow', 22), 3)}<span class="ios-rt"><b>${q.linkLabel}</b></span>${CHEV}</a>` : ''}</div>`;
+  }
+  function goalsBlock(p) {
+    return h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="gl-h"><h2 class="ios-gh" id="gl-h">${tile(xi('sparkle', 18), 4, true)}<span>My goals</span></h2>
+      <div class="goal-stack">${p.goals.map(function (g) { return goalCard(p, g); })}</div>
+      <p class="ios-gf">You picked ${p.goals.length === 1 ? 'this goal' : 'these goals'} from your readiness check. Each step you tick grows${plantOn() ? ' a leaf' : ' your progress'}. <a href="#/levels/check">Change my goals</a></p></section>`;
+  }
+  /* No check yet: invite one. A visit within 14 days and a check older than 3 weeks: invite a retake (MyTransition retakes its scale too). */
+  function checkPrompt(p, vd, soon) {
+    var c = (p.checks || []), last = c.length ? c[c.length - 1] : null, old = last && (Date.now() - new Date(last.date + 'T12:00:00').getTime()) / 864e5 > 21;
+    if (last && !(soon && old)) return '';
+    var days = vd ? Math.max(0, Math.round((vd.getTime() - Date.now()) / 864e5)) : 0;
+    return h`<section class="ios-sec" data-rise style="--d:2"><div class="ios-list"><button type="button" class="ios-row has-tile ck-prompt" data-action="openCheck">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>${last ? 'Retake your readiness check' : 'Where are you now?'}</b><small>${last ? 'Your visit is ' + (days <= 1 ? 'very soon' : 'in ' + days + ' days') + '. Retake it so your care team sees where you are now.' : F.CHECK.length + ' quick questions about your diabetes care. Pick up to 3 goals at the end.'}</small></span>${CHEV}</button></div></section>`;
+  }
+  /* Coming up: care tasks with a due date and refill dates, soonest first, under the visit ticket (MyTransition's calendar, kept to what Folio tracks) */
+  function upcoming(p) {
+    var out = [], day = function (iso) { var d = new Date(iso + 'T09:00'); return isNaN(d.getTime()) ? null : d; };
+    (p.careTasks || []).forEach(function (t) { var d = t.due && !t.done ? day(t.due) : null; if (d) out.push({ d: d, kind: t.id === 'k1' ? 'Blood work' : 'Care task', title: t.label, act: 'careRemind', id: t.id }); });
+    (p.meds || []).forEach(function (m) { var d = m.refill ? day(m.refill) : null; if (d) out.push({ d: d, kind: 'Refill', title: m.name, act: 'refillDate', id: m.id }); });
+    return out.sort(function (a, b) { return a.d - b.d; });
+  }
+  function dueWords(d) { var t = new Date(), t0 = new Date(t.getFullYear(), t.getMonth(), t.getDate()); return d < t0 ? 'Was due ' + MON3[d.getMonth()] + ' ' + d.getDate() : countdown(d) === 'Today' ? 'Today' : countdown(d) === 'Tomorrow' ? 'Tomorrow' : countdown(d).replace(/^in /, 'In '); }
+  function comingUp(p) {
+    var items = upcoming(p);
+    if (!items.length) return '';
+    return h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="cu-h"><h2 class="ios-gh" id="cu-h">${tile(xi('calendar', 18), 1, true)}<span>Coming up</span></h2>
+      <div class="ios-list">${items.slice(0, 5).map(function (it) { return h`<button type="button" class="ios-row cu-row" data-action="${it.act}" data-id="${it.id}" aria-label="${it.kind}: ${it.title}, ${MON3[it.d.getMonth()]} ${it.d.getDate()}. Edit">
+          <span class="cu-date k-${it.kind === 'Refill' ? 'refill' : 'task'}" aria-hidden="true"><span class="m">${MON3[it.d.getMonth()]}</span><span class="d">${it.d.getDate()}</span></span>
+          <span class="ios-rt"><b>${it.title}</b><small>${it.kind} · ${dueWords(it.d)}</small></span>${CHEV}</button>`; })}</div>
+      <p class="ios-gf">Add due dates in Run my care and refill dates to your medications. Each one can go in your phone's calendar.</p></section>`;
+  }
+  F.actions.openCheck = function () { if (F.Welcome && F.Welcome.check) F.Welcome.check(pid()); };
+  F.actions.openGoals = function () { if (F.Welcome && F.Welcome.check) F.Welcome.check(pid(), 'cgoals'); };
+  F.actions.goalStep = function (el) {
+    var r = A.toggleGoalStep(pid(), el.dataset.id, +el.dataset.i); if (!r) return;
+    if (r.on) { N.haptic('success'); U.toast(r.all ? 'Goal done. Your care team sees it at your next visit.' : plantOn() ? 'Step done. Your plant grew a leaf.' : 'Step done. Nice.', r.all); }
+  };
+  F.actions.refillDate = function (el) {
+    var p = me(), m = (p.meds || []).filter(function (x) { return x.id === el.dataset.id; })[0]; if (!m) return;
+    U.formModal({ title: 'Refill date', lead: 'When does ' + m.name.charAt(0).toLowerCase() + m.name.slice(1) + ' run out or need reordering? Your calendar reminds you a week before and the day before.', cta: 'Add to Calendar',
+      fields: [{ name: 'iso', label: 'Refill date', type: 'date', value: m.refill || '', req: true }],
+      destructive: m.refill ? { label: 'Remove date', body: 'It comes off Coming up.', run: function () { A.setRefill(p.id, m.id, ''); } } : null,
+      onSubmit: function (d) { A.setRefill(p.id, m.id, d.iso); var f = N.ics({ iso: d.iso + 'T09:00', where: '', note: 'Reorder ' + m.name }, null, p.id + '-rf-' + m.id, { summary: 'Reorder ' + m.name, alarms: ['-P7D', '-P1D'] }); if (f) N.openCalendar(f); U.toast('Refill date saved'); } });
+  };
+
+  /* The teen always sees when a parent can see something (UK Children's Code, standard 11) */
+  var PV_WORDS = { level: 'your level and skills', tasks: 'your Run my care tasks', visit: 'your next visit' };
+  function parentLine(p) {
+    var on = F.PARENT_SHARE.filter(function (x) { return p.parentShare && p.parentShare[x.k]; });
+    if (!on.length) return '';
+    return h`<a class="ios-sec pv-line" href="#/about" data-rise style="--d:1">${ic('eye', 18)}<span>Your parent can see ${on.map(function (x) { return PV_WORDS[x.k]; }).join(', ')}. <u>Change</u></span></a>`;
+  }
+  function pocket(p) {
+    var c = p.card || {};
+    if (c.status === 'unassigned' || !c.token) return h`<section class="ios-pocket" data-rise style="--d:4" aria-labelledby="pk"><div class="ios-eyebrow" id="pk">My Folio card</div>
+      <div class="ios-list"><div class="ios-row has-tile">${tile(ic('card', 22), 3)}<span class="ios-rt"><b>Your card is on its way</b><small>Your clinic gives it to you at your next visit. Until then, your Folio ID is ${sel.fid(p.folioId)}.</small></span></div></div></section>`;
+    return h`<section class="ios-pocket" data-rise style="--d:4" aria-labelledby="pk"><div class="ios-eyebrow" id="pk">My Folio card</div>
+          <div class="ios-cardwrap">${U.cardFace(p, 'front')}</div>
+          ${c.status === 'active' ? h`<div class="ios-pbtns"><button type="button" class="ios-btn glass-btn" data-action="showQR">${ic('qr', 20)} Show QR</button><button type="button" class="ios-btn glass-btn" data-action="tapShare">${ic('nfc', 20)} Tap to share</button></div>` : h`<p class="ios-gf">Your card is frozen, so it cannot open your profile. Unfreeze it in About me.</p>`}
+          <p class="ios-pcap">Folio ID ${sel.fid(p.folioId)}</p></section>`;
   }
 
   /* ---------- Levels ---------- */
   function levels() {
-    var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p), li = '';
+    var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p), li = '', mode = F.Plant ? F.Plant.mode() : 'bar';
+    var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; }), done = F.SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; });
     for (var i = 1; i <= 10; i++) li += '<li class="' + (i < p.level ? 'done' : i === p.level ? 'cur' : '') + '" style="--h:' + (30 + i * 14) + 'px;--n:' + i + '"><span>' + i + '</span>' + (i === p.level ? U.star(20).s : '') + '</li>';
+    var skillRow = function (s) { var st = p.skills[s.id], k = F.SKILLS.indexOf(s); return st !== 'own' ? h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[st]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (k % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span>${CHEV}</a>` : h`<div class="ios-row has-tile" data-key="sk-${s.id}">${tile(ic(SKILL_ICON[s.id], 22), (k % 5) + 1)}<span class="ios-rt"><b>${s.name}</b>${status(st)}</span></div>`; };
+    /* Priority order: the skills still to do, Run my care, what the next level unlocks, then progress art and the full list */
     return { title: 'Levels', navTitle: 'Level ' + p.level, html: h`
       ${large(h`Level ${p.level}: <em>${L.name}</em>`, nx ? 'Here is what gets you to Level ' + nx.n + '.' : 'You are at the top level.')}
       <div class="ios-body">
-        <section class="ios-stairwrap" data-rise style="--d:1" aria-label="Your staircase"><span class="ios-tape" aria-hidden="true"></span><div class="ios-eyebrow">Your staircase</div>
-          <ol class="ios-big-stairs" role="img" aria-label="Level ${p.level} of 10">${raw(li)}</ol><p class="ios-cap">${L.phase} phase. ${L.leads}.</p></section>
-        <section class="ios-sec" data-rise style="--d:2" aria-labelledby="sk"><h2 class="ios-gh" id="sk">${tile(ic('check', 18), 4, true)}<span>Skills at this level</span></h2>
-          <div class="ios-meter" role="img" aria-label="${own} of 5 skills on your own">${[1, 2, 3, 4, 5].map(function (i) { return h`<i class="${i <= own ? 'on' : ''}"></i>`; })}</div>
-          <div class="ios-list" style="margin-top:12px">${F.SKILLS.map(function (s, i) { var st = p.skills[s.id]; return st !== 'own' ? h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[st]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span>${CHEV}</a>` : h`<div class="ios-row has-tile" data-key="sk-${s.id}">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span></div>`; })}</div>
-          <p class="ios-gf">${own} of 5 on your own. Your care team signs skills off in person.</p></section>
-        ${nx ? h`<section class="ios-up" data-rise style="--d:3"><div class="ios-eyebrow">Up next · Level ${nx.n}</div><h3>${nx.name}</h3><p>${nx.leads}.</p><p style="margin-top:6px"><b>Unlocks:</b> ${nx.unlocks}</p></section>` : ''}
-        <section class="ios-sec" data-rise style="--d:4" aria-labelledby="al"><h2 class="ios-gh" id="al">${tile(ic('levels', 18), 3, true)}<span>All 10 levels</span></h2>
-          <div class="ios-list">${F.LEVELS.map(function (l) { return h`<div class="ios-row ${l.n === p.level ? 'cur' : ''}" ${l.n === p.level ? h`aria-current="step"` : ''}><span class="ios-lvn ${l.n < p.level ? 'done' : ''}" aria-hidden="true">${l.n}</span><span class="ios-rt"><b>${l.name}${l.n === p.level ? ' (you are here)' : ''}</b><small>${l.phase} · ${l.leads}</small></span>${l.n < p.level ? h`<span class="ios-done" aria-label="Done">${ic('check', 20)}</span>` : ''}</div>`; })}</div></section>
+        <section class="ios-sec" data-rise style="--d:1" aria-labelledby="sk"><h2 class="ios-gh" id="sk">${tile(ic('check', 18), 4, true)}<span>${nx ? 'To reach Level ' + nx.n : 'Your skills'}</span></h2>
+          <div class="ios-meter" role="img" aria-label="${own} of 5 skills on your own">${[1, 2, 3, 4, 5].map(function (k) { return h`<i class="${k <= own ? 'on' : ''}"></i>`; })}</div>
+          ${todo.length ? h`<div class="ios-list" style="margin-top:12px">${todo.map(skillRow)}</div>` : h`<div class="ios-list" style="margin-top:12px"><div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div>`}
+          ${done.length && todo.length ? h`<h3 class="ios-gh" style="margin:16px 4px 8px"><span>Already on your own</span></h3><div class="ios-list">${done.map(skillRow)}</div>` : ''}
+          <p class="ios-gf">${own} of 5 on your own. Your care team signs skills off in person.</p>${legendApp()}</section>
+        ${checkRow(p)}
+        ${careSection(p)}
+        ${nx ? h`<section class="ios-up" data-rise style="--d:3"><div class="ios-eyebrow">Up next · Level ${nx.n}</div><h3>${nx.name}</h3><p>${nx.you || nx.leads + '.'}</p><p style="margin-top:6px"><b>Unlocks:</b> ${nx.unlocks}</p></section>` : ''}
+        ${mode === 'plant' ? h`<section class="ios-sec" data-rise style="--d:3"><div class="ios-list"><a class="ios-row has-tile" href="#/levels/plant">${tile(raw(F.Plant.svg(p.level, sel.leaves(p), 22, '')), 4)}<span class="ios-rt"><b>My plant</b><small>Level ${p.level} of 10 · ${sel.leaves(p)} new ${sel.leaves(p) === 1 ? 'leaf' : 'leaves'} since your last sign-off</small></span>${CHEV}</a></div></section>` : ''}
+        ${mode === 'bar' ? h`<section class="ios-stairwrap" data-rise style="--d:3" aria-label="Your staircase"><span class="ios-tape" aria-hidden="true"></span><div class="ios-eyebrow">Your staircase</div>
+          <ol class="ios-big-stairs" role="img" aria-label="Level ${p.level} of 10">${raw(li)}</ol><p class="ios-cap">${L.you || L.leads + '.'}</p></section>` : ''}
+        <section class="ios-sec" data-rise style="--d:4"><details class="lv-all"><summary class="ios-gh">${tile(ic('levels', 18), 3, true)}<span>See all 10 levels</span></summary>
+          <div class="ios-list">${F.LEVELS.map(function (l) { return h`<div class="ios-row ${l.n === p.level ? 'cur' : ''}" ${l.n === p.level ? h`aria-current="step"` : ''}><span class="ios-lvn ${l.n < p.level ? 'done' : ''}" aria-hidden="true">${l.n}</span><span class="ios-rt"><b>${l.name}${l.n === p.level ? ' (you are here)' : ''}</b><small>${l.you || l.leads}</small></span>${l.n < p.level ? h`<span class="ios-done" aria-label="Done">${ic('check', 20)}</span>` : ''}</div>`; })}</div></details></section>
+      </div>` };
+  }
+
+  function checkRow(p) {
+    var c = p.checks || [], last = c.length ? c[c.length - 1] : null, g = (p.goals || []).length;
+    return h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="ck-h"><h2 class="ios-gh" id="ck-h">${tile(ic('check', 18), 3, true)}<span>Readiness check</span></h2>
+      <div class="ios-list">${last ? h`<a class="ios-row has-tile" href="#/levels/check">${tile(ic('levels', 22), 3)}<span class="ios-rt"><b>Where you are now</b><small>Last done ${U.fmt(last.date)} · ${g ? g + (g === 1 ? ' goal' : ' goals') : 'No goals picked yet'}</small></span>${CHEV}</a>` :
+        h`<button type="button" class="ios-row has-tile" data-action="openCheck">${tile(ic('levels', 22), 3)}<span class="ios-rt"><b>Where are you now?</b><small>${F.CHECK.length} quick questions about your diabetes care. Pick up to 3 goals at the end.</small></span>${CHEV}</button>`}</div>
+      <p class="ios-gf">Your view, for your care team to talk through with you. It never changes your level.</p></section>`;
+  }
+  /* /levels/check: per-skill results, what changed, the answers behind each skill, goals and past checks */
+  function checkPage() {
+    var p = me(), c = p.checks || [], last = c.length ? c[c.length - 1] : null, prev = c.length > 1 ? c[c.length - 2] : null;
+    var word = function (v) { return F.CHECK_WORD[v]; }, chip = function (v) { return h`<span class="ios-st s-${v}">${ic(ST_ICON[v], 16)}${word(v)}</span>`; };
+    var chg = function (sid) { if (!prev || !prev.skills[sid] || !last.skills[sid]) return ''; var r = F.CHECK_RANK, a = prev.skills[sid], b = last.skills[sid]; return r[b] > r[a] ? 'Up from ' + word(a).toLowerCase() : r[b] < r[a] ? 'Last time: ' + word(a).toLowerCase() : 'Same as last time'; };
+    if (!last) return { title: 'Readiness check', navTitle: 'Readiness check', back: { href: '#/levels', label: 'Levels' }, html: h`
+      ${large(h`Where are you <em>now</em>?`, F.CHECK.length + ' quick questions about your diabetes care.')}
+      <div class="ios-body"><section class="ios-sec" data-rise style="--d:1"><button type="button" class="ios-btn" data-action="openCheck">Start the check</button><p class="ios-gf" style="text-align:center">About 3 minutes. It never changes your level.</p></section></div>` };
+    return { title: 'Readiness check', navTitle: 'Readiness check', back: { href: '#/levels', label: 'Levels' }, html: h`
+      ${large(h`Where you are <em>now</em>`, 'From your check on ' + U.fmtFull(last.date) + '. Your care team talks it through with you at your next visit.')}
+      <div class="ios-body">
+        <section class="ios-sec" data-rise style="--d:1" aria-labelledby="ckr-h"><h2 class="ios-gh" id="ckr-h">${tile(ic('levels', 18), 3, true)}<span>Your five skills</span></h2>
+          <div class="ck-skills">${F.SKILLS.filter(function (k) { return last.skills[k.id]; }).map(function (k) { var i = F.SKILLS.indexOf(k); return h`<details class="ios-list ck-skill"><summary class="ios-row has-tile">${tile(ic(SKILL_ICON[k.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${k.name}</b>${chg(k.id) ? h`<small>${chg(k.id)}</small>` : ''}</span>${chip(last.skills[k.id])}</summary>
+            ${F.CHECK.filter(function (q) { return q.skill === k.id; }).map(function (q) { var a = last.answers[q.id]; return h`<div class="ios-row ck-ans"><span class="ios-rt"><b>${q.q}</b><small>${a ? 'You said ' + word(a).toLowerCase() : 'Skipped'}</small></span></div>`; })}</details>`; })}</div>
+          <p class="ios-gf">Each skill shows the middle of your three answers. Tap a skill to see them.</p>
+          <button type="button" class="ios-btn" data-action="openCheck" style="margin-top:14px">Retake the check</button></section>
+        <section class="ios-sec" data-rise style="--d:2" aria-labelledby="ckg-h"><h2 class="ios-gh" id="ckg-h">${tile(xi('sparkle', 18), 4, true)}<span>My goals</span></h2>
+          ${(p.goals || []).length ? h`<div class="ios-list">${p.goals.map(function (g) { var q = F.checkItem(g.id); return q ? h`<div class="ios-row"><span class="ios-rt"><b>${q.goal}</b><small>${g.done.filter(Boolean).length} of 3 steps done</small></span></div>` : ''; })}</div>` : h`<p class="ios-gf">No goals picked yet.</p>`}
+          <button type="button" class="ios-btn sec" data-action="openGoals" style="margin-top:12px">${(p.goals || []).length ? 'Change my goals' : 'Pick up to 3 goals'}</button></section>
+        ${c.length > 1 ? h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="ckh-h"><h2 class="ios-gh" id="ckh-h">${tile(xi('calendar', 18), 1, true)}<span>Past checks</span></h2>
+          <div class="ios-list">${c.slice().reverse().map(function (x) { var n = F.SKILLS.filter(function (k) { return x.skills[k.id] === 'own'; }).length; return h`<div class="ios-row"><span class="ios-rt"><b>${U.fmtFull(x.date)}</b><small>${n} of 5 skills on your own, in your view</small></span></div>`; })}</div></section>` : ''}
+        <section class="ios-sec" data-rise style="--d:4"><p class="ios-gf">Folio's own questions, written for type 1 diabetes. They and the goal steps are drafts for a diabetes educator to review.</p></section>
       </div>` };
   }
 
@@ -230,6 +370,11 @@
     var segIdx = Math.max(0, TOPICS.indexOf(ui.rt));
     var term = (ui.rq || '').trim().toLowerCase();
     var list = S.get().resources.filter(function (r) { return r.published && (ui.rt === 'All' || r.tags.indexOf(ui.rt) >= 0) && (!term || (r.title + ' ' + r.kind + ' ' + r.body).toLowerCase().indexOf(term) >= 0); });
+    /* Priority: guides for the skills still being learned come first, in skill order */
+    var rank = function (r) { var st = r.skill ? p.skills[r.skill] : null; return st === 'learning' ? 0 : st === 'help' ? 1 : 2; };
+    list = list.map(function (r, i) { return { r: r, i: i }; }).sort(function (a, b) { return rank(a.r) - rank(b.r) || a.i - b.i; }).map(function (x) { return x.r; });
+    var forYou = list.filter(function (r) { return rank(r) < 2; }), more = list.filter(function (r) { return rank(r) === 2; });
+    var row = function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}" data-ctx="resource:${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}${r.skill ? ' · ' + F.SKILLS.filter(function (k) { return k.id === r.skill; })[0].name : ''}</small></span>${F.fx ? raw(F.fx.readDot(r.id)) : ''}${CHEV}</a>`; };
     return { title: 'Resources', html: h`
       ${large('Resources', 'Learn it, then link what your doctor may need.')}
       <div class="ios-body">
@@ -237,7 +382,7 @@
           <div class="ios-search ${ui.rq ? 'has' : ''}" role="search"><label class="ios-searchbox">${ic('search', 18)}<span class="ios-sr">Search resources</span><input type="search" placeholder="Search" value="${ui.rq}" data-bind="rq" data-rerender autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"></label><button type="button" class="ios-cancel" data-action="clearSearch">Cancel</button></div>
           <div class="ios-sec"><div class="ios-seg" role="group" aria-label="Topic" style="--n:4;--i:${segIdx}">${TOPICS.map(function (t) { return h`<button type="button" data-action="rtag" data-v="${t}" aria-pressed="${String(ui.rt === t)}">${t}</button>`; })}</div></div></div>
         <section class="ios-sec" data-rise style="--d:2" aria-label="Library">
-          ${list.length ? h`<div class="ios-list">${list.map(function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}" data-ctx="resource:${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${F.fx ? raw(F.fx.readDot(r.id)) : ''}${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row has-tile" role="status">${tile(ic('search', 22), 2)}<span class="ios-rt"><b>${term ? 'No results for "' + ui.rq.trim() + '"' : 'Nothing in this topic yet'}</b><small>${term ? 'Check the spelling or try another topic.' : 'Try another topic.'}</small></span></div></div>`}</section>
+          ${list.length ? h`${forYou.length && !term ? h`<h2 class="ios-gh">${tile(xi('sparkle', 18), 4, true)}<span>For the skills you are learning</span></h2>` : ''}<div class="ios-list">${(term ? list : forYou).map(row)}</div>${more.length && !term ? h`<h2 class="ios-gh" style="margin-top:22px">${tile(ic('book', 18), 1, true)}<span>More guides</span></h2><div class="ios-list">${more.map(row)}</div>` : ''}` : h`<div class="ios-list"><div class="ios-row has-tile" role="status">${tile(ic('search', 22), 2)}<span class="ios-rt"><b>${term ? 'No results for "' + ui.rq.trim() + '"' : 'Nothing in this topic yet'}</b><small>${term ? 'Check the spelling or try another topic.' : 'Try another topic.'}</small></span></div></div>`}</section>
         <section class="ios-sec" data-rise style="--d:3" aria-labelledby="ml"><h2 class="ios-gh" id="ml">${tile(ic('link', 18), 3, true)}<span>My links · doctors can open these</span></h2>
           <div class="ios-list">${p.links.map(function (l, i) { return h`<div class="ios-swipe" data-ctx="link:${l.id}">${swipeTray()}<button type="button" class="ios-row has-tile" data-action="editLink" data-id="${l.id}" aria-label="${l.title}${l.sub ? ', ' + l.sub : ''}. Edit">${tile(ic('link', 22), (i % 5) + 1)}<span class="ios-rt"><b>${l.title}</b><small>${l.sub || l.url}</small></span>${CHEV}</button></div>`; })}
             <button type="button" class="ios-row has-tile ios-addrow" data-action="editLink">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add a link</b></span></button></div>
@@ -249,12 +394,12 @@
     if (!r) return { title: 'Not found', back: { href: '#/resources', label: 'Resources' }, html: h`${large('Not found', 'This resource was removed or is not published.')}<div class="ios-body"><div class="ios-sec"><a class="ios-btn sec" href="#/resources">Back to resources</a></div></div>` };
     var paras = r.body.split('. ').map(function (t, i, a) { return i < a.length - 1 ? t + '.' : t; }); var mid = Math.ceil(paras.length / 2);
     var two = [paras.slice(0, mid).join(' '), paras.slice(mid).join(' ')].filter(Boolean);
-    var skill = F.SKILLS.filter(function (s) { return SKILL_RES[s.id] === r.id; })[0];
+    var skill = F.SKILLS.filter(function (s) { return r.skill ? s.id === r.skill : SKILL_RES[s.id] === r.id; })[0];
     return { title: r.title, navTitle: r.title, back: { href: '#/resources', label: 'Resources' }, html: h`
       <header class="ios-large" data-rise><h1 tabindex="-1">${r.title}</h1></header>
       <div class="ios-body">
         <div class="ios-meta" data-rise style="--d:1">${kindTile(r)}<span><b>${r.kind}</b><br><span class="ios-detail">${r.mins}${skill ? ' · helps with ' + skill.name : ''}</span></span></div>
-        <article class="ios-read" data-rise style="--d:2"><span class="ios-tape" aria-hidden="true"></span>${two.map(function (t) { return h`<p>${t}</p>`; })}</article>
+        <article class="ios-read" data-rise style="--d:2"><span class="ios-tape" aria-hidden="true"></span>${two.map(function (t) { return h`<p>${t}</p>`; })}</article>${r.review ? h`<p class="ios-gf" data-rise style="--d:2">Draft guide. To be reviewed by a diabetes educator before it goes live.</p>` : ''}
         ${F.fx ? raw(F.fx.readBlock(r)) : ''}<div class="ios-sec" data-rise style="--d:3"><button type="button" class="ios-btn sec" data-action="shareResource" data-id="${r.id}">${shareSvg} Share this resource</button></div>
       </div>` };
   }
@@ -298,11 +443,32 @@
   F.actions.editTeam = personForm('careTeam', 'care team member', 'role');
   F.actions.a11yApp = function (el) { S.a11y.set(el.dataset.k, el.checked ? el.dataset.on : el.dataset.off); };
   F.actions.install = function () { if (deferred) { deferred.prompt(); deferred = null; render(false); } };
+  /* v3: the first-run welcome (welcome.js) signs a teen in on this device */
+  F.app = { setPatient: function (id) { try { localStorage.setItem(PKEY, id); } catch (e) {} cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {}; if (location.hash && location.hash !== '#/') history.replaceState(null, '', '#/'); render('swap'); }, me: function () { return me(); } };
   F.actions.asPatient = function (el) { saveWantNow(); try { localStorage.setItem(PKEY, el.value); } catch (e) {} cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {}; tabMem['/about'] = '/about';
     /* Patch in place: keep the scroll position and focus, and do not replay entrance animations */
     var keep = N.scrollSnapshot(); render(false); keep(); el.blur && el.blur(); U.toast('Now viewing as ' + sel.full(me())); };
   F.actions.focusStory = function () { var t = document.getElementById('story'); if (t) { t.scrollIntoView({ block: 'center', behavior: N.reduced() ? 'auto' : 'smooth' }); setTimeout(function () { t.focus({ preventScroll: true }); }, 350); } };
 
+  /* v5: My diabetes in 3 sentences (MyTransition's "3-sentence summary", made diabetes-specific). Adult doctors see it first. */
+  function summarySection(p) {
+    var s3 = p.summary3;
+    return h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="s3-h"><h2 class="ios-gh" id="s3-h">${tile(ic('message', 18), 1, true)}<span>My diabetes in 3 sentences</span></h2>
+      ${s3 ? h`<div class="ios-s3"><ol>${[s3.s1, s3.s2, s3.s3].filter(Boolean).map(function (t) { return h`<li>${t}</li>`; })}</ol>${U.visChip('future')}</div>
+        <div class="s3-btns"><button type="button" class="ios-btn sm" data-action="saidIt">${xi('sparkle', 18)} I said it out loud</button><button type="button" class="ios-btn sm sec" data-action="editSummary3">Edit</button></div>
+        <p class="ios-gf">Say it when a new doctor asks about your diabetes. Adult doctors see it first, as "In ${p.first}'s words".</p>` :
+        h`<button type="button" class="ios-add" data-action="editSummary3">${ic('plus', 20)} Write your 3 sentences</button><p class="ios-gf">What you have, how you manage it, and what you need from a new doctor. Practise saying it before your next visit.</p>`}</section>`;
+  }
+  F.actions.editSummary3 = function () {
+    var p = me(), s3 = p.summary3 || {};
+    U.formModal({ title: 'My diabetes in 3 sentences', lead: 'Short and in your own words. Adult doctors see it first.', cta: 'Save',
+      fields: [{ name: 's1', label: '1. What I have', type: 'textarea', value: s3.s1, req: true, ph: 'I have type 1 diabetes and use an insulin pump and a sensor.' },
+        { name: 's2', label: '2. How I manage it', type: 'textarea', value: s3.s2, ph: 'I count carbs and give my own insulin for meals.' },
+        { name: 's3', label: '3. What I need from you', type: 'textarea', value: s3.s3, ph: 'Please explain what you are doing as you go.' }],
+      destructive: p.summary3 ? { label: 'Clear it', body: 'Adult doctors will no longer see it.', run: function () { A.setSummary3(p.id, null); } } : null,
+      onSubmit: function (d) { A.setSummary3(p.id, { s1: (d.s1 || '').trim(), s2: (d.s2 || '').trim(), s3: (d.s3 || '').trim() }); U.toast('Saved. Practise saying it out loud.'); } });
+  };
+  F.actions.saidIt = function () { var grew = A.logPractice(pid(), 'You said your 3 sentences out loud'); N.haptic(grew ? 'success' : 'light'); U.toast(grew ? (plantOn() ? 'Nice. Your plant grew a leaf.' : 'Nice. That is real practice.') : 'Already counted today. Nice.'); };
   function ring(pct) {
     var r = 32, len = +(2 * Math.PI * r).toFixed(2);
     return raw('<div class="ios-ring" aria-hidden="true"><svg width="76" height="76" viewBox="0 0 76 76"><circle cx="38" cy="38" r="' + r + '" fill="none" stroke="rgba(31,47,22,.16)" stroke-width="8"/><circle class="ios-ring-fg" cx="38" cy="38" r="' + r + '" fill="none" stroke="#395B50" stroke-width="8" stroke-linecap="round" stroke-dasharray="' + len + '" stroke-dashoffset="' + (pct >= 100 ? 0 : +(len * (1 - pct / 100)).toFixed(2)) + '" style="--len:' + len + '"' + (pct <= 0 ? ' opacity="0"' : '') + '/></svg><b>' + pct + '%</b></div>');
@@ -317,12 +483,15 @@
   }
   var HOW_ICON = { 'Card tap (NFC)': ['nfc', '#92AFD7'], 'Card tap (QR)': ['qr', '#92AFD7'], Portal: ['eye', '#C5D1EB'] };
 
+  /* Team-only tools (haptics test) show with ?debug=1, remembered for the session */
+  function debugOn() { try { if (/[?&]debug=1/.test(location.search)) sessionStorage.setItem('folio.debug', '1'); return sessionStorage.getItem('folio.debug') === '1'; } catch (e) { return false; } }
   function about() {
     var p = me(), a = S.a11y.get(), st = S.get();
     var log = st.access.filter(function (x) { return x.pid === p.id; }).slice().sort(function (x, y) { return x.time < y.time ? 1 : -1; }).slice(0, 5);
     var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
     var items = [
       ['Add a photo', !!(p.photo || p.avatar), 'pickAvatar'],
+      ['Write your diabetes in 3 sentences', !!p.summary3, 'editSummary3'],
       ['Say what you want your doctor to know', !!(p.wantDoctorKnow && p.wantDoctorKnow !== 'Nothing added yet.'), 'focusStory'],
       ['Add a family contact', p.contacts.length > 0, 'editContact'],
       ['Add a care team member', p.careTeam.some(function (c) { return c.name && c.name !== 'Not added yet'; }), 'editTeam'],
@@ -339,31 +508,42 @@
       </div>
       <div class="ios-body" style="margin-top:28px">
         <section class="ios-complete" data-rise style="--d:1" aria-labelledby="cp"><div class="ios-complete-head">${ring(pct)}<div><h2 id="cp">${pct === 100 ? 'Profile complete' : 'Finish your profile'}</h2><p>${doneN} of ${items.length} done. Adult doctors see this when they tap your card.</p></div></div>
-          <ul class="ios-checks">${items.map(function (x) { return h`<li class="${x[1] ? 'done' : ''}"><button type="button" data-action="${x[2]}" aria-label="${x[0]}${x[1] ? ', done' : ''}"><span class="box">${x[1] ? ic('check', 14) : ''}</span><span class="t">${x[0]}</span><span class="go">${CHEV}</span></button></li>`; })}</ul></section>
+          ${pct === 100 ? '' : h`<ul class="ios-checks">${items.map(function (x) { return h`<li class="${x[1] ? 'done' : ''}"><button type="button" data-action="${x[2]}" aria-label="${x[0]}${x[1] ? ', done' : ''}"><span class="box">${x[1] ? ic('check', 14) : ''}</span><span class="t">${x[0]}</span><span class="go">${CHEV}</span></button></li>`; })}</ul>`}</section>
+        ${summarySection(p)}
         <section class="ios-sec" data-rise style="--d:2" aria-labelledby="story-h"><h2 class="ios-gh" id="story-h">${tile(xi('pencil', 18), 5, true)}<span>My story</span></h2>
-          <div class="ios-story"><span class="ios-tape b" aria-hidden="true"></span><div class="ios-eyebrow" style="margin-bottom:8px" aria-hidden="true">What I want my doctor to know</div><label class="ios-sr" for="story">What I want my doctor to know</label><textarea id="story" data-change="saveWant" maxlength="600" placeholder="For example: I get anxious in new clinics. Please explain what you are doing as you go.">${p.wantDoctorKnow === 'Nothing added yet.' ? '' : p.wantDoctorKnow}</textarea><p class="ios-cap">Saves as you type. Shows as "Patient: ${p.first}" to doctors.</p></div></section>
-        <section class="ios-sec" data-rise style="--d:3" aria-labelledby="q-h"><h2 class="ios-gh" id="q-h">${tile(ic('message', 18), 3, true)}<span>Questions for my next visit</span></h2>
+          <div class="ios-story"><span class="ios-tape b" aria-hidden="true"></span><div class="ios-eyebrow" style="margin-bottom:8px" aria-hidden="true">What I want my doctor to know</div><label class="ios-sr" for="story">What I want my doctor to know</label><textarea id="story" data-change="saveWant" maxlength="600" placeholder="For example: I get anxious in new clinics. Please explain what you are doing as you go.">${p.wantDoctorKnow === 'Nothing added yet.' ? '' : p.wantDoctorKnow}</textarea><p class="ios-cap">Saves as you type. Shows as "Patient: ${p.first}" to doctors.</p>${U.visChip('future')}</div></section>
+        <section class="ios-sec" data-rise style="--d:3" aria-labelledby="q-h"><h2 class="ios-gh" id="q-h">${tile(ic('message', 18), 3, true)}<span>Questions for my next visit</span></h2><p class="ios-gf" style="margin:-4px 4px 10px">${U.visChip('team')}</p>
           <div class="ios-qcards">${p.questions.length ? '' : h`<p class="ios-empty">No questions yet. Add one when it comes to mind.</p>`}${p.questions.map(function (qq, i) { return h`<div class="ios-qcard"><span aria-hidden="true">${ic('message', 20)}</span><span class="q">${qq}</span><button type="button" class="x" data-action="rmQ" data-i="${i}" aria-label="Remove question: ${qq}">${ic('x', 18)}</button></div>`; })}
             <button type="button" class="ios-add" data-action="addQ">${ic('plus', 20)} Add a question</button></div></section>
+        ${medsSection(p)}
         <section class="ios-sec" data-rise style="--d:4" aria-labelledby="f-h"><h2 class="ios-gh" id="f-h">${tile(ic('users', 18), 1, true)}<span>Family contacts</span></h2>
           <div class="ios-list">${p.contacts.map(function (c) { return contactRow(c, 'contacts', 'rel'); })}<button type="button" class="ios-row has-tile ios-addrow" data-action="editContact">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add contact</b></span></button></div>
           <p class="ios-gf">Switch on so doctors can call or message them.</p></section>
         <section class="ios-sec" data-rise style="--d:5" aria-labelledby="c-h"><h2 class="ios-gh" id="c-h">${tile(ic('team', 18), 2, true)}<span>Care team</span></h2>
-          <div class="ios-list">${p.careTeam.map(function (c) { return contactRow(c, 'careTeam', 'role'); })}<button type="button" class="ios-row has-tile ios-addrow" data-action="editTeam">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add care team member</b></span></button></div></section>
+          <div class="ios-list">${p.careTeam.filter(function (c) { return c.name && c.name !== 'Not added yet'; }).map(function (c) { return contactRow(c, 'careTeam', 'role'); })}${p.careTeam.some(function (c) { return /family doctor/i.test(c.role) && (!c.name || c.name === 'Not added yet'); }) ? h`<button type="button" class="ios-row has-tile ios-addrow" data-action="editTeam" data-id="${p.careTeam.filter(function (c) { return /family doctor/i.test(c.role) && (!c.name || c.name === 'Not added yet'); })[0].id}">${tile(ic('plus', 22), 2)}<span class="ios-rt"><b>Add your adult family doctor</b><small>Adult doctors look for this first. Your clinic can help you find one.</small></span></button>` : ''}<button type="button" class="ios-row has-tile ios-addrow" data-action="editTeam">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add care team member</b></span></button></div></section>
         <section class="ios-sec" data-rise style="--d:6" aria-labelledby="s-h"><h2 class="ios-gh" id="s-h">${tile(ic('shield', 18), 4, true)}<span>Sharing and privacy</span></h2>
           <div class="ios-list"><label class="ios-row has-tile">${tile(ic('lock', 22), 3)}<span class="ios-rt"><b>Share my notes with adult care</b><small>You can change this any time.</small></span><input type="checkbox" role="switch" switch class="ios-sw" ${p.shareNotes !== false ? 'checked' : ''} data-change="shareNotes" aria-label="Share my notes with adult care"></label>
-            <button type="button" class="ios-row has-tile" data-action="shareProfile">${tile(shareSvg, 1)}<span class="ios-rt"><b>Share a summary</b><small>Send your level, skills and visit questions to a new doctor.</small></span>${CHEV}</button></div></section>
+            </div>
+          <h3 class="ios-gh" style="margin:18px 4px 8px"><span>What my parent can see</span></h3>
+          <div class="ios-list">${F.PARENT_SHARE.map(function (x) { return h`<label class="ios-row"><span class="ios-rt"><b>${x.label}</b><small>${x.sub}</small></span><input type="checkbox" role="switch" switch class="ios-sw" ${p.parentShare && p.parentShare[x.k] ? 'checked' : ''} data-change="parentShare" data-k="${x.k}" aria-label="My parent can see ${x.label.toLowerCase()}"></label>`; })}</div>
+          <p class="ios-gf">Off until you turn it on. Your parent never sees your notes, your questions or any glucose numbers.</p>
+          <div class="ios-list" style="margin-top:12px">
+            <button type="button" class="ios-row has-tile" data-action="shareProfile">${tile(shareSvg, 1)}<span class="ios-rt"><b>Share a summary</b><small>Send your level, skills and visit questions to a new doctor.</small></span>${CHEV}</button>
+            ${p.card && p.card.status !== 'unassigned' ? h`<button type="button" class="ios-row has-tile" data-action="freezeCard">${tile(ic('lock', 22), 2)}<span class="ios-rt"><b>${p.card.status === 'active' ? 'Freeze my card' : 'Unfreeze my card'}</b><small>${p.card.status === 'active' ? 'Lost it? Freezing stops it opening your profile.' : 'Your card is frozen. Nobody can open your profile with it.'}</small></span>${CHEV}</button>
+            <button type="button" class="ios-row has-tile" data-action="newCardLink">${tile(ic('refresh', 22), 3)}<span class="ios-rt"><b>Get a new card link</b><small>Your old card stops working. Your clinic prints a new one.</small></span>${CHEV}</button>` : ''}</div></section>
         <section class="ios-sec" data-rise style="--d:7" aria-labelledby="w-h"><h2 class="ios-gh" id="w-h">${tile(ic('eye', 18), 5, true)}<span>Who has looked at my profile</span></h2>
           <div class="ios-list">${log.length ? h`<ol class="ios-timeline">${log.map(function (l) { var ho = HOW_ICON[l.how] || ['eye', '#C5D1EB']; return h`<li><span class="dot" style="--c:${ho[1]}" aria-hidden="true">${ic(ho[0], 20)}</span><span class="ios-rt"><b>${l.who}</b><small>${l.how} · ${U.fmtTime(l.time)}</small></span></li>`; })}</ol>` : h`<div class="ios-row has-tile">${tile(ic('eye', 22), 2)}<span class="ios-rt"><b>No one yet</b><small>Opens are listed here.</small></span></div>`}</div></section>
         <section class="ios-sec" data-rise style="--d:8" aria-labelledby="a-h"><h2 class="ios-gh" id="a-h">${tile(ic('settings', 18), 2, true)}<span>Display and motion</span></h2>
           <div class="ios-list">
             <label class="ios-row"><span class="ios-rt"><b>Increase contrast</b></span><input type="checkbox" role="switch" switch class="ios-sw" ${a.contrast === 'high' ? 'checked' : ''} data-change="a11yApp" data-k="contrast" data-on="high" data-off="normal" aria-label="Increase contrast"></label>
             <label class="ios-row"><span class="ios-rt"><b>Reduce motion</b></span><input type="checkbox" role="switch" switch class="ios-sw" ${a.motion === 'reduce' ? 'checked' : ''} data-change="a11yApp" data-k="motion" data-on="reduce" data-off="auto" aria-label="Reduce motion"></label></div>
-          <p class="ios-gf">Text size follows your iPhone's Display and Text Size setting.</p></section>
+          ${F.Plant ? h`<h3 class="ios-gh" style="margin:14px 4px 8px"><span>How Folio shows your progress</span></h3><div class="ios-seg" role="group" aria-label="How Folio shows your progress" style="--n:3;--i:${Math.max(0, ['plant', 'stickers', 'bar'].indexOf(F.Plant.mode()))}">${['plant', 'stickers', 'bar'].map(function (m) { return h`<button type="button" data-action="motiv" data-v="${m}" aria-pressed="${String(F.Plant.mode() === m)}">${F.Plant.MODES[m]}</button>`; })}</div>` : ''}
+          <p class="ios-gf">Text size follows your iPhone's Display and Text Size setting. Switch progress style any time.</p></section>
         ${standalone ? '' : h`<section class="ios-sec" aria-labelledby="i-h"><h2 class="ios-gh" id="i-h">${tile(ic('plus', 18), 3, true)}<span>Add Folio to your home screen</span></h2><div class="ios-list"><div class="ios-row has-tile">${tile(shareSvg, 1)}<span class="ios-rt"><b>${N.ios ? 'In Safari, tap Share, then Add to Home Screen' : 'Install it like an app'}</b><small>${N.ios ? 'On iOS 26, Share is in the ··· menu. ' : ''}Folio then opens full screen and works offline.</small></span></div>${deferred ? h`<button type="button" class="ios-row ios-addrow" data-action="install"><b>Install Folio</b></button>` : ''}</div></section>`}
         <section class="ios-sec" aria-labelledby="d-h"><h2 class="ios-gh" id="d-h"><span>Prototype</span></h2>
           <div class="ios-list"><label class="ios-row ios-selrow"><span class="ios-rt"><b>View the app as</b></span><select class="ios-select" data-change="asPatient" aria-label="View the app as">${st.patients.map(function (x) { return h`<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${sel.full(x)} · L${x.level}</option>`; })}</select>${raw('<svg class="ios-chev" width="12" height="18" viewBox="0 0 12 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7l4-4 4 4M2 11l4 4 4-4"/></svg>')}</label></div>
-          <div class="ios-list" style="margin-top:12px"><button type="button" class="ios-row" data-action="hapticLab"><span class="ios-rt"><b>Haptics test</b><small>Check which taps make your phone tick</small></span>${CHEV}</button></div>
+          <div class="ios-list" style="margin-top:12px"><button type="button" class="ios-row" data-action="replayWelcome"><span class="ios-rt"><b>Show the welcome again</b><small>Run first-time setup as a teen or a parent</small></span>${CHEV}</button></div>
+          <div class="ios-list" style="margin-top:12px" ${debugOn() ? '' : 'hidden'}><button type="button" class="ios-row" data-action="hapticLab"><span class="ios-rt"><b>Haptics test</b><small>Check which taps make your phone tick</small></span>${CHEV}</button></div>
           <p class="ios-gf">Demo only. Switch patient to try other levels.</p></section>
       </div>` };
   }
@@ -428,12 +608,13 @@
     for (var i = 0; i < 22; i++) bits += '<i style="left:' + Math.round(rnd() * 100) + '%;background:' + cols[i % 5] + ';animation-duration:' + (2.4 + rnd() * 2.4).toFixed(1) + 's;animation-delay:' + (rnd() * 1.4).toFixed(1) + 's"></i>';
     var so = p.levelSignoff || { by: 'Your care team', date: new Date().toISOString().slice(0, 10) };
     return h`<div class="ios-lvlup" role="dialog" aria-modal="true" aria-labelledby="lv-h"><div class="ios-confetti" aria-hidden="true">${raw(bits)}</div>
-      <div class="ios-stackviz" aria-hidden="true"><i></i><i></i><i></i>${U.star(34)}</div>
+      ${plantOn() ? h`<div class="pl-celebrate" aria-hidden="true">${raw(F.Plant.svg(transfer ? 10 : L.n, 0, 150, ''))}</div>` : h`<div class="lv-mascot" aria-hidden="true">${U.mascot(120)}</div>`}
       <div class="ios-eyebrow">${transfer ? 'Final sign-off' : 'Level up'}</div>
-      <h2 id="lv-h">${transfer ? 'You own it' : 'Level ' + L.n + ': ' + L.name}</h2>
+      <h2 id="lv-h">${transfer ? h`You <em>own</em> it` : h`You're ${/^[AEIOU]/.test(L.name) ? 'an' : 'a'} <em>${L.name}</em> now`}</h2>
+      <p class="lv-sub">Level ${transfer ? 10 : L.n} of 10</p>
       <p>${transfer ? 'Your adult team has what they need, and you decide who sees what.' : 'You and your care team now: ' + L.leads.toLowerCase() + '.'}</p>
       <div class="stamp" role="img" aria-label="Signed off by ${so.by}">${U.star(22)}<span>Signed off</span></div>
-      <div class="ios-changed"><div class="ios-eyebrow">What changed</div><ul><li>${so.by} signed off, ${U.monthYear(so.date)}</li><li>Unlocked: ${L.unlocks}</li></ul></div>
+      <div class="ios-changed"><div class="ios-eyebrow">What changed</div><ul><li>${so.by} signed off, ${U.monthYear(so.date)}</li>${plantOn() ? h`<li>Your new plant: ${F.Plant.stageName(transfer ? 10 : L.n).toLowerCase()}</li>` : ''}<li>Unlocked: ${L.unlocks}</li></ul></div>
       <div class="ios-lv-btns"><button type="button" class="ios-btn light" data-action="closeCelebrate">Continue</button><button type="button" class="ios-btn ghost" data-action="shareLevel" data-id="${L.n}">${shareSvg} Share this level</button></div></div>`;
   }
   F.actions.closeCelebrate = function () {
@@ -627,9 +808,116 @@
   function morphHTML(el, html) { tpl.innerHTML = html; morphChildren(el, tpl.content); tpl.innerHTML = ''; }
 
   /* =====================================================================
+     v2 research update: plant, Run my care, medications, card controls
+     ===================================================================== */
+  /* One plain line per status (research: testers could not tell With help from Learning) */
+  function legendApp() {
+    return h`<div class="st-legend ios-cap">${['own', 'help', 'learning'].map(function (k) { return h`<div><b>${F.SKILL_STATUS[k]}</b><span>${F.SKILL_STATUS_HELP[k]}</span></div>`; })}</div>`;
+  }
+  function plantCard(p, L, own) {
+    var n = sel.leaves(p), ev = F.Plant.recent(p, 1)[0];
+    return h`<section class="ios-index" data-rise style="--d:1" aria-labelledby="pl-h"><span class="ios-tape" aria-hidden="true"></span>
+      <div class="ios-eyebrow">Your plant</div>
+      <div class="pl-card"><div class="pl-art">${raw(F.Plant.svg(p.level, n, 130, F.Plant.describe(p)))}</div>
+        <div><h2 id="pl-h">${F.Plant.stageName(p.level)}</h2><p class="ios-cap">Level ${p.level} of 10 · ${L.name}</p>
+          <p>${ev && ev.type !== 'signOff' ? 'Last growth: ' + ev.label.charAt(0).toLowerCase() + ev.label.slice(1) + '.' : 'Practise a skill, read a guide or tick off a care task to grow a leaf.'}</p></div></div>
+      <a class="pl-link" href="#/levels/plant">See my plant ${CHEV}</a>
+      <p class="ios-cap">${youLine(p, L, own)}</p></section>`;
+  }
+  /* v3: one plain, strength-first sentence in the teen's voice (no "0 of 5" on a first visit) */
+  function youLine(p, L, own) { return p.transferred ? 'You have moved to adult care.' : (L.you || L.leads + '.') + (own ? ' ' + own + ' of 5 skills on your own.' : ''); }
+  function plantPage() {
+    var p = me(), n = sel.leaves(p), nx = p.level < 10 ? sel.level(p.level + 1) : null, ev = F.Plant.recent(p, 5), v = visitDate(p.nextVisit);
+    var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
+    return { title: 'My plant', navTitle: 'My plant', back: { href: '#/levels', label: 'Levels' }, html: h`
+      ${large(h`My <em>plant</em>`, 'It grows when you practise, learn and take care of things yourself.')}
+      <div class="ios-body">
+        <section class="ios-index pl-hero" data-rise style="--d:1"><span class="ios-tape" aria-hidden="true"></span>
+          <div class="pl-art">${raw(F.Plant.svg(p.level, n, 200, F.Plant.describe(p)))}</div>
+          <h2>${F.Plant.stageName(p.level)}</h2><p class="ios-cap">Level ${p.level} of 10 · ${n} new ${n === 1 ? 'leaf' : 'leaves'} since your last sign-off</p>
+          <p class="ios-cap">It never shrinks. A hard stretch just pauses it.</p></section>
+        <section class="ios-sec" data-rise style="--d:2" aria-labelledby="pa-h"><h2 class="ios-gh" id="pa-h">${tile(ic('levels', 18), 3, true)}<span>A new plant every level</span></h2>
+          <div class="pl-row" role="list">${F.LEVELS.map(function (l) { var st = l.n < p.level ? 'earned' : l.n === p.level ? 'current' : 'upcoming'; return h`<div class="pl-item ${st}" role="listitem" aria-label="Level ${l.n}, ${F.Plant.stageName(l.n)}, ${st === 'current' ? 'your plant now' : st}">${raw(F.Plant.svg(l.n, 0, 56, ''))}<b>Level ${l.n}</b><small>${F.Plant.stageName(l.n)}</small></div>`; })}</div>
+          <p class="ios-gf">Earned plants are in full colour. The next ones are faded so you can see what is ahead.</p></section>
+        <section class="ios-sec" data-rise style="--d:2" aria-labelledby="pw-h"><h2 class="ios-gh" id="pw-h">${tile(xi('sparkle', 18), 4, true)}<span>What helped it grow</span></h2>
+          <div class="ios-list">${ev.length ? ev.map(function (e) { var ei = EV_ICON[e.type] || ['check', 4]; return h`<div class="ios-row has-tile">${tile(ic(ei[0], 22), ei[1])}<span class="ios-rt"><b>${e.label}</b><small>${U.fmt(e.date)}</small></span></div>`; }) : h`<div class="ios-row"><span class="ios-rt"><b>Nothing yet</b><small>Practise a skill, read a guide or tick off a Run my care task.</small></span></div>`}</div></section>
+        ${nx ? h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="pn-h"><h2 class="ios-gh" id="pn-h">${tile(ic('levels', 18), 3, true)}<span>Next: Level ${nx.n}, ${nx.name}</span></h2>
+          ${todo.length ? h`<div class="ios-list">${todo.map(function (s, i) { return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${F.SKILL_STATUS_HELP[p.skills[s.id]]}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row"><span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div>`}
+          <p class="ios-gf">${v ? 'At your visit on ' + MON3[v.getMonth()] + ' ' + v.getDate() + ', show your care team to reach Level ' + nx.n + '.' : 'Show your care team at your next visit to reach Level ' + nx.n + '.'}</p></section>` : ''}
+        <section class="ios-sec" data-rise style="--d:4"><p class="ios-gf">Your plant is private. Your care team and adult doctors never see it.</p></section>
+      </div>` };
+  }
+  function careSection(p) {
+    var tasks = p.careTasks || []; if (!tasks.length) return '';
+    var done = tasks.filter(function (t) { return t.done; }).length;
+    return h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="mc-h"><h2 class="ios-gh" id="mc-h">${tile(ic('visit', 18), 2, true)}<span>Run my care</span></h2>
+      <div class="ios-list">${tasks.map(function (t) { return h`<div class="ios-row mc-task ${t.done ? 'done' : ''}" data-key="mc-${t.id}"><input type="checkbox" id="mc-${t.id}" aria-describedby="mc-o-${t.id}" ${t.done ? 'checked' : ''} data-change="careTask" data-id="${t.id}"><div class="mc-body"><label class="ios-rt" for="mc-${t.id}"><b>${t.label}</b><small>${t.detail}</small></label><div class="mc-own"><span class="own-chip own-${t.owner || 'teen'}" id="mc-o-${t.id}">${t.owner === 'parent' ? 'Your parent does this' : t.owner === 'shared' ? 'Shared with your parent' : 'You'}</span>${t.owner && t.owner !== 'teen' && !t.done ? h`<button type="button" class="ios-btn sm sec mc-take" data-action="takeTask" data-id="${t.id}" aria-label="Take on ${t.label.toLowerCase()}">Take it on</button>` : ''}</div></div><button type="button" class="ios-round" data-action="careRemind" data-id="${t.id}" aria-label="Add a reminder for ${t.label}">${xi('calendar', 20)}</button></div>`; })}</div>
+      <p class="ios-gf">${done} of ${tasks.length} done yourself. These are the jobs that land on you at 18. The calendar button reminds you three weeks before and the day before.</p></section>`;
+  }
+  function medsSection(p) {
+    var meds = p.meds || [], c = p.medsConfirmed, stale = sel.medsStale(p);
+    var al = p.allergies || [];
+    return h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="md-h"><h2 class="ios-gh" id="md-h">${tile(xi('heart', 18), 2, true)}<span>Allergies, medications and supplies</span></h2>
+      <div class="ios-list" style="margin-bottom:12px">${al.map(function (a) { return h`<button type="button" class="ios-row has-tile" data-action="editAllergy" data-id="${a.id}" aria-label="Allergy: ${a.name}. Edit">${tile(ic('info', 22), 5)}<span class="ios-rt"><b>${a.name}</b><small>Allergy${a.reaction ? ' · ' + a.reaction : ''}</small></span>${CHEV}</button>`; })}
+        ${!al.length && p.noAllergies ? h`<div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>No known allergies</b><small>You told your care team you have none.</small></span></div>` : ''}
+        <button type="button" class="ios-row has-tile ios-addrow" data-action="editAllergy">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add an allergy</b></span></button>
+        ${!al.length && !p.noAllergies ? h`<button type="button" class="ios-row ios-addrow" data-action="noAllergies"><span class="ios-rt"><b>I have no known allergies</b></span></button>` : ''}</div>
+      <div class="ios-list">${meds.map(function (m) { return h`<button type="button" class="ios-row has-tile" data-action="editMed" data-id="${m.id}" aria-label="${m.name}. Edit">${tile(m.kind === 'supply' ? ic('card', 22) : xi('heart', 22), m.kind === 'supply' ? 3 : 2)}<span class="ios-rt"><b>${m.name}</b><small>${(m.kind === 'supply' ? 'Supply' : 'Medication') + (m.detail ? ' · ' + m.detail : '')}</small></span>${CHEV}</button>`; })}
+        <button type="button" class="ios-row has-tile ios-addrow" data-action="editMed">${tile(ic('plus', 22), 4)}<span class="ios-rt"><b>Add a medication or supply</b></span></button></div>
+      <p class="ios-gf ${stale ? 'meds-stale' : ''}">${!meds.length ? 'Adult doctors see this list first, so keep it current.' : stale ? (c ? 'Changed since your care team last confirmed it. They check it at your next visit.' : 'Your care team confirms this list at your next visit.') : 'Confirmed by ' + c.by + ', ' + U.fmt(c.date) + '. Adult doctors see this first.'}</p></section>`;
+  }
+
+  F.actions.careTask = function (el) {
+    var t = A.toggleCareTask(pid(), el.dataset.id); if (!t) return;
+    if (t.done) { N.haptic('success'); U.toast(plantOn() ? 'Done yourself. Your plant grew a leaf.' : 'Done yourself. Nice.', true); }
+  };
+  F.actions.careRemind = function (el) {
+    var p = me(), t = (p.careTasks || []).filter(function (x) { return x.id === el.dataset.id; })[0]; if (!t) return;
+    U.formModal({ title: 'Add a reminder', lead: 'Pick when it is due. It shows in Coming up, and your calendar reminds you three weeks before and the day before.', cta: 'Add to Calendar',
+      fields: [{ name: 'iso', label: 'Due date', type: 'date', value: t.due || '', req: true }],
+      destructive: t.due ? { label: 'Remove date', body: 'It comes off Coming up.', run: function () { A.setTaskDue(p.id, t.id, ''); } } : null,
+      onSubmit: function (d) { A.setTaskDue(p.id, t.id, d.iso); var f = N.ics({ iso: d.iso + 'T09:00', where: '', note: t.detail }, null, p.id + '-' + t.id, { summary: t.label, alarms: ['-P21D', '-P1D'] }); if (f) N.openCalendar(f); else U.toast('Pick a date first'); } });
+  };
+  F.actions.editMed = function (el) {
+    var p = me(), id = el && el.dataset ? el.dataset.id || '' : '', it = id ? (p.meds || []).filter(function (x) { return x.id === id; })[0] || {} : {};
+    U.formModal({ title: id ? 'Edit ' + it.name : 'Add a medication or supply', lead: 'Your care team confirms changes at your next visit.',
+      fields: [{ name: 'name', label: 'Name', value: it.name, req: true, ph: 'Rapid-acting insulin' }, { name: 'kind', label: 'Type', type: 'select', options: ['Medication', 'Supply'], value: it.kind === 'supply' ? 'Supply' : 'Medication' }, { name: 'detail', label: 'Details', value: it.detail, ph: 'How or when you use it' }, { name: 'refill', label: 'Runs out or refill due (optional)', type: 'date', value: it.refill || '' }],
+      destructive: id ? { label: 'Remove', body: 'Adult doctors will no longer see it.', run: function () { A.removeMed(p.id, id); } } : null,
+      onSubmit: function (d) {
+        var kind = d.kind === 'Supply' ? 'supply' : 'medication', same = id && it.name === d.name && (it.kind || 'medication') === kind && (it.detail || '') === (d.detail || '');
+        if (!same) A.editMed(p.id, { id: id || undefined, name: d.name, kind: kind, detail: d.detail || '' });
+        var mid = id || ((me().meds || []).filter(function (x) { return x.name === d.name; }).slice(-1)[0] || {}).id;
+        if (mid && (d.refill || '') !== (it.refill || '')) A.setRefill(p.id, mid, d.refill || '');
+        U.toast(same ? 'Refill date saved' : 'Saved. Your care team confirms it next visit.'); } });
+  };
+  /* Teen takes a job over from a parent, one at a time (v4 "Take it on"). The parent sees it in the parent view. */
+  F.actions.takeTask = function (el) { var p = me(), t = (p.careTasks || []).filter(function (x) { return x.id === el.dataset.id; })[0]; if (!t) return; A.setTaskOwner(p.id, t.id, 'teen'); N.haptic('success'); U.toast('It is yours now. Your parent sees the change.'); };
+  F.actions.editAllergy = function (el) {
+    var p = me(), id = el && el.dataset ? el.dataset.id || '' : '', it = id ? (p.allergies || []).filter(function (x) { return x.id === id; })[0] || {} : {};
+    U.formModal({ title: id ? 'Edit ' + it.name : 'Add an allergy', lead: 'Adult doctors and the ER see allergies first. Your care team confirms changes at your next visit.',
+      fields: [{ name: 'name', label: 'Allergic to', value: it.name, req: true, ph: 'Penicillin' }, { name: 'reaction', label: 'What happens', value: it.reaction, ph: 'Rash' }],
+      destructive: id ? { label: 'Remove', body: 'Adult doctors will no longer see it.', run: function () { A.removeAllergy(p.id, id); } } : null,
+      onSubmit: function (d) { A.editAllergy(p.id, { id: id || undefined, name: d.name, reaction: d.reaction || '' }); U.toast('Saved. Your care team confirms it next visit.'); } });
+  };
+  F.actions.noAllergies = function () { A.setNoAllergies(me().id, true); U.toast('Saved. Your care team confirms it next visit.'); };
+  F.actions.freezeCard = function () {
+    var p = me(), on = p.card.status === 'active';
+    U.confirmModal({ title: on ? 'Freeze your card?' : 'Unfreeze your card?', body: on ? 'Nobody can open your profile with it until you unfreeze it.' : 'Your card opens your profile again.', cta: on ? 'Freeze' : 'Unfreeze', danger: on,
+      onOk: function () { if (on) A.deactivateCard(p.id); else A.reactivateCard(p.id); N.haptic('success'); U.toast(on ? 'Card frozen' : 'Card unfrozen'); } });
+  };
+  F.actions.newCardLink = function () {
+    var p = me();
+    U.confirmModal({ title: 'Get a new card link?', body: 'Your old card stops working right away. Ask your clinic to print a new one.', cta: 'Get new link', danger: true,
+      onOk: function () { A.replaceCard(p.id); cardFile = null; N.haptic('success'); U.toast('New card link made. Your old card no longer works.'); } });
+  };
+  F.actions.motiv = function (el) { if (!F.Plant) return; F.Plant.setMode(el.dataset.v); N.haptic('light'); U.toast('Progress style: ' + F.Plant.MODES[el.dataset.v]); };
+  F.actions.parentShare = function (el) { var p = me(), on = el.checked; A.setParentShare(p.id, el.dataset.k, on); U.toast(on ? 'Your parent can now see this' : 'Hidden from your parent'); };
+  F.actions.replayWelcome = function () { if (F.Welcome) F.Welcome.start(true); };
+
+  /* =====================================================================
      Router and persistent shell
      ===================================================================== */
-  var ROUTES = [['/', home], ['/levels', levels], ['/resources', resources], ['/resources/:id', resourceDetail], ['/about', about]];
+  var ROUTES = [['/', home], ['/levels', levels], ['/levels/plant', plantPage], ['/levels/check', checkPage], ['/resources', resources], ['/resources/:id', resourceDetail], ['/about', about]];
   function notFound() { return { title: 'Not found', html: h`${large('Not found', 'That page is not in Folio.')}<div class="ios-body"><div class="ios-sec"><a class="ios-btn" href="#/">Go to Home</a></div></div>` }; }
   function parse(hash) {
     var hs = (hash == null ? location.hash : hash).replace(/^#/, '') || '/', qi = hs.indexOf('?'), path = qi < 0 ? hs : hs.slice(0, qi), q = {};
@@ -774,6 +1062,7 @@
   window.addEventListener('hashchange', function () {
     saveWantNow();
     var np = parse().path, d = depth(np), o = depth(prevPath);
+    if (np !== '/') F.ui.freshNotes = [];
     var dir = F.ui._dir || (rootOf(np) !== rootOf(prevPath) ? 'tab' : d > o ? 'push' : d < o ? 'pop' : 'tab');
     F.ui._dir = ''; prevPath = np;
     N.closeSwipes(); if (N.contextOpen()) N.closeContext(true);

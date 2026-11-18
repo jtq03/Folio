@@ -47,24 +47,55 @@
     eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     refresh: 'M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5',
     x: 'M6 6l12 12M18 6L6 18',
-    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>'
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+    /* v4 status icons (Lucide shapes, 2px stroke) */
+    sprout: '<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
+    hand: '<path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/>',
+    alert: '<path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    circlecheck: '<circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/>',
+    send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>'
   };
   function ic(name, size) {
     var p = P[name] || '', body = p.charAt(0) === '<' ? p : '<path d="' + p + '"/>';
     size = size || 20;
-    return raw('<svg class="ic" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + body + '</svg>');
+    return raw('<svg class="ic" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + body + '</svg>');
   }
 
   /* ---------- Brand: red star, stacked-card mark, wordmark ---------- */
+  /* Where shared assets live, worked out from this script's own address so it works from the portal, app and card */
+  var ASSET = (function () { try { var c = document.currentScript && document.currentScript.src; if (c) return c.replace(/js\/ui\.js.*$/, 'img/'); } catch (e) {} return 'shared/img/'; })();
+  F.ASSET = ASSET;
+  /* The brand star (v4 star.svg): eight rounded arms. Red is for the star and the mascot only. */
+  var STAR_PATH = 'M0 -24V24M-24 0H24M-16.97 -16.97L16.97 16.97M16.97 -16.97L-16.97 16.97';
   function star(size, cls) {
     size = size || 18;
-    return raw('<svg class="star ' + (cls || '') + '" width="' + size + '" height="' + size + '" viewBox="-12 -12 24 24" aria-hidden="true" focusable="false"><g fill="#CE3B3B"><rect x="-2" y="-11" width="4" height="22" rx="2"/><rect x="-2" y="-11" width="4" height="22" rx="2" transform="rotate(60)"/><rect x="-2" y="-11" width="4" height="22" rx="2" transform="rotate(120)"/></g></svg>');
+    return raw('<svg class="star ' + (cls || '') + '" width="' + size + '" height="' + size + '" viewBox="-30 -30 60 60" aria-hidden="true" focusable="false"><path d="' + STAR_PATH + '" stroke="#CE3B3B" stroke-width="11" stroke-linecap="round" fill="none"/></svg>');
   }
-  function mark(size) {
+  /* The Levels mark (v4 levels-mark-dark.svg): four stacked tiles and the star */
+  function mark(size, light) {
     size = size || 40;
-    return raw('<svg class="mark" width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="36" width="34" height="20" rx="4" fill="#92AFD7"/><rect x="12" y="28" width="34" height="20" rx="4" fill="#395B50"/><rect x="18" y="20" width="34" height="20" rx="4" fill="#1F2F16"/><g fill="#CE3B3B" transform="translate(50 14)"><rect x="-1.8" y="-9" width="3.6" height="18" rx="1.8"/><rect x="-1.8" y="-9" width="3.6" height="18" rx="1.8" transform="rotate(60)"/><rect x="-1.8" y="-9" width="3.6" height="18" rx="1.8" transform="rotate(120)"/></g></svg>');
+    var f = light ? ['#92AFD7', '#5A7684', '#395B50', '#1F2F16', '#F0E3CE'] : ['#5A7684', '#92AFD7', '#C5D1EB', '#F0E3CE', '#1F2F16'];
+    return raw('<svg class="mark" width="' + size + '" height="' + Math.round(size * 0.94) + '" viewBox="0 0 200 188" aria-hidden="true" focusable="false"><rect x="8" y="132" width="110" height="54" rx="8" fill="' + f[0] + '" stroke="' + f[4] + '" stroke-width="4"/><rect x="30" y="106" width="110" height="54" rx="8" fill="' + f[1] + '" stroke="' + f[4] + '" stroke-width="4"/><rect x="52" y="80" width="110" height="54" rx="8" fill="' + f[2] + '" stroke="' + f[4] + '" stroke-width="4"/><rect x="74" y="54" width="110" height="54" rx="8" fill="' + f[3] + '" stroke="' + f[4] + '" stroke-width="4"/><path d="M170 26V74M146 50H194M153.03 33.03L186.97 66.97M186.97 33.03L153.03 66.97" stroke="#CE3B3B" stroke-width="11" stroke-linecap="round"/></svg>');
   }
-  function wordmark(cls) { return h`<span class="wordmark ${cls || ''}" aria-label="Folio">fol<span class="wm-i" aria-hidden="true">ı${star(11, 'wm-star')}</span>o</span>`; }
+  /* The wordmark artwork with the star as the dot of the i (v4: star at left 59%, top 16%, width 15%) */
+  /* Both artworks are in the markup: the cream one shows on dark surfaces and in dark mode, the ink one otherwise */
+  function wordmark(cls, cream) { return h`<span class="wordmark ${cream ? 'cream' : ''} ${cls || ''}" role="img" aria-label="Folio"><img class="wm-ink" src="${ASSET + 'logo/folio-wordmark.png'}" alt="" width="269" height="197"><img class="wm-cream" src="${ASSET + 'logo/folio-wordmark-cream.png'}" alt="" width="269" height="197">${star(24, 'wm-star')}</span>`; }
+  /* The mascot: the red star with a round face, cream eyes looking up and right, and a small smile.
+     Teen app, the card and celebrations only. Never on clinical screens. */
+  function mascot(size, cls) {
+    size = size || 96;
+    return raw('<svg class="mascot ' + (cls || '') + '" width="' + size + '" height="' + size + '" viewBox="-32 -32 64 64" aria-hidden="true" focusable="false"><g transform="rotate(-8)"><path d="' + STAR_PATH + '" stroke="#CE3B3B" stroke-width="13" stroke-linecap="round" fill="none"/></g><circle r="13.5" fill="#CE3B3B"/><circle cx="-5" cy="-2.5" r="4.4" fill="#FCF8F1"/><circle cx="5" cy="-2.5" r="4.4" fill="#FCF8F1"/><circle cx="-3.6" cy="-3.9" r="2.1" fill="#2A2420"/><circle cx="6.4" cy="-3.9" r="2.1" fill="#2A2420"/><path d="M-3.2 4.6q3.2 2.6 6.4 0" stroke="#2A2420" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>');
+  }
+  /* The level plant (v4 plants/01-10): one plant per level, on the sky tile, never cropped */
+  var PLANT_NAMES = ['Tiny sprout', 'Seedling', 'Clover', 'Mini cactus', 'Succulent', 'Fern', 'Monstera', 'Palm', 'Pine', 'Giant oak'];
+  function plantImg(level, size, cls, alt) {
+    var n = Math.min(Math.max(level || 1, 1), 10);
+    return h`<span class="plant-tile ${cls || ''}" style="--s:${size || 120}px"><img src="${ASSET + 'plants/' + ('0' + n).slice(-2) + '.jpg'}" alt="${alt == null ? PLANT_NAMES[n - 1] : alt}" width="${size || 120}" height="${size || 120}" loading="lazy"></span>`;
+  }
+  F.PLANT_NAMES = PLANT_NAMES;
+  /* v4 "who can see this" chip: outlined, with an icon. Status chips are filled, privacy chips are outlined. */
+  var VIS = { me: ['lock', 'Only me'], team: ['users', 'You + care team'], care: ['users', 'Care team'], future: ['send', 'Future care teams'], family: ['home', 'Family'] };
+  function visChip(kind, text) { var v = VIS[kind] || VIS.team; return h`<span class="vis-chip">${ic(v[0], 14)}${text || v[1]}</span>`; }
 
   /* ---------- Small components ---------- */
   function lvbar(n, total) {
@@ -108,8 +139,9 @@
     }
     return raw('<ol class="stairs" role="img" aria-label="' + (cur ? 'Level ' + cur + ' of 10' : 'Patients by level') + '">' + s + '</ol>');
   }
-  function pill(text, tone) { return h`<span class="pill pill-${tone || 'neutral'}">${text}</span>`; }
-  var STATUS = { track: ['On track', 'neutral'], attention: ['Needs attention', 'attn'], ready: ['Ready to advance', 'ready'], transferred: ['Transferred', 'done'] };
+  var PILL_ICON = { own: 'circlecheck', help: 'hand', learning: 'sprout', attn: 'alert', ready: 'circlecheck', green: 'circlecheck', done: 'check', track: 'levels' };
+  function pill(text, tone) { var i = PILL_ICON[tone]; return h`<span class="pill pill-${tone || 'neutral'}">${i ? ic(i, 14) : ''}${text}</span>`; }
+  var STATUS = { track: ['On track', 'track'], attention: ['Needs attention', 'attn'], ready: ['Ready to advance', 'ready'], transferred: ['Transferred', 'done'] };
   function statusPill(p) { var s = STATUS[F.Store.sel.status(p)]; return pill(s[0], s[1]); }
   function skillPill(st) { return pill(F.SKILL_STATUS[st], st); }
   function empty(title, body) { return h`<div class="empty"><div class="empty-mark">${mark(44)}</div><h3>${title}</h3><p>${body}</p></div>`; }
@@ -250,13 +282,14 @@
     return { render: render, go: function (p) { location.hash = p; } };
   }
 
-  F.UI = { h: h, raw: raw, esc: esc, ic: ic, star: star, mark: mark, wordmark: wordmark, lvbar: lvbar, tile: tile, stairs: stairs, avatar: avatar, avatarSvg: avatarSvg, pill: pill, statusPill: statusPill, skillPill: skillPill,
+  F.UI = { h: h, raw: raw, esc: esc, ic: ic, star: star, mark: mark, wordmark: wordmark, mascot: mascot, plantImg: plantImg, visChip: visChip, lvbar: lvbar, tile: tile, stairs: stairs, avatar: avatar, avatarSvg: avatarSvg, pill: pill, statusPill: statusPill, skillPill: skillPill,
     empty: empty, eyebrow: eyebrow, qr: qr, stamp: stamp, fmt: fmt, fmtFull: fmtFull, fmtTime: fmtTime, monthYear: monthYear, toast: toast, modal: modal, closeModal: closeModal,
     formModal: formModal, confirmModal: confirmModal, createApp: createApp };
 
   F.UI.cardFace = function (p, side) {
     var c = p.card || {}, cls = 'fcard ' + side + ' ' + (c.shape || 'rounded') + (c.status === 'inactive' ? ' inactive' : '');
-    if (side === 'front') return h`<div class="${cls}"><div><div class="fc-tag">Your story, carried forward</div><div class="fc-brand" style="margin-top:.4rem">${wordmark()}</div></div><div><div class="fc-tag">Folio ID</div><div class="fc-id">${F.Store.sel.fid(p.folioId)}</div><div class="fc-name">${p.first} ${p.last}</div></div><span class="fc-stack">${mark(54)}</span></div>`;
+    /* v4 card: Green 800, cream wordmark, contactless mark, a Blue 300 circle, the name and a large Folio ID */
+    if (side === 'front') return h`<div class="${cls}"><span class="fc-circle" aria-hidden="true"></span><div class="fc-top"><span class="fc-brand">${wordmark('', true)}</span><span class="fc-nfc">${ic('nfc', 20)}</span></div><div class="fc-bottom"><div class="fc-name">${p.first} ${p.last}</div><div class="fc-id">${F.Store.sel.fid(p.folioId)}</div><div class="fc-tag">Folio ID</div></div></div>`;
     return h`<div class="${cls}"><div class="qrbox">${qr(c.token || p.folioId, 200)}</div><div class="fc-right"><h4>Tap or scan</h4><p><b>TAP</b> Hold the card to a phone (NFC chip inside)</p><p><b>SCAN</b> Point a camera at the code</p><p><b>TYPE</b> folio.example/id and the number on the front</p></div></div>`;
   };
   F.root = new URL('../../', ROOT_SRC).href;

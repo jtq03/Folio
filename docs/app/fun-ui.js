@@ -167,6 +167,7 @@
   };
   F.actions.gotIt = function (el) {
     var id = el.dataset.id, l = readList(); if (l.indexOf(id) < 0) { l.push(id); lsSet(readKey(), l); }
+    try { var rr = S.get().resources.filter(function (x) { return x.id === id; })[0]; if (rr && A.readGuide) A.readGuide(pid(), rr); } catch (e) {}
     haptic('success'); if (F.rerender) F.rerender(false);
     requestAnimationFrame(function () {
       var st = document.querySelector('#main .fx-stamp'); if (st && !reduced()) { st.classList.add('slam'); setTimeout(function () { burst(st, 16); }, 300); }
