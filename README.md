@@ -35,7 +35,7 @@ Install the patient app on a phone: open `/app/` on the published site, then use
 
 ## Design rules (Folio design system v4)
 
-The full design system lives in [`design-system/`](design-system/). Start with its [README](design-system/README.md) and [design guide](design-system/DESIGN_GUIDE.md). To see every component, download the folder and open `Folio Design System v4.dc.html` in a browser, with `support.js` next to it.
+The full-size plant images from the v4 design system, one per level, are in [`design-system/plants/`](design-system/plants/). The app uses smaller copies in `docs/shared/img/plants/`.
 
 - Colour: Greens 500, 800 and 900, Blues 100 to 700, Lime, Butter and Beiges 50 to 300 in place of white. Red 500 is the star and the mascot. Errors use the error pair (Red 700 on a light red) with an icon and words.
 - Type: Fraunces for headings 24px and up (sentence case, italic on one or two words), Figtree for UI and body (16px minimum).

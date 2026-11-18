@@ -15,7 +15,7 @@ Plain static site, no build, no framework. Reason: the repo deploys `docs/` stra
 - `docs/app`: patient PWA (manifest.webmanifest, sw.js, icons, app.js)
 - `docs/card`: adult care view (token query, demo mode, session timeout, access logging)
 - `notes/`: the first-run walkthrough and change plan (participant codes only, no names)
-- `design-system/`: the v4 design system handoff, not loaded by the site. The site copies what it uses into `docs/shared` (tokens in tokens.css, plant images as small JPGs, the two wordmarks)
+- `design-system/plants/`: the full-size v4 plant images (01 to 10). The site does not load them. It uses small JPG copies in `docs/shared/img/plants/`
 
 Scripts are plain `<script>` tags on a `window.Folio` namespace so it works on file:// and Pages. Load order is set in each `index.html`.
 
@@ -122,7 +122,7 @@ Warm, clear and teen friendly. Sentence case for everything except iOS system ve
 - If it breaks: check the test sheet log first, then the ios-haptics npm package for the current trick (v3.3 lays an invisible label over each button so the user's own tap toggles the switch).
 
 ## Design system v4
-Source: the v4 handoff from Claude Design, kept unchanged in `design-system/` (README, DESIGN_GUIDE, tokens, the showcase page `Folio Design System v4.dc.html` and full-size assets). Behaviour and markup stay as after the usability pass. The restyle is an override layer plus small design-level JS.
+Source: "Folio Design System Redesign.zip" from Claude Design (v4). Only its full-size plant images are in the repo, in `design-system/plants/`. Behaviour and markup stay as after the usability pass. The restyle is an override layer plus small design-level JS.
 - **Tokens:** `shared/css/tokens.css` holds the v4 palette, semantic pairs (success, info, warning, error), voices (`--voice-patient` Blue 100, `--voice-care-team` Beige 200), radii, focus ring and a dark block. Older names (`--bg`, `--text`, `--primary`, `--accent`) point at v4 values. `--shadow-paper`, `--grain` and `--linen` are `none`.
 - **Override files, loaded last:** `shared/css/v4.css` (portal and adult view base), `portal/v4.css`, `card/v4.css`, `app/v4.css` (teen app, including its own wordmark rules because the app does not load shared v4.css). Fonts are Fraunces and Figtree. Prompt is gone.
 - **Assets:** `shared/img/plants/01.jpg` to `10.jpg` and `shared/img/logo/` (the two wordmarks). `F.ASSET` is the path to them.
