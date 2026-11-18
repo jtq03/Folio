@@ -155,12 +155,14 @@ table.data tr:hover td { background: var(--tint-row); }
   html, body { overflow-x: clip; }
   .side { -webkit-mask-image: none; mask-image: none; }
   /* The account stays reachable: a compact Log out pinned to the right end of the top strip */
-  .side .side-foot { display: flex; position: sticky; right: 0; z-index: 2; margin-left: auto; padding: 0 0 0 .5rem; border: 0; background: inherit; box-shadow: -12px 0 12px -6px rgba(15,25,19,.5); }
+  .side .side-foot { display: flex; position: sticky; right: 0; z-index: 2; margin-left: auto; padding: 0 0 0 .5rem; border: 0; background: var(--green-800); box-shadow: -16px 0 14px -4px var(--green-800); }
   .side .side-foot .demo-links, .side .side-foot .me > .avatar, .side .side-foot .me > div { display: none; }
   .side .side-foot .me { padding: 0; }
   .side .side-foot .me .signout { flex-basis: auto; white-space: nowrap; min-height: 44px; padding: 0 .8rem; border: 1.5px solid rgba(252,248,241,.45); color: var(--beige-50); }
   .page-head { gap: .75rem; }
   .table-wrap { max-width: 100%; }
+  table.data td:first-child { min-width: 11.5rem; }
+  table.data .btn, table.data .pill { white-space: nowrap; }
 }
 @media (max-width: 600px) {
   .page { padding: 20px 16px 72px; }

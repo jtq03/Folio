@@ -154,6 +154,8 @@ a:not(.btn):not(.nav-i):hover { color: var(--fg-1); }
   :root:not([data-theme="light"]) .toast { box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-float); }
   :root:not([data-theme="light"]) .btn-cta { background: var(--lime); border-color: var(--lime); color: var(--green-900); }
   :root:not([data-theme="light"]) .tile.t5 { color: var(--success-fg); }
+  :root:not([data-theme="light"]) .lvbar i { background: #34493D; }
+  :root:not([data-theme="light"]) .lvbar i.on { background: #9CC4B1; }
   :root:not([data-theme="light"]) .stairs li.cur { outline-color: var(--beige-50); }
   :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { background: var(--fg-1); color: var(--bg-page); box-shadow: none; }
   :root:not([data-theme="light"]) .chip[aria-pressed="true"], :root:not([data-theme="light"]) .chip[aria-checked="true"] { color: var(--bg-page); }
