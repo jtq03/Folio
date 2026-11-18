@@ -35,6 +35,8 @@ Install the patient app on a phone: open `/app/` on the published site, then use
 
 ## Design rules (Folio design system v4)
 
+The full design system lives in [`design-system/`](design-system/). Start with its [README](design-system/README.md) and [design guide](design-system/DESIGN_GUIDE.md). To see every component, download the folder and open `Folio Design System v4.dc.html` in a browser, with `support.js` next to it.
+
 - Colour: Greens 500, 800 and 900, Blues 100 to 700, Lime, Butter and Beiges 50 to 300 in place of white. Red 500 is the star and the mascot. Errors use the error pair (Red 700 on a light red) with an icon and words.
 - Type: Fraunces for headings 24px and up (sentence case, italic on one or two words), Figtree for UI and body (16px minimum).
 - Surfaces are flat. Only floating things (sheets, toasts, the card) get a shadow. Clinical screens use a 14px radius, the teen app 20px rows and 28px cards. Buttons are pills with 48px targets.
@@ -63,7 +65,7 @@ Each change below comes from Team 9's research: interviews with a paediatrician,
 
 ## Why each first-run change exists (v3 first-run update)
 
-A persona walkthrough on a wiped phone and browser found that Folio had no first run. The app opened on another teen's Home and the portal opened already signed in as Dr. Okafor. Each change below is backed by Team 9's interviews (participant codes) or by published research. The full walkthrough, sources and plan are in "Folio - First-run walkthrough and change plan.md" in the team folder. AI personas were used as hypotheses only and are not counted as evidence.
+A persona walkthrough on a wiped phone and browser found that Folio had no first run. The app opened on another teen's Home and the portal opened already signed in as Dr. Okafor. Each change below is backed by Team 9's interviews (participant codes) or by published research. The full walkthrough, sources and plan are in [notes/first-run-walkthrough-and-change-plan.md](notes/first-run-walkthrough-and-change-plan.md). AI personas were used as hypotheses only and are not counted as evidence.
 
 | ID | Change | Why (paraphrased) | Evidence |
 |---|---|---|---|
