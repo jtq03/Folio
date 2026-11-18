@@ -50,10 +50,57 @@ Changes come from Team 9's interviews, classroom tests and instructor critique. 
 - `store.js` runs `migrate()` on load, so saved demo data gains the new fields and loses the old GI wording without a reset.
 - New store actions: `editMed`, `removeMed`, `confirmMeds`, `toggleCareTask`, `readGuide`, `setDecisionSupport`, `saveHandoff`. `practise` and `advance` also record plant growth.
 - Adult view: no level numbers, a consent screen before the profile opens, medications above the fold, "Where X may need support in this visit", "Make big decisions: with help", a status legend, and drafts never shown (`sel.notesFor(p, 'adult')` filters them).
-- Patient app: a growing plant (`docs/app/plant.js`, `plant.css`) with a Motivation style switch in About me > Prototype (plant, stickers, level only), stored as the device setting `motivation`. Stage = signed-off level. Leaves = practice, guides read and Run my care tasks since the last sign-off. Nothing ever shrinks, and it is never tied to glucose or A1C. Private: never shown in the portal or adult view.
+- Patient app: a growing plant (`docs/app/plant.js`, `plant.css`). Teens choose the progress style in setup and can change it in About me > Display (plant, stickers, just my level). It is stored as the device setting `motivation`. Stage = signed-off level. Leaves = practice, guides read and Run my care tasks since the last sign-off. Nothing ever shrinks, and it is never tied to glucose or A1C. Private: never shown in the portal or adult view.
 - Patient app: Run my care checklist with calendar reminders (three weeks and one day before), a medications and supplies list, card freeze and new card link, and draft type 1 diabetes guides linked to skills (marked for diabetes educator review).
 - Portal: confirm the medication list, edit support notes and big-decision support, a structured handoff form (draft or shared), the status legend and the attention reason.
 - Flag for the team: Level 3 no longer asks for a glucose log (pumps and sensors already log), and the guides need review by a diabetes educator.
+
+## v3 first-run update
+A persona walkthrough found no first run anywhere. The README section "Why each first-run change exists" maps each change (F1 to F11) to its reason.
+- **Patient app first run:** `docs/app/welcome.js` and `welcome.css` load after `app.js`.
+  - The overlay covers the app shell, which stays inert until setup ends.
+  - Teen path: Folio ID, confirm, privacy, nickname and progress style, an optional self-check, then Home.
+  - Parent path: three screens, then a parent home.
+  - Per device: `folio.app.setup` ('teen' or 'parent') and `folio.app.child`. Devices that already remember a patient (`folio.app.pid`) skip setup.
+  - `?welcome=1` forces the welcome. About me > Prototype > Show the welcome again replays it.
+  - `F.app.setPatient(id)` switches the signed-in teen without a toast.
+- **New patient fields** (defaults in `F.defaults`, filled by `migrate()`):
+  - `allergies`, `noAllergies`
+  - `selfCheck {skills, date}`
+  - `parentShare {level, tasks, visit}`, all off by default
+  - `owner` on care tasks ('parent', 'shared' or 'teen')
+  - Also `F.OWNERS`, `F.PARENT_SHARE`, a teen-voice `you` line on each level, and care task k5 "Find an adult family doctor".
+- **New store actions:** `setMe`, `setSelfCheck`, `setParentShare`, `setTaskOwner`, `editAllergy`, `removeAllergy`, `setNoAllergies`. `practise(pid, sid)` takes an optional skill id.
+- **One-time demo fixes** (`state.mig.v3`): Maya's handoff note is shared and final, she has a penicillin allergy and parent sharing on, and Jordan carries the draft handoff example.
+- `today()` now uses the local date, not UTC (evening entries in Ontario were dated tomorrow).
+- **Portal:**
+  - A mock sign-in (`folio.portal.user` per device) with an account picker and Sign out. No password field.
+  - A one-time welcome card per person (`folio.portal.welcomed`).
+  - Coordinators see "Cards to hand out". Everyone else sees "Handoffs shared" in place of "Average level".
+  - Visit mode shows the teen's self-check as their view.
+- **Adult view:**
+  - The consent screen says what Folio is and whose settings apply, with an optional viewer name that goes to the access log and pre-fills the clinician note.
+  - "At a glance" comes first: allergies, insulin, devices, emergency contact with Call, big decisions, adult care and the teen's own words, each with its source and date.
+  - The fold label shows only in demo mode.
+- `sw.js` is at v9.
+- **Flags for the team:**
+  - Level 8 still says it unlocks "I control what my family can see", and Levels 1 to 3 assume a parent-managed profile until "My own login". The parent path gives the teen control from the start (CPS 2023, PHIPA). Pick one and update `F.LEVELS`.
+  - Coordinator limits are described, not enforced.
+  - Real sign-in, a date-of-birth check on the Folio ID, and DKA or severe low history in the adult view are not built.
+  - The Ontario consent rules (PHIPA, Health Care Consent Act) need a legal check before any real use.
+
+## Usability pass
+- Priority order on every main screen. The README section "Usability pass" lists U1 to U18 with reasons.
+- **Removed from view:**
+  - Card shape choice: the portal no longer offers it. `F.CARD_SHAPES` and `setCardShape` stay in the code, and every card uses 'rounded'.
+  - The "soon" condition packages.
+  - The sticker book in plant and level-only modes.
+  - The count-up on portal Home stats.
+  - Phase words in the teen app.
+- **Team tools:** the haptics test shows with `?debug=1`. The intro plays once per device (`localStorage folio.intro.v1` and `folio.portal.intro.v1`), and `?intro=1` replays it.
+- **New in the teen app:** allergies in About me (`editAllergy`, `noAllergies` actions), and an "Add your adult family doctor" prompt.
+- **New in the portal:** the Visit mode question list and medication check, `Sort: needs action first` (the default), and a "Needs educator review" pill on draft guides.
+- `sw.js` is at v10.
 
 ## Haptics on iOS
 - Web pages cannot trigger haptics from script on current iOS (a programmatic click on a hidden switch stopped working around iOS 26.5; there is no Vibration API on iOS). Only a finger landing on a real, rendered `<input type="checkbox" switch>` gets the system tick.
@@ -69,5 +116,32 @@ Warm, clear and teen friendly. Sentence case for everything except iOS system ve
 - A real tap on a native switch (or its label) always ticks, so visible toggles are real switches (`html.nsw` is set in native.js when the switch control is detected).
 - A programmatic `label.click()` on a hidden switch ticked on iOS 17.4 to 26.4. Apple blocked it in iOS 26.5, so code-started haptics (success, level up) are silent there. Android uses vibrate patterns.
 - Engine: `F.native.haptic(kind)` in `docs/app/native.js` (light, medium, heavy, success, warning, error, selection). Decorative haptics (not started by a tap) are skipped under Reduce Motion or when the last tap was over 1 s ago.
-- Test sheet: About me, Prototype, Test haptics (`docs/app/haptics.js`). Real switch buzzes but buttons do not: code haptics are blocked by iOS. Neither buzzes: System Haptics off, Low Power Mode, or iOS too old.
+- Test sheet: About me, Prototype, Test haptics (`F.actions.hapticLab` in `docs/app/polish.js`, shown with `?debug=1`). Real switch buzzes but buttons do not: code haptics are blocked by iOS. Neither buzzes: System Haptics off, Low Power Mode, or iOS too old.
 - If it breaks: check the test sheet log first, then the ios-haptics npm package for the current trick (v3.3 lays an invisible label over each button so the user's own tap toggles the switch).
+
+## Design system v4
+Source: "Folio Design System Redesign.zip" from Claude Design (v4). Behaviour and markup stay as after the usability pass. The restyle is an override layer plus small design-level JS.
+- **Tokens:** `shared/css/tokens.css` holds the v4 palette, semantic pairs (success, info, warning, error), voices (`--voice-patient` Blue 100, `--voice-care-team` Beige 200), radii, focus ring and a dark block. Older names (`--bg`, `--text`, `--primary`, `--accent`) point at v4 values. `--shadow-paper`, `--grain` and `--linen` are `none`.
+- **Override files, loaded last:** `shared/css/v4.css` (portal and adult view base), `portal/v4.css`, `card/v4.css`, `app/v4.css` (teen app, including its own wordmark rules because the app does not load shared v4.css). Fonts are Fraunces and Figtree. Prompt is gone.
+- **Assets:** `shared/img/plants/01.jpg` to `10.jpg` and `shared/img/logo/` (the two wordmarks). `F.ASSET` is the path to them.
+- **ui.js helpers:** `U.wordmark(cls, cream)`, `U.mark()`, `U.mascot()`, `U.plantImg()`, `U.visChip(kind, text)`, `F.PLANT_NAMES`. `pill()` adds an icon per tone (`track` is the On track status).
+- **Plant:** `plant.js` uses the v4 plant images, one per level. My plant shows all ten (earned, current, upcoming).
+- **Small improvements (README V1 to V6):** visibility chips on notes, owner chip and Take it on in Run my care (`F.actions.takeTask`), the plant row, a compact adult view bar on phones, an icon on On track, and Reduce motion now stops page smooth scrolling (`base.css`).
+- **Review set:** 90 screens captured with headless Chrome (the team review doc and screens page). A colour audit of every screen finds no colour outside the v4 tokens.
+- **Flags for the team (v4 conflicts with earlier decisions, earlier decision kept):**
+  - v4 shows the plant as a readiness marker in clinical tables. Folio keeps the plant private to the teen.
+  - v4 lists a blood sugar chart. Folio never shows glucose numbers, so none is built.
+  - v4 says Red 500 is the star and mascot only. Folio still uses the star for the new-note badge, the guide finish line, the profile ring and the sign-off stamp.
+  - v4 has four card shapes. The usability pass kept one.
+  - The v4 calendar pattern (month, week strip) is not built. Visits use the ticket and phone reminders.
+  - v4 names Lucide as a stand-in icon set. Folio keeps its own icons at a 2px stroke until the paper-cut set arrives.
+
+## Readiness check, goals and more (v5)
+From a review of MyTransition (McMaster and CanChild). README R1 to R7 give the reasons.
+- **Data (data.js):** `F.CHECK` (15 questions, 3 per skill, each with a goal, 3 steps and a guide `res` or `link`), `F.CHECK_ANS`, `F.CHECK_WORD` (Not yet, With help, On my own), `F.CHECK_RANK`, `F.checkSkills(answers)` (the middle answer per skill), `F.checkItem(id)`. Resources r17 to r20 are the health behaviour guides (review: true).
+- **New patient fields** (defaults in `F.defaults`, Maya filled by `state.mig.v5`): `checks` (newest last, at most 6, each `{date, answers, skills}`), `goals` (at most 3, `{id, date, done: [bool x3]}`), `summary3` (`{s1, s2, s3, date}`), care task `due`, medication `refill`.
+- **Store actions:** `saveCheck` (also sets `selfCheck`, grows a leaf once a day), `setGoals`, `toggleGoalStep`, `setSummary3`, `logPractice`, `setTaskDue`, `setRefill` (does not undo the medication confirmation).
+- **Teen app:** the check runs in the welcome overlay (`welcome.js` steps check, cq, cres, cgoals). `F.Welcome.check(pid, at)` opens it from the app. New route `#/levels/check`. Home shows My goals in place of the next step, a check prompt, and Coming up. About me has My diabetes in 3 sentences.
+- **Portal:** Visit mode step 1 shows the teen's goals, view and answers per skill. The profile overview shows the 3 sentences and goals.
+- **Adult view:** At a glance opens with "In Maya's words" when the teen has written their 3 sentences.
+- **Flags:** TRANSITION-Q items are licensed, so none are used. The READDY item list could not be read, so Folio's questions are original and need a diabetes educator's review. The 3 sentences sit above allergies in the adult view; the team may want allergies first for ER use.
