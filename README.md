@@ -27,6 +27,10 @@ Open http://localhost:8000 (portal), /app/ (patient app), /card/?demo=1 (adult v
 
 Install the patient app on a phone: open `/app/` on the published site, then use "Add to Home Screen" (iOS Safari) or "Install app" (Android Chrome). Service workers need https or localhost.
 
+## QR codes for printed cards
+
+Every card QR encodes its tap link, `https://jtq03.github.io/Folio/card/?t=TOKEN&via=qr`. Make print-ready PNGs (Node 18+, no install needed) with `node tools/make-qr-pngs.js`. It writes `qr-codes/` (black on white 1200 px, brand colours in `brand/`, sample patients in `samples/`, and a 28 mm print sheet) and decodes every file to check it. Replace card makes a new link, so reprint after a replace. In the app, the welcome screen's "Scan your card" reads the QR with the camera, or from a photo.
+
 ## Try the story
 
 1. Portal > Patients > Maya R. Start visit, review skills, decide, write one note, sign off. The red star stamp lands.

@@ -1,0 +1,15 @@
+/* Folio patient app: account and log out (session.js), plus the card code on setup screens.
+   Separate file so the shared iOS styles stay untouched. Colours come from existing tokens. */
+
+/* Account: who is signed in on this phone, and Log out as a plain iOS destructive row */
+.fm-who { gap: 12px; }
+.fm-who .ios-rt small { overflow-wrap: anywhere; }
+.fm-logout { justify-content: center; min-height: 52px; }
+.fm-logout .ios-rt { flex: none; text-align: center; }
+.fm-logout b { font-weight: 600; }
+
+/* While the welcome covers the app, its sheets (Log out on the parent view) sit above it, still under the intro */
+#device.fw-on #modal-root { z-index: 105; }
+
+/* Is this you?: the Folio ID and card code under the name */
+.fw-ids { margin: 2px 0 6px; font-variant-numeric: tabular-nums; letter-spacing: .01em; }

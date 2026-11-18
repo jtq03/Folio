@@ -1,0 +1,77 @@
+/* Folio patient app: "Scan your card" camera sheet (scan.js) and the scan button on the welcome screens.
+   Dark camera surface (Green 900 family) with cream text, so the live preview reads like the iOS camera.
+   Corner brackets frame the code. The scan line pauses under reduced motion. */
+.sc { position: absolute; inset: 0; z-index: 140; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain;
+  background: #131B10; color: #F7F0E2; opacity: 0; transform: translateY(24px); transition: opacity .22s ease-out, transform .32s cubic-bezier(.2, .9, .3, 1); }
+.sc.in { opacity: 1; transform: none; }
+.sc.out { opacity: 0; transform: translateY(24px); pointer-events: none; }
+.sc.sc-still, .sc.sc-still.out { transition: none; transform: none; }
+.sc-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.sc-video[hidden] { display: none; }
+.sc-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(19, 27, 16, .78) 0%, rgba(19, 27, 16, .1) 26%, rgba(19, 27, 16, .1) 64%, rgba(19, 27, 16, .86) 100%); opacity: 0; }
+.sc[data-state="live"] .sc-shade { opacity: 1; }
+.sc-ui { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; min-height: 100%;
+  padding: calc(var(--st, 47px) + 6px) max(16px, env(safe-area-inset-right)) calc(var(--sb, 20px) + 16px) max(16px, env(safe-area-inset-left)); }
+.sc-top { display: flex; justify-content: space-between; align-items: center; min-height: 48px; }
+.sc-x, .sc-torch { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; min-width: 48px; padding: 0 16px; border: 0; border-radius: 24px;
+  background: rgba(247, 240, 226, .16); color: #F7F0E2; font: 600 1rem var(--font-ui, system-ui); cursor: pointer;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.sc-torch[aria-pressed="true"] { background: #F7F0E2; color: #1F2F16; }
+.sc-x:focus-visible, .sc-torch:focus-visible, .sc .ios-btn:focus-visible, .sc-filebtn:focus-within { outline: 3px solid #D8EB7E; outline-offset: 3px; }
+
+/* Live camera */
+.sc-live { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 8px; }
+.sc-title { margin: 4px 0 4px; font: 600 1.75rem/1.15 var(--font-display, Georgia, serif); color: #F7F0E2; outline: none; }
+.sc-sub { margin: 0 auto; max-width: 30ch; font-size: 1rem; line-height: 1.4; color: #F0E3CE; }
+.sc-frame { position: relative; width: min(72vw, 300px); aspect-ratio: 1; margin: 7vh auto 0; border-radius: 24px; box-shadow: 0 0 0 100vmax rgba(19, 27, 16, .34); }
+.sc-corners { position: absolute; inset: -3px; width: calc(100% + 6px); height: calc(100% + 6px); fill: none; stroke: #F7F0E2; stroke-width: 3.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.sc-corners path { vector-effect: non-scaling-stroke; }
+.sc-line { position: absolute; left: 10%; right: 10%; top: 12%; height: 2px; border-radius: 2px; background: #D8EB7E; box-shadow: 0 0 12px 2px rgba(216, 235, 126, .55); animation: scLine 2.4s ease-in-out infinite alternate; }
+@keyframes scLine { from { top: 12%; opacity: .55; } to { top: 86%; opacity: 1; } }
+.sc-frame.hinting .sc-corners { stroke: #D8EB7E; }
+.sc-hint { min-height: 3em; margin: 18px auto 0; max-width: 30ch; font-size: 1rem; line-height: 1.4; font-weight: 600; color: #F7F0E2; }
+.sc-still .sc-line, html[data-motion="reduce"] .sc-line { animation: none; top: 50%; opacity: .8; }
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="full"]) .sc-line { animation: none; top: 50%; opacity: .8; } }
+
+/* Panels: permission, errors, success */
+.sc-panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; padding: 12px 4px; }
+.sc-panel h2 { margin: 12px 0 4px; font: 600 1.5rem/1.2 var(--font-display, Georgia, serif); color: #F7F0E2; outline: none; }
+.sc-panel p { margin: 4px auto; max-width: 32ch; font-size: 1rem; line-height: 1.45; color: #F0E3CE; }
+.sc-panel .ios-btn { margin-top: 14px; min-width: 200px; }
+.sc-icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: rgba(247, 240, 226, .14); color: #F7F0E2; }
+.sc-icon.warn { background: #F6D9D3; color: #9E2A2A; }
+.sc-steps { margin: 8px auto 4px; padding: 0 0 0 1.4em; max-width: 32ch; text-align: left; font-size: 1rem; line-height: 1.45; color: #F7F0E2; }
+.sc-steps li { margin: 4px 0; padding-left: 2px; }
+.sc-small { font-size: .9375rem !important; color: #E9DCC3 !important; }
+.sc-or { margin: 14px 0 6px; font-size: .9375rem; color: #E9DCC3; text-align: center; }
+.sc-spin { width: 40px; height: 40px; border-radius: 50%; border: 3px solid rgba(247, 240, 226, .25); border-top-color: #F7F0E2; animation: scSpin .9s linear infinite; }
+@keyframes scSpin { to { transform: rotate(360deg); } }
+.sc-still .sc-spin { animation-duration: 3s; }
+
+.sc-check { width: 88px; height: 88px; }
+.sc-check circle { fill: #D8EB7E; }
+.sc-check path { fill: none; stroke: #1F2F16; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: scTick .42s .12s cubic-bezier(.3, .9, .3, 1) forwards; }
+.sc-done .sc-check { animation: scPop .4s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes scTick { to { stroke-dashoffset: 0; } }
+@keyframes scPop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+.sc-still .sc-check path { animation: none; stroke-dashoffset: 0; }
+.sc-still .sc-done .sc-check { animation: none; }
+
+/* Photo fallback */
+.sc-foot { position: relative; z-index: 1; padding-top: 8px; }
+.sc-photo { display: grid; gap: 10px; }
+.sc .sc-filebtn { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; overflow: hidden; cursor: pointer;
+  background: rgba(247, 240, 226, .14); color: #F7F0E2; border: 1px solid rgba(247, 240, 226, .3); }
+.sc-file { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
+.sc[data-state="live"] .sc-foot .sc-filebtn { background: rgba(19, 27, 16, .55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+
+/* Welcome screens: the scan button beside the typed ID */
+.fw-scanrow { display: grid; gap: 10px; margin: 6px 0 4px; }
+.fw .fw-scanbtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+.fw-ordiv { display: flex; align-items: center; gap: 12px; margin: 14px 0 4px; color: var(--fg-2, #3E4A36); font-size: .9375rem; font-weight: 600; }
+.fw-ordiv::before, .fw-ordiv::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: .3; }
+
+@media (forced-colors: active) {
+  .sc-corners { stroke: CanvasText; }
+  .sc-line { background: Highlight; }
+}

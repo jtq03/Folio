@@ -309,7 +309,124 @@ window.Folio = window.Folio || {};
       }),
       P('p5', 'Sam', 'W.', 14, '99214470', 3, sk('help', 'learning', 'learning', 'learning', 'learning'), '2026-08-29', true),
       P('p6', 'Ana', 'M.', 18, '60483315', 9, sk('own', 'own', 'own', 'own', 'own'), '2026-10-20', false),
-      P('p7', 'Eli', 'T.', 13, '22767089', 1, sk('learning', 'learning', 'learning', 'learning', 'learning'), '2026-10-08', false)
+      P('p7', 'Eli', 'T.', 13, '22767089', 1, sk('learning', 'learning', 'learning', 'learning', 'learning'), '2026-10-08', false),
+      /* Trade-show cards: four people with printed Folio tags (FO-1001 to FO-1004). cardId is the code printed on the tag,
+         and the setup screen accepts it as well as the 8-digit Folio ID. Fictional demo profiles, nothing sensitive. */
+      P('p8', 'Sam', 'Orr', 14, '51730264', 2, sk('help', 'learning', 'help', 'learning', 'learning'), '2026-10-16', false, {
+        cardId: 'FO-1001',
+        levelSignoff: { level: 2, by: 'Dr. A. Okafor', date: '2026-09-02' },
+        wantDoctorKnow: 'I am still learning the names of my insulins. Please say them slowly and write them down for me.',
+        questions: ['How do I know if a low is serious?'],
+        contacts: [{ id: 'c81', name: 'Lena Orr', rel: 'Mother, primary contact', phone: '(555) 014-2201', visible: true }],
+        careTeam: [
+          { id: 't81', name: 'Dr. A. Okafor', role: 'Paediatrician', phone: '(555) 010-3000' },
+          { id: 't82', name: 'Nina Park', role: 'Diabetes nurse educator', phone: '(555) 010-3200' }
+        ],
+        notes: [{ id: 'n81', kind: 'Visit takeaway', author: 'Nina Park', role: 'peds', date: '2026-10-16', shared: true, text: 'Great job naming your fast and slow insulin today. Next time, show me how you check your sensor.' }],
+        meds: [
+          { id: 'm81', name: 'Rapid-acting insulin pen', detail: 'For meals, a parent helps with the dose', kind: 'medication' },
+          { id: 'm82', name: 'Long-acting insulin pen', detail: 'Once a day at bedtime', kind: 'medication' },
+          { id: 'm83', name: 'Glucose sensor', detail: 'Continuous glucose monitor', kind: 'supply' }
+        ],
+        noAllergies: true
+      }),
+      P('p9', 'Amber', 'Baiden', 16, '64028715', 5, sk('own', 'help', 'own', 'help', 'learning'), '2026-10-21', false, {
+        cardId: 'FO-1002',
+        levelSignoff: { level: 5, by: 'Dr. L. Marsh', date: '2026-08-27' },
+        wantDoctorKnow: 'I play basketball four days a week. Please ask about my practice schedule before changing doses.',
+        questions: ['Can I adjust my basal on game days myself?', 'What should I pack for a tournament weekend?'],
+        contacts: [
+          { id: 'c91', name: 'Grace Baiden', rel: 'Mother, primary contact', phone: '(555) 016-4410', visible: true },
+          { id: 'c92', name: 'Kofi Baiden', rel: 'Father', phone: '(555) 016-4477', visible: true }
+        ],
+        careTeam: [
+          { id: 't91', name: 'Dr. L. Marsh', role: 'Specialist (endocrinology)', phone: '(555) 010-3100' },
+          { id: 't92', name: 'Nina Park', role: 'Diabetes nurse educator', phone: '(555) 010-3200' }
+        ],
+        notes: [{ id: 'n91', kind: 'Visit takeaway', author: 'Dr. Marsh', role: 'peds', date: '2026-10-21', shared: true, text: 'Your game-day plan is working. Try running your own correction doses this month and bring your notes.' }],
+        meds: [
+          { id: 'm91', name: 'Rapid-acting insulin', detail: 'Through my insulin pump', kind: 'medication' },
+          { id: 'm92', name: 'Glucagon nasal spray', detail: 'In my sports bag', kind: 'medication' },
+          { id: 'm93', name: 'Pump infusion sets', detail: 'Changed every 3 days', kind: 'supply' }
+        ],
+        medsConfirmed: { by: 'Dr. L. Marsh', date: '2026-10-21' },
+        noAllergies: true,
+        parentShare: { level: true, tasks: true, visit: false }
+      }),
+      P('p10', 'Lauren', 'Martin', 17, '70356148', 8, sk('own', 'own', 'own', 'help', 'own'), '2026-10-25', false, {
+        cardId: 'FO-1003',
+        levelSignoff: { level: 8, by: 'Dr. A. Okafor', date: '2026-10-01' },
+        wantDoctorKnow: 'I start university next fall in another city. I want to meet my adult team before I move.',
+        questions: ['Can you send my referral to a clinic near campus?', 'How do I refill prescriptions in a new province?'],
+        contacts: [{ id: 'c101', name: 'Mark Martin', rel: 'Father, primary contact', phone: '(555) 018-7720', visible: true }],
+        careTeam: [
+          { id: 't101', name: 'Dr. A. Okafor', role: 'Paediatrician', phone: '(555) 010-3000' },
+          { id: 't102', name: 'Dr. L. Marsh', role: 'Specialist (endocrinology)', phone: '(555) 010-3100' },
+          { id: 't103', name: 'Dr. S. Patel', role: 'Adult family doctor', phone: '(555) 010-5500' }
+        ],
+        notes: [{ id: 'n101', kind: 'Visit takeaway', author: 'Dr. Okafor', role: 'peds', date: '2026-10-25', shared: true, text: 'You booked your own blood work this time. Next step: call the pharmacy yourself for your next refill.' }],
+        meds: [
+          { id: 'm101', name: 'Rapid-acting insulin pen', detail: 'For meals and corrections', kind: 'medication' },
+          { id: 'm102', name: 'Long-acting insulin pen', detail: 'Every morning', kind: 'medication' },
+          { id: 'm103', name: 'Glucose sensor', detail: 'Continuous glucose monitor', kind: 'supply' }
+        ],
+        medsConfirmed: { by: 'Dr. A. Okafor', date: '2026-10-25' },
+        allergies: [{ id: 'al101', name: 'Adhesive tape', reaction: 'Skin irritation' }],
+        summary3: { s1: 'I have type 1 diabetes and use insulin pens and a glucose sensor.', s2: 'I count carbs, dose my own insulin and book my own blood work.', s3: 'I am moving for university, so I need a clear plan for refills and a new clinic.', date: '2026-10-25' }
+      }),
+      P('p11', 'Jake', 'Querin', 17, '83140572', 6, sk('own', 'own', 'help', 'own', 'learning'), '2026-10-28', false, {
+        cardId: 'FO-1004',
+        levelSignoff: { level: 6, by: 'Dr. A. Okafor', date: '2026-10-28' },
+        wantDoctorKnow: 'I like to understand the why behind a change. Talk to me first, then my mom if I ask. I do my best at morning visits.',
+        questions: ['Can I try a pump before I move to adult care?', 'What changes when I turn 18?'],
+        howToWork: [
+          { by: 'Patient: Jake', date: 'Oct 2026', text: 'Talk to me first. I will bring my mom in if I want her there.' },
+          { by: 'Peds team: Dr. Okafor', date: 'Oct 2026', text: 'Jake is confident with doses and carb counting. Give him the plan in writing so he can look back at it.' },
+          { by: 'Patient: Jake', date: 'Oct 2026', text: 'Texts work better for me than phone calls during school.' }
+        ],
+        contacts: [
+          { id: 'c111', name: 'Dana Querin', rel: 'Mother, primary contact', phone: '(555) 012-6630', visible: true },
+          { id: 'c112', name: 'Chris Querin', rel: 'Father', phone: '(555) 012-6688', visible: true }
+        ],
+        careTeam: [
+          { id: 't111', name: 'Dr. A. Okafor', role: 'Paediatrician', phone: '(555) 010-3000' },
+          { id: 't112', name: 'Dr. L. Marsh', role: 'Specialist (endocrinology)', phone: '(555) 010-3100' },
+          { id: 't113', name: 'Nina Park', role: 'Diabetes nurse educator', phone: '(555) 010-3200' },
+          { id: 't114', name: 'Dr. R. Chen', role: 'Adult family doctor', phone: '(555) 010-5800' },
+          { id: 't115', name: 'Main Street Pharmacy', role: 'Pharmacy', phone: '(555) 010-9950' }
+        ],
+        links: [
+          { id: 'l111', title: 'Hospital records portal', sub: "Sample Children's Hospital", url: 'https://example.org/portal' },
+          { id: 'l112', title: 'My insulin plan (PDF)', sub: 'Added by Jake, Oct 2026', url: 'https://example.org/plan.pdf' }
+        ],
+        notes: [
+          { id: 'n111', kind: 'Visit takeaway', author: 'Dr. Okafor', role: 'peds', date: '2026-10-28', shared: true,
+            text: 'Level 6 signed off. You ran the whole visit today. Next: practise asking the adult team your own questions.' },
+          { id: 'n112', kind: 'Visit takeaway', author: 'Nina Park', role: 'peds', date: '2026-09-30', shared: true,
+            text: 'Your sick-day plan was spot on. Keep your ketone strips in your school bag.' }
+        ],
+        meds: [
+          { id: 'm111', name: 'Rapid-acting insulin pen', detail: 'For meals and corrections', kind: 'medication', refill: '2026-12-10' },
+          { id: 'm112', name: 'Long-acting insulin pen', detail: 'Every night at 9', kind: 'medication' },
+          { id: 'm113', name: 'Glucagon', detail: 'For a severe low. My family and coach know where it is', kind: 'medication' },
+          { id: 'm114', name: 'Glucose sensor', detail: 'Continuous glucose monitor', kind: 'supply', refill: '2026-11-30' }
+        ],
+        medsConfirmed: { by: 'Dr. A. Okafor', date: '2026-10-28' },
+        noAllergies: true,
+        parentShare: { level: true, tasks: false, visit: true },
+        careTasks: [
+          { id: 'k1', label: 'Book my blood work', detail: 'Labs are often closed on weekends. Check if it needs fasting.', done: true, doneDate: '2026-10-20', owner: 'teen' },
+          { id: 'k2', label: 'Reorder pump and sensor supplies', detail: 'Order well before you run out.', done: false, due: '2026-11-28', owner: 'teen' },
+          { id: 'k3', label: 'Check how long my prescriptions last', detail: 'Know when repeats run out so you can book in time.', done: true, doneDate: '2026-10-02', owner: 'teen' },
+          { id: 'k4', label: 'Find out what covers my supplies', detail: 'Ask who applies for funding and when it renews.', done: false, owner: 'shared' }
+        ],
+        nextVisit: { iso: '2026-12-03T09:30', where: "Sample Children's Hospital, diabetes clinic", note: 'Bring my questions about the pump.' },
+        summary3: { s1: 'I have type 1 diabetes and use insulin pens and a glucose sensor.', s2: 'I count carbs and give my own insulin for meals and corrections.', s3: 'Please explain the why behind any change, and talk to me first.', date: '2026-10-28' },
+        plant: { events: [
+          { id: 'g111', type: 'signOff', label: 'Signed off to Level 6', date: '2026-10-28' },
+          { id: 'g112', type: 'careTask', label: 'You booked your own blood work', date: '2026-10-29' }
+        ] }
+      })
     ]
   };
 
@@ -331,7 +448,7 @@ window.Folio = window.Folio || {};
 
   /* ---------- v2 additions: program settings, team, cards, access log, resources ---------- */
   F.SEED.v = 2;
-  var AVP = { p1: 'a3', p2: 'a5', p3: 'a2', p4: 'a7', p5: 'a1', p6: 'a4', p7: 'a6' };
+  var AVP = { p1: 'a3', p2: 'a5', p3: 'a2', p4: 'a7', p5: 'a1', p6: 'a4', p7: 'a6', p8: 'a1', p9: 'a2', p10: 'a6', p11: 'a7' };
   F.SEED.patients.forEach(function (p) { p.avatar = AVP[p.id] || 'a1'; p.photo = ''; });
   F.SEED.program = { requiredSkills: 4, minMonths: 3, inPerson: true };
   F.SEED.me = 'u1';
@@ -348,7 +465,9 @@ window.Folio = window.Folio || {};
     Nurse: 'View patients, update skills, write notes. Cannot sign off a level.',
     Coordinator: 'Add patients and manage cards. Cannot see clinical notes.'
   };
-  F.CARD_SHAPES = { rounded: 'Rounded card', square: 'Square corners', tab: 'Keyring tab' };
+  F.CARD_SHAPES = { rounded: 'Rounded card', square: 'Square corners', tab: 'Keyring tab', star: 'Star tag', cloud: 'Cloud tag', heart: 'Heart tag', tag: 'Luggage tag' };
+  /* The shape of each printed trade-show tag */
+  var TAG_SHAPE = { p8: 'star', p9: 'cloud', p10: 'heart', p11: 'tag' };
   var ATTN = { p2: 'No visit note since Sep 30', p5: 'Progress paused after illness. Check in.' };
   function tok(seed) {
     var a = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', x = 0, o = '';
@@ -356,9 +475,21 @@ window.Folio = window.Folio || {};
     for (var j = 0; j < 22; j++) { x = (x * 1664525 + 1013904223) >>> 0; o += a[(x >>> 16) % a.length]; }
     return o;
   }
+  /* Card tokens are frozen here, so a printed QR code (qr-codes/, made by tools/make-qr-pngs.js) keeps working in every
+     fresh browser. They equal tok('folio' + id) today; the literal list protects them if tok() ever changes.
+     Replace card in the portal makes a new random token, and the old printed QR code stops working. p7 (Eli) is the
+     sample patient with no card yet, so the portal can show issuing one. */
+  F.CARD_TOKENS = {
+    p1: 'hyqPr8wzQ3vMTrpPTGWVCL', p2: 'KHH96SWsbgvVP4jh8unr7a', p3: 'cRJt4C7jfvc5JEwKmhNVSP', p4: 'E2KMHExcAJbvEgJVA5Wrnd',
+    p5: '7a47pqG5DXTDzTWpQRnWRT', p6: 'yi5rma8WYcSMvv9zMDNsCg',
+    p8: 'tBp5GWHGnnzkk2gdfdnsAj', p9: 'VKqnDGazsBgugCuFu2NemH', p10: 'HdJeRf2KNqaE2AnYmN7qJF', p11: 'a5KywZbCRDR6VczaBixUd4'
+  };
+  /* Production base for QR payloads, so a code looks and scans the same from localhost, a preview or GitHub Pages */
+  F.PROD_BASE = 'https://jtq03.github.io/Folio/';
+  F.cardUrlProd = function (token) { return F.PROD_BASE + 'card/?t=' + encodeURIComponent(token) + '&via=qr'; };
   F.SEED.patients.forEach(function (p) {
     p.attentionReason = p.attention ? ATTN[p.id] || 'Needs a check-in' : '';
-    p.card = { status: p.id === 'p7' ? 'unassigned' : 'active', shape: 'rounded', token: tok('folio' + p.id), issued: '2026-0' + (3 + (+p.id.slice(1) % 5)) + '-1' + (+p.id.slice(1) % 9), lastTap: p.id === 'p1' ? '2026-10-12' : '' };
+    p.card = { status: p.id === 'p7' ? 'unassigned' : 'active', shape: TAG_SHAPE[p.id] || 'rounded', token: F.CARD_TOKENS[p.id] || tok('folio' + p.id), issued: '2026-0' + (3 + (+p.id.slice(1) % 5)) + '-1' + (+p.id.slice(1) % 9), lastTap: p.id === 'p1' ? '2026-10-12' : '' };
     if (p.id === 'p7') p.card.token = '';
   });
   F.SEED.resources = F.RESOURCES.map(function (r) { return Object.assign({ published: true }, r); });
@@ -367,6 +498,7 @@ window.Folio = window.Folio || {};
     { id: 'a2', pid: 'p1', who: 'Sample General ED', how: 'Card tap (NFC)', time: '2026-10-03T22:41:00' },
     { id: 'a3', pid: 'p3', who: 'Dr. L. Marsh', how: 'Portal', time: '2026-10-22T09:15:00' },
     { id: 'a4', pid: 'p6', who: 'Westside Adult Diabetes Clinic', how: 'Card tap (QR)', time: '2026-10-20T10:30:00' },
-    { id: 'a5', pid: 'p4', who: 'Nina Park', how: 'Portal', time: '2026-10-03T11:20:00' }
+    { id: 'a5', pid: 'p4', who: 'Nina Park', how: 'Portal', time: '2026-10-03T11:20:00' },
+    { id: 'a6', pid: 'p11', who: 'Dr. A. Okafor', how: 'Portal', time: '2026-10-28T10:05:00' }
   ];
 })(window.Folio);

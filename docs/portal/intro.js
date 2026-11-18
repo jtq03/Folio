@@ -1,10 +1,11 @@
 /* Folio portal opening intro. A full-viewport desktop take on docs/app/intro.js (that file stays phone-sized).
-   Plays once per browser session, click, tap, Esc, Enter or Space skips it. About 2.4s: three paper layers drop in
+   Plays every time the portal is opened (a new tab, a new window, a reload), even when someone is signed in, and
+   not again on hash navigation inside the same page session. Click, tap, Esc, Enter or Space skips it. About 2.4s: three paper layers drop in
    with soft thuds, the red star spins in with a small paper burst, "folio" is written with a pen nib, the tagline
    fades in, then the whole sheet turns away like a page to reveal the portal. The first frame is the page
    background (beige paper with grain), so nothing flashes. Transform and opacity only, through the Web Animations
    API, and every node and listener is removed at the end. Reduced motion gets a calm 500ms fade.
-   API: FolioIntro.boot() (inline, once per session), .play({force:true}) to replay, .skip(). */
+   API: FolioIntro.boot() (inline, once per page session), .play({force:true}) to replay, .skip(). */
 (function () {
   var KEY = 'folio.portal.intro.v1';
   var NS = 'http://www.w3.org/2000/svg';
@@ -19,10 +20,13 @@
   function reduced() {
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.getAttribute('data-motion') === 'reduce'; } catch (e) { return false; }
   }
-  /* Once per device, not once per session: people opening Folio several times a day do not need to watch it again.
-     Add ?intro=1 to the address to replay it for a demo. */
-  function seen() { try { if (/[?&]intro=1/.test(location.search)) return false; return localStorage.getItem(KEY) === '1' || sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
-  function markSeen() { try { localStorage.setItem(KEY, '1'); sessionStorage.setItem(KEY, '1'); } catch (e) {} }
+  /* Once per page session, for the trade-show demo: sessionStorage only, so every fresh open plays it and a reload
+     plays it too. The old once-per-device flag in localStorage is ignored and removed. ?intro=1 still forces it. */
+  function reloaded() {
+    try { var n = performance.getEntriesByType && performance.getEntriesByType('navigation')[0]; if (n) return n.type === 'reload'; return performance.navigation && performance.navigation.type === 1; } catch (e) { return false; }
+  }
+  function seen() { try { if (/[?&]intro=1/.test(location.search) || reloaded()) return false; return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+  function markSeen() { try { sessionStorage.setItem(KEY, '1'); localStorage.removeItem(KEY); } catch (e) {} }
   function svg(cls, vb, body) { return '<svg class="' + cls + '" viewBox="' + vb + '" aria-hidden="true">' + body + '</svg>'; }
   function letters(withStar) {
     return '<span>f</span><span>o</span><span>l</span><span class="fi-ri">ı' + (withStar ? svg('fi-istar', '-12 -12 24 24', STAR_WORD) : '') + '</span><span>o</span>';

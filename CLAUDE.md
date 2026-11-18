@@ -36,7 +36,7 @@ Scripts are plain `<script>` tags on a `window.Folio` namespace so it works on f
 
 ## Known gaps and open flags
 - No backend or auth. Data is per-browser. Roles on the Team page are not enforced.
-- QR codes are decorative, not scannable. NFC is simulated by the tap link.
+- QR codes are real (vendored qrcode-generator, error correction Q). They encode the production tap link https://jtq03.github.io/Folio/card/?t=TOKEN&via=qr (F.cardUrlProd). Seed tokens are frozen in data.js (F.CARD_TOKENS). 'Replace card' creates a new token and invalidates a printed QR: reprint with `node tools/make-qr-pngs.js`. The app's 'Scan your card' (docs/app/scan.js, jsQR lazy-loaded) logs in from the card QR. NFC is simulated by the tap link.
 - Level system is 10 levels from the Figma wireframes. The video drew 7 steps. Settle the count as a team.
 - Figma wireframes mix "Crohn's/GI" and "Type 1 diabetes" for Maya. The code uses Type 1 diabetes (matches the level system and MVP flow).
 - Wireframe sign-off lets a clinician advance with a skill still Learning plus a note. Visit mode keeps that, behind an explicit override.

@@ -158,7 +158,7 @@
       <a class="crumb" href="#/patients">${ic('back', 16)} All patients</a>
       <section class="hero" data-rise><span class="tape" aria-hidden="true"></span>
         <div class="hero-av">${U.avatar(p, 112)}</div>
-        <div class="grow"><div class="eyebrow">Folio ID ${sel.fid(p.folioId)}</div><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span>${U.pill(p.condition, 'blue')}${U.statusPill(p)}${p.attention && p.attentionReason ? h`<span class="small">${p.attentionReason}</span>` : ''}<span class="muted">Level ${p.level} · ${sel.level(p.level).name}</span></div></div>
+        <div class="grow"><div class="eyebrow">Folio ID ${sel.fid(p.folioId)}${F.Pages.cardId(p) ? h` · Card ${F.Pages.cardId(p)}${F.Pages.shapeName(p) ? ' (' + F.Pages.shapeName(p).toLowerCase() + ')' : ''}` : ''}</div><h1>${sel.full(p)}</h1><div class="facts"><span>Age ${p.age}</span>${U.pill(p.condition, 'blue')}${U.statusPill(p)}${p.attention && p.attentionReason ? h`<span class="small">${p.attentionReason}</span>` : ''}<span class="muted">Level ${p.level} · ${sel.level(p.level).name}</span></div></div>
         <div class="row wrap"><button class="btn" data-action="editPatient" data-pid="${p.id}">${ic('edit', 16)} Edit info</button><a class="btn btn-primary" href="#/visit/${p.id}">${ic('visit', 16)} Start visit</a></div>
       </section>
       <div class="subtabs" role="tablist" aria-label="Patient sections">${tabs.map(function (t) { return h`<button role="tab" aria-selected="${String(F.ui.pt === t[0])}" data-action="ptab" data-v="${t[0]}">${t[1]}</button>`; })}</div>

@@ -1,0 +1,42 @@
+/* Portal memory and sign-in polish: Account section, log out, sign-in steps, card IDs. Owned by portal/memory.js and
+   the pages that use these classes. New file so the shared and older portal CSS stay untouched. */
+
+/* Sign-in: an obvious keyboard focus and a calm step label */
+.signin-step { margin: .25rem 0 -.5rem; color: var(--fg-2, var(--text-muted)); }
+.signin-note { max-width: 32rem; }
+.signin-sso:focus-visible, .signin-acct:focus-visible, .signin-back:focus-visible {
+  outline: 3px solid var(--focus-ring, var(--focus)); outline-offset: 3px;
+}
+.signin-acct { transition: border-color var(--dur-fast, .15s) ease; }
+.signin-back { align-self: center; }
+@media (max-width: 600px) {
+  .signin { padding: 1rem; align-items: start; }
+  .signin h1 { font-size: 1.9rem; }
+  .signin-brand { font-size: 1.4rem; flex-wrap: wrap; row-gap: .5rem; }
+  .signin-brand > span:last-child { border-left: 0; padding-left: 0; flex-basis: 100%; }
+}
+
+/* Settings: Account section at the top */
+.account-sec { margin-bottom: 1.25rem; }
+.account-sec h2 { margin: 0 0 .75rem; }
+.account-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.account-row .grow { display: flex; flex-direction: column; gap: .2rem; min-width: 14rem; flex: 1; }
+.account-row .btn { min-height: 44px; }
+.account-note { margin: .85rem 0 0; max-width: 46rem; }
+
+/* Card IDs (FO-1001) next to the Folio ID */
+.fid-cell { display: inline-flex; align-items: center; gap: .45rem; flex-wrap: wrap; white-space: nowrap; }
+.cid {
+  display: inline-block; font: 600 .78rem/1.2 var(--font-ui); letter-spacing: .02em; padding: .15rem .45rem;
+  border-radius: var(--radius-status, 6px); background: var(--bg-inset, var(--beige-200)); color: var(--fg-1, var(--text));
+  border: 1px solid var(--line, transparent);
+}
+.card-shape { align-items: center; }
+.shape-ic { flex: none; color: var(--fg-1, var(--text)); }
+.pilot-tags { margin-bottom: 1.25rem; }
+.pilot-list { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .75rem; }
+.pilot-list li { display: flex; gap: .7rem; align-items: flex-start; padding: .8rem .9rem; border-radius: var(--radius-row, 12px); background: var(--bg-inset, var(--beige-200)); }
+.pilot-list .shape-ic { margin-top: .1rem; }
+
+:root[data-contrast="high"] .cid, :root[data-contrast="high"] .pilot-list li { border: 1px solid var(--fg-1); }
+.nowrap { white-space: nowrap; }

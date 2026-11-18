@@ -12,12 +12,16 @@
    - The teen holds the parent switches, all off by default, and always sees when one is on (CPS 2023, UK Children's Code).
    - Progress style is a real choice on day one, including "Just my level" (SDT meta-analysis, gamified app trials).
    - Parent home shows skills and tasks, never notes or glucose, plus autonomy-supporting tips (Goethals 2019, Dickinson 2017).
-   Per device: localStorage folio.app.setup = 'teen' | 'parent', folio.app.child = the parent's teen.
-   Demo: ?welcome=1 forces the welcome. About me > Prototype > Show the welcome again replays it. */
+   Per device: localStorage folio.app.setup = 'teen' | 'parent', folio.app.child = the parent's teen,
+   folio.app.flow = setup still in progress, so closing the app mid-setup resumes at the same step (see session.js).
+   Find your profile takes the 8-digit Folio ID or the code printed on a Folio tag (FO-1004), typed any way,
+   or "Scan your card" reads the QR code on the card (scan.js) and lands on the same "Is this you?" step.
+   Demo: ?welcome=1 forces the welcome. ?logout=1 logs the phone out. About me > Log out brings the welcome back. */
 (function (F) {
   'use strict';
   var h = F.UI.h, raw = F.UI.raw, ic = F.UI.ic, U = F.UI, S = F.Store, sel = S.sel, A = S.act, N = F.native || {};
-  var KEY = 'folio.app.setup', PKEY = 'folio.app.pid', CHILD = 'folio.app.child';
+  var KEY = 'folio.app.setup', PKEY = 'folio.app.pid', CHILD = 'folio.app.child', FLOW = 'folio.app.flow';
+  var FLOW_STEPS = ['hello', 'find', 'confirm', 'privacy', 'yours', 'check', 'cq', 'cres', 'cgoals', 'done', 'p-about', 'p-find', 'p-confirm'];
   var device = document.getElementById('device'), appEl = document.getElementById('app');
   var el = null, st = null;
 
@@ -37,11 +41,11 @@
       el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'fw-h');
       device.appendChild(el);
     }
-    appEl.setAttribute('inert', ''); appEl.setAttribute('aria-hidden', 'true');
+    appEl.setAttribute('inert', ''); appEl.setAttribute('aria-hidden', 'true'); device.classList.add('fw-on');
   }
   function unmount() {
     if (el) { el.remove(); el = null; }
-    appEl.removeAttribute('inert'); appEl.removeAttribute('aria-hidden');
+    appEl.removeAttribute('inert'); appEl.removeAttribute('aria-hidden'); device.classList.remove('fw-on');
     st = null;
     setTimeout(function () { var t = document.querySelector('#main h1'); if (t) try { t.focus({ preventScroll: true }); } catch (e) {} }, 60);
   }
@@ -51,10 +55,25 @@
     var same = el.dataset.step === st.step; el.dataset.step = st.step; el.classList.toggle('fw-same', same);
     el.innerHTML = screen().s;
     el.scrollTop = focus ? 0 : el.scrollTop;
+    saveFlow();
     document.title = (st.step === 'parent' ? 'Parent view' : 'Welcome') + ' · Folio';
     if (focus === 'field') { var f = el.querySelector('input'); if (f) f.focus(); return; }
     if (focus) { var t = el.querySelector('#fw-h'); if (t) try { t.focus({ preventScroll: true }); } catch (e) {} return; }
     if (sig) { var b = el.querySelector(sig); if (b) b.focus({ preventScroll: true }); }
+  }
+  /* Setup in progress is kept on the device, so an app closed mid-setup opens on the same step with the same answers */
+  function saveFlow() {
+    if (!st || st.retake || st.replay || st.step === 'parent' || FLOW_STEPS.indexOf(st.step) < 0) return;
+    put(FLOW, JSON.stringify({ step: st.step, path: st.path, pid: st.pid, typed: st.typed || '', style: st.style || '', ans: st.ans || {}, qi: st.qi || 0, picked: st.picked || null, at: Date.now() }));
+  }
+  function loadFlow() {
+    var f = null; try { f = JSON.parse(get(FLOW) || 'null'); } catch (e) {}
+    if (!f || FLOW_STEPS.indexOf(f.step) < 0) return null;
+    var needsP = ['hello', 'find', 'p-about', 'p-find'].indexOf(f.step) < 0;
+    if (f.pid && !sel.patient(f.pid)) f.pid = null;
+    if (needsP && !f.pid) return null;
+    if (f.step === 'cq') f.qi = Math.max(0, Math.min(F.CHECK.length - 1, +f.qi || 0));
+    return { step: f.step, path: f.path || '', pid: f.pid || null, err: '', typed: f.typed || '', style: f.style || '', replay: false, ans: f.ans && typeof f.ans === 'object' ? f.ans : {}, qi: +f.qi || 0, picked: Array.isArray(f.picked) ? f.picked : null };
   }
   function go(step, extra) { Object.assign(st, extra || {}, { step: step, err: '' }); render(true); }
 
@@ -91,17 +110,18 @@
       </div></div>`;
 
     if (s === 'find' || s === 'p-find') {
-      var parent = s === 'p-find', demo = S.get().patients.slice().sort(function (a, b) { return a.level - b.level; });
+      var parent = s === 'p-find', demo = S.get().patients.slice().sort(function (a, b) { return (b.cardId ? 1 : 0) - (a.cardId ? 1 : 0) || String(a.cardId || '').localeCompare(String(b.cardId || '')) || a.level - b.level; });
       return h`<form class="fw-scr" data-submit="fwFind" novalidate>
         ${back(parent ? 'p-about' : 'hello')}
         ${parent ? '' : stepOf(1)}
         <h1 id="fw-h" tabindex="-1">${parent ? 'Connect to your teen' : 'Find your profile'}</h1>
-        <p class="fw-lead">${parent ? 'Type the 8 numbers on the front of your teen\'s Folio card.' : 'Your clinic already started it. Type the 8 numbers on the front of your Folio card or in your clinic letter.'}</p>
-        <div class="ios-list"><label class="ios-field" for="fw-id"><span class="fw-lbl">Folio ID</span><input id="fw-id" name="id" type="text" inputmode="numeric" autocomplete="off" maxlength="9" value="${st.typed || ''}" ${st.err ? h`aria-invalid="true" aria-describedby="fw-err"` : ''}></label></div>
+        <p class="fw-lead" id="fw-hint">${parent ? 'Type your teen\'s Folio ID: the 8 numbers on their Folio card, or the code on their Folio tag, like FO-1004.' : 'Your clinic already started it. Type the 8 numbers on your Folio card, or the code on your Folio tag, like FO-1004.'}</p>
+        ${F.scan ? h`<div class="fw-scanrow"><button type="button" class="ios-btn sec fw-scanbtn" data-action="fwScan">${ic('qr', 22)} Scan your card</button></div><p class="fw-ordiv">or type it</p>` : ''}
+        <div class="ios-list"><label class="ios-field" for="fw-id"><span class="fw-lbl">Folio ID or card code</span><input id="fw-id" name="id" type="text" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="off" enterkeyhint="go" maxlength="16" value="${st.typed || ''}" aria-describedby="${st.err ? 'fw-err fw-hint' : 'fw-hint'}" ${st.err ? h`aria-invalid="true"` : ''}></label></div>
         ${st.err ? h`<p class="fw-err" id="fw-err" role="alert">${ic('info', 16)} ${st.err}</p>` : ''}
         <div class="fw-acts"><button type="submit" class="ios-btn">${parent ? 'Find my teen' : 'Find my profile'}</button></div>
         <details class="fw-demo"><summary>Demo numbers for the Folio team</summary>
-          <div class="ios-list">${demo.map(function (x) { return h`<button type="button" class="ios-row" data-action="fwFill" data-id="${x.folioId}"><span class="ios-rt"><b>${sel.full(x)}, ${x.age}</b><small>Level ${x.level} · ${sel.fid(x.folioId)}</small></span></button>`; })}</div></details>
+          <div class="ios-list">${demo.map(function (x) { return h`<button type="button" class="ios-row" data-action="fwFill" data-id="${x.folioId}"><span class="ios-rt"><b>${sel.full(x)}, ${x.age}</b><small>Level ${x.level} · ${sel.fid(x.folioId)}${x.cardId ? ' · ' + sel.cardId(x) : ''}</small></span></button>`; })}</div></details>
       </form>`;
     }
 
@@ -113,6 +133,7 @@
         <div class="fw-av">${U.avatar(p, 104)}</div>
         <h1 id="fw-h" tabindex="-1">${par ? 'Is this your teen?' : 'Is this you?'}</h1>
         <p class="fw-name">${sel.full(p)}</p>
+        <p class="fw-note fw-ids">Folio ID ${sel.fid(p.folioId)}${p.cardId ? ' · Card ' + sel.cardId(p) : ''}</p>
         <p class="fw-lead">Age ${p.age} · ${p.condition}<br>${S.get().clinic.org}, ${S.get().clinic.team.toLowerCase()}</p>
         <div class="fw-acts">
           <button type="button" class="ios-btn" data-action="${par ? 'fwParentDone' : 'fwGo'}" data-to="privacy">${par ? 'Yes, connect' : 'Yes, that\'s me'}</button>
@@ -258,7 +279,7 @@
           ${point('check', 4, 'Offer choices instead of doing it for them, like which day to book blood work.')}
           ${point('info', 5, 'Talk about numbers without judging. A high reading is information, not a grade.')}
         </ul></section>
-      <div class="fw-acts fw-foot"><p class="fw-note">Prototype: one phone can be the teen or the parent.</p><button type="button" class="ios-btn sec" data-action="fwRestart">Start over</button></div>
+      <div class="fw-acts fw-foot"><p class="fw-note">Signed in on this phone as ${first}'s parent or caregiver. Prototype: one phone can be the teen or the parent.</p><button type="button" class="ios-btn sec" data-action="fwRestart">Log out</button></div>
     </div>`;
   }
 
@@ -271,16 +292,27 @@
     haptic('light'); go(to, extra);
   };
   F.actions.fwFill = function (b) {
-    var i = el && el.querySelector('#fw-id'); if (i) { i.value = String(b.dataset.id).replace(/(\d{4})(\d{4})/, '$1 $2'); i.focus(); }
+    var i = el && el.querySelector('#fw-id'), x = sel.byAnyId(b.dataset.id); if (i) { i.value = x && x.cardId ? sel.cardId(x) : String(b.dataset.id).replace(/(\d{4})(\d{4})/, '$1 $2'); i.focus(); }
     var d = el && el.querySelector('.fw-demo'); if (d) d.open = false;
   };
   F.actions.fwFind = function (d) {
-    var raw0 = String(d.id || ''), id = raw0.replace(/\D/g, ''), parent = st.step === 'p-find';
+    var raw0 = String(d.id || '').trim(), parent = st.step === 'p-find';
     st.typed = raw0;
-    if (id.length !== 8) { st.err = 'Use the 8 numbers on the card, like 4821 0937.'; haptic('error'); render('field'); return; }
-    var p = sel.byFolioId(id);
-    if (!p) { st.err = 'We could not find that number. Check the 8 numbers on the card, or ask ' + (parent ? 'your teen\'s' : 'your') + ' clinic.'; haptic('error'); render('field'); return; }
+    if (!raw0) { st.err = 'Type the 8 numbers on the card, or the code on the tag, like FO-1004.'; haptic('error'); render('field'); return; }
+    var p = sel.byAnyId ? sel.byAnyId(raw0) : sel.byFolioId(raw0);
+    if (!p) { st.err = 'We could not find that ID. Check the code on your card and try again.'; haptic('error'); render('field'); return; }
     haptic('success'); go(parent ? 'p-confirm' : 'confirm', { pid: p.id });
+  };
+  /* Scan your card: the camera reads the QR code on the card, then the same "Is this you?" step as typing the ID */
+  F.actions.fwScan = function () {
+    if (!F.scan || !st) return;
+    var from = st.step, parent = from === 'p-find';
+    haptic('light');
+    F.scan.open({ onResult: function (p) {
+      if (!st || st.step !== from) return;
+      st.typed = p.cardId ? sel.cardId(p) : sel.fid(p.folioId);
+      go(parent ? 'p-confirm' : 'confirm', { pid: p.id });
+    } });
   };
   F.actions.fwYours = function (d) {
     var p = pt(), n = String(d.nick || '').trim().slice(0, 24);
@@ -312,29 +344,32 @@
   F.actions.fwCheckSave = function () { finishCheck(null); };
   F.actions.fwGoals = function (d) { finishCheck(Object.keys(d).filter(function (k) { return k.indexOf('g_') === 0; }).map(function (k) { return k.slice(2); }).slice(0, 3)); };
   F.actions.fwTeenDone = function () {
-    var id = st.pid; put(KEY, 'teen'); put(CHILD, null); haptic('success');
+    var id = st.pid; put(KEY, 'teen'); put(CHILD, null); put(FLOW, null); haptic('success');
+    if (F.Session) F.Session.persist();
     try { sessionStorage.setItem('folio.app.new', id); } catch (e) {}
     unmount(); if (F.app) F.app.setPatient(id);
   };
-  F.actions.fwParentDone = function () { put(KEY, 'parent'); put(CHILD, st.pid); haptic('success'); go('parent'); };
+  F.actions.fwParentDone = function () { put(KEY, 'parent'); put(CHILD, st.pid); put(FLOW, null); put(PKEY, null); if (F.Session) F.Session.persist(); haptic('success'); go('parent'); };
   F.actions.fwOwner = function (b) {
     var p = pt(); if (!p) return; var t = (p.careTasks || []).filter(function (x) { return x.id === b.dataset.id; })[0];
     if (!t || t.owner === b.dataset.v) return;
     A.setTaskOwner(p.id, t.id, b.dataset.v); haptic('light');
     U.toast(b.dataset.v === 'teen' ? 'Handed to ' + p.first + '. ' + p.first + ' sees it in the app.' : b.dataset.v === 'shared' ? 'Now shared with ' + p.first : 'Back with you for now');
   };
-  F.actions.fwDemo = function () { put(KEY, 'teen'); put(CHILD, null); unmount(); if (F.app) F.app.setPatient('p1'); U.toast('Demo profile: Maya R.'); };
-  F.actions.fwCancel = function () { unmount(); if (F.rerender) F.rerender(true); };
-  F.actions.fwRestart = function () { put(KEY, null); put(CHILD, null); start(false); };
+  F.actions.fwDemo = function () { put(KEY, 'teen'); put(CHILD, null); put(FLOW, null); if (F.Session) F.Session.persist(); unmount(); if (F.app) F.app.setPatient('p1'); U.toast('Demo profile: Maya R.'); };
+  F.actions.fwCancel = function () { if (st && st.replay) put(FLOW, null); unmount(); if (F.rerender) F.rerender(true); };
+  /* Parent view: Log out uses the same confirm sheet and clean-up as the teen app (app.js) */
+  F.actions.fwRestart = function () { if (F.actions.logOut) F.actions.logOut(); else { put(KEY, null); put(CHILD, null); put(FLOW, null); start(false); } };
 
   /* ---------- Start ---------- */
-  function start(replay) {
-    st = { step: 'hello', path: '', pid: null, err: '', typed: '', style: '', replay: !!replay, ans: {}, qi: 0, picked: null };
+  function start(replay, resume) {
+    st = resume || { step: 'hello', path: '', pid: null, err: '', typed: '', style: '', replay: !!replay, ans: {}, qi: 0, picked: null };
+    if (!resume) put(FLOW, null);
     mount(); render(true);
   }
   function openParent(pid) { st = { step: 'parent', path: 'parent', pid: pid, err: '' }; mount(); render(true); }
   /* The parent view follows the teen's switches live, even from another tab */
-  S.sub(function () { if (st && st.step === 'parent') { if (!pt()) { put(KEY, null); start(false); return; } render(false); } });
+  S.sub(function () { if (st && st.step === 'parent') { if (!pt()) { put(KEY, null); put(CHILD, null); start(false); return; } render(false); } });
 
   /* Retake from the app (Levels, Home): the same screens, closing back to where the teen was. at = 'check' or 'cgoals'. */
   function check(pid, at) {
@@ -343,10 +378,10 @@
     st = { step: at || 'check', path: 'teen', pid: pid, err: '', retake: true, goalsOnly: at === 'cgoals', ans: at === 'cgoals' && last ? JSON.parse(JSON.stringify(last.answers)) : {}, qi: 0, picked: null };
     mount(); render(true);
   }
-  F.Welcome = { start: start, mode: mode, check: check };
+  F.Welcome = { start: start, mode: mode, check: check, get open() { return !!el; }, close: function () { if (el) unmount(); } };
   var force = false; try { force = new URLSearchParams(location.search).get('welcome') === '1'; } catch (e) {}
   var m = force ? '' : mode();
   if (force) { put(KEY, null); put(CHILD, null); start(false); }
   else if (m === 'parent' && sel.patient(get(CHILD))) openParent(get(CHILD));
-  else if (m !== 'teen') start(false);
+  else if (m !== 'teen') { var resume = m === 'parent' ? null : loadFlow(); start(false, resume); }
 })(window.Folio);

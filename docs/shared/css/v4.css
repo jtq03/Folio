@@ -38,7 +38,7 @@ a { color: var(--fg-2); text-underline-offset: 3px; }
 .btn-danger:hover { background: var(--error-bg); }
 .btn-sm { min-height: 40px; padding: 0 1rem; font-size: .875rem; }
 .btn-sm.btn-quiet { padding: 0 .75rem; }
-.btn[disabled], .btn[aria-disabled="true"] { background: var(--beige-300); border-color: var(--beige-300); color: var(--fg-disabled); opacity: 1; cursor: not-allowed; transform: none; }
+.btn[disabled], .btn[aria-disabled="true"] { background: var(--bg-disabled); border-color: var(--bg-disabled); color: var(--fg-disabled); opacity: 1; cursor: not-allowed; transform: none; }
 .btn-icon { width: 48px; padding: 0; border-radius: 50%; }
 
 /* ---------- Forms ---------- */
@@ -52,7 +52,8 @@ input[disabled], select[disabled], textarea[disabled] { background: var(--bg-pag
 .search input { border-radius: 999px; background: var(--bg-surface); }
 .check input { accent-color: var(--green-500); width: 24px; height: 24px; }
 .choice { border: 2px solid var(--line); border-radius: var(--radius-clinical); background: var(--bg-surface); box-shadow: none; }
-.choice:has(input:checked) { border-color: var(--green-500); background: var(--lime-100); }
+.choice:has(input:checked) { border-color: var(--fg-headline); background: var(--tint-lime); }
+.choice, .choice b, .choice span:not(.muted) { color: var(--fg-1); }
 
 /* Switch: 52 x 30, on = Green 500 track with a lime knob */
 .switch .track { width: 52px; height: 30px; border: 0; border-radius: 999px; background: var(--switch-off); box-shadow: none; }
@@ -81,8 +82,9 @@ input[disabled], select[disabled], textarea[disabled] { background: var(--bg-pag
 .pill-ready, .pill-green { background: var(--success-bg); color: var(--success-fg); }
 .pill-done, .pill-neutral, .pill-track { background: var(--bg-sunken); color: var(--fg-1); }
 .pill-own { background: var(--lime); color: var(--green-900); }
-.pill-help { background: var(--blue-100); color: var(--green-900); }
-.pill-learning { background: var(--beige-200); color: var(--green-900); }
+.pill-own .ic { color: var(--green-900); }
+.pill-help { background: var(--tint-blue); color: var(--on-tint); }
+.pill-learning { background: var(--tint-beige); color: var(--on-tint); }
 .pill-blue { background: var(--info-bg); color: var(--info-fg); }
 .pill-dark { background: var(--green-800); color: var(--beige-50); }
 
@@ -92,7 +94,7 @@ table.data { background: transparent; border-collapse: separate; border-spacing:
 table.data th { background: var(--bg-sunken); color: var(--fg-2); font: 700 .75rem/1rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; border: 0; padding: .7rem .9rem; }
 table.data th:first-child { border-top-left-radius: 10px; } table.data th:last-child { border-top-right-radius: 10px; }
 table.data td { font-size: .875rem; border-bottom: 1px solid var(--line); padding: .7rem .9rem; background: transparent; }
-table.data tr:hover td { background: var(--lime-100); }
+table.data tr:hover td { background: var(--tint-row); }
 table.data a.rowlink { color: var(--fg-1); font-weight: 700; }
 
 /* ---------- Toast, dialog ---------- */
@@ -113,14 +115,15 @@ dialog.modal::backdrop { background: var(--scrim); backdrop-filter: none; }
 .stamp { border: 2px solid var(--success-fg); color: var(--success-fg); background: var(--success-bg); border-radius: 999px; transform: none; box-shadow: none; padding: .5rem .9rem; }
 .stamp strong { color: var(--success-fg); }
 .divider-label::after { background: var(--line); }
-.lvbar i { background: var(--beige-300); box-shadow: none; border-radius: 3px; }
+.lvbar i { background: var(--line); box-shadow: none; border-radius: 3px; }
 .lvbar i.on { background: var(--green-500); }
 .avatar { box-shadow: none; }
-.tile { box-shadow: none; background-image: none; border-radius: 12px; transform: none; color: var(--green-900); }
-.tile.t1 { background: var(--blue-100); } .tile.t2 { background: var(--butter); } .tile.t3 { background: var(--lime-100); } .tile.t4 { background: var(--beige-200); } .tile.t5 { background: var(--success-bg); }
+.tile { box-shadow: none; background-image: none; border-radius: 12px; transform: none; color: var(--on-tint); }
+.tile.t1 { background: var(--tint-blue); } .tile.t2 { background: var(--tint-butter); } .tile.t3 { background: var(--tint-lime); } .tile.t4 { background: var(--tint-beige); } .tile.t5 { background: var(--success-bg); color: var(--success-fg); }
 /* Levels bars (v4): earned bars in blues and greens, the current bar lime */
 .stairs li { background: var(--beige-200); box-shadow: none; border-radius: 6px 6px 0 0; border: 0; }
-.stairs li.done { background: var(--blue-300); }
+.stairs li.done { background: var(--blue-300); color: var(--green-900); }
+.stairs li.done > *, .stairs li.cur > * { color: inherit; }
 .stairs li.done:nth-child(3n+2) { background: var(--blue-500); color: var(--beige-50); }
 .stairs li.done:nth-child(3n) { background: var(--green-500); color: var(--beige-50); }
 .stairs li.cur { background: var(--lime); color: var(--green-900); outline: 2px solid var(--green-900); outline-offset: -2px; }
@@ -134,10 +137,26 @@ h1:focus-visible, h1[tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { box-s
 input:not([type]) { min-height: 48px; border: 2px solid var(--line-strong); border-radius: var(--radius-input); background: var(--bg-surface); color: var(--fg-1); font: 500 1rem/1.5rem var(--font-ui); padding: .6rem .9rem; box-shadow: none; width: 100%; }
 input:not([type]):focus-visible { border-color: var(--fg-1); }
 .search input { padding-left: 2.6rem; }
-.stairs li { background: var(--bg-sunken); color: var(--fg-1); }
+.stairs li:not(.done):not(.cur) { background: var(--bg-sunken); color: var(--fg-1); }
 .wordmark .wm-cream { display: none; }
 .wordmark.cream .wm-ink { display: none; }
 .wordmark.cream .wm-cream { display: block; }
-@media (prefers-color-scheme: dark) { .wordmark .wm-ink { display: none; } .wordmark .wm-cream { display: block; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wordmark .wm-ink { display: none; } :root:not([data-theme="light"]) .wordmark .wm-cream { display: block; } }
 /* Who can see this: outlined chip with an icon (v4) */
 .vis-chip { display: inline-flex; align-items: center; gap: .3rem; padding: 3px 9px 3px 7px; border-radius: 999px; border: 1.5px solid var(--line-strong); color: var(--fg-1); font: 700 .75rem/1rem var(--font-ui); white-space: nowrap; }
+
+/* ---------- Readability layer (dark mode, placeholders, links) ---------- */
+::placeholder { color: var(--fg-placeholder); opacity: 1; }
+input, select, textarea { color-scheme: inherit; }
+a:not(.btn):not(.nav-i):hover { color: var(--fg-1); }
+.toast { background: var(--bg-inverse); color: var(--fg-inverse); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .toast { box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-float); }
+  :root:not([data-theme="light"]) .btn-cta { background: var(--lime); border-color: var(--lime); color: var(--green-900); }
+  :root:not([data-theme="light"]) .tile.t5 { color: var(--success-fg); }
+  :root:not([data-theme="light"]) .lvbar i { background: #34493D; }
+  :root:not([data-theme="light"]) .lvbar i.on { background: #9CC4B1; }
+  :root:not([data-theme="light"]) .stairs li.cur { outline-color: var(--beige-50); }
+  :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { background: var(--fg-1); color: var(--bg-page); box-shadow: none; }
+  :root:not([data-theme="light"]) .chip[aria-pressed="true"], :root:not([data-theme="light"]) .chip[aria-checked="true"] { color: var(--bg-page); }
+}

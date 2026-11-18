@@ -40,7 +40,7 @@ h1,h2,h3{text-shadow:0 1px 0 rgba(255,251,240,.85)}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 0 0 var(--green-900)}
 .btn-primary{background:var(--linen),var(--green-500);color:var(--beige-100);text-shadow:0 -1px 0 rgba(0,0,0,.35);box-shadow:0 1px 0 rgba(255,255,255,.28) inset,0 3px 0 var(--green-900)}
 .btn-primary:hover{background:var(--linen),var(--green-900);border-color:var(--green-900)}
-.btn-cta{background:var(--red-500) var(--grain);border-color:#7d1f1f;color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 3px 0 #7d1f1f;text-shadow:0 -1px 0 rgba(0,0,0,.3)}
+.btn-cta{background:var(--highlight);border-color:var(--highlight);color:var(--on-highlight);box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 3px 0 var(--green-900);text-shadow:0 -1px 0 rgba(0,0,0,.3)}
 .btn-cta:hover{background:#b53030;border-color:#7d1f1f}
 .btn-quiet{background:transparent;border-color:transparent;box-shadow:none}.btn-quiet:hover{background:rgba(233,220,195,.7)}.btn-quiet:active{transform:none;box-shadow:none;background:var(--beige-300)}
 .btn-danger{border-color:#8E2323;color:#8E2323;box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 3px 0 #8E2323}

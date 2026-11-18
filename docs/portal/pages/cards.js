@@ -5,7 +5,7 @@
 
   F.actions.cardPreview = function (el) {
     var p = sel.patient(el.dataset.pid);
-    U.modal(h`<h2>${sel.full(p)}'s card</h2><p class="muted small">Sample QR for the prototype. It is not scannable. Use "Open tap view" to see what a clinic sees.</p><div class="fcards">${U.cardFace(p, 'front')}${U.cardFace(p, 'back')}</div><div class="mform-actions"><button class="btn btn-primary" data-close>Done</button></div>`, { cls: 'wide', label: 'Card preview' });
+    U.modal(h`<h2>${sel.full(p)}'s card</h2><p class="muted small">This QR code opens the care team view on any phone camera. Replace card makes a new link, so a printed code stops working.</p><div class="fcards">${U.cardFace(p, 'front')}${U.cardFace(p, 'back')}</div><div class="mform-actions"><button class="btn btn-primary" data-close>Done</button></div>`, { cls: 'wide', label: 'Card preview' });
   };
   F.actions.cardIssue = function (el) {
     var p = sel.patient(el.dataset.pid);
@@ -19,6 +19,27 @@
     (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { U.toast('Tap link copied'); }, function () { U.modal(h`<h2>Tap link</h2><input type="text" readonly value="${url}" onfocus="this.select()"><div class="mform-actions"><button class="btn btn-primary" data-close>Done</button></div>`); });
   };
 
+  /* Small outline glyphs for the physical tag shapes in the pilot */
+  var GLYPH = {
+    star: '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+    cloud: '<path d="M7.5 18.5h9.8a3.7 3.7 0 0 0 .4-7.4 5.2 5.2 0 0 0-10-1A4.2 4.2 0 0 0 7.5 18.5z"/>',
+    heart: '<path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.6 4.2 4.2 0 0 1 19.5 10C19.5 15.4 12 20 12 20z"/>',
+    tag: '<rect x="3.5" y="6.5" width="17" height="11" rx="2"/><circle cx="7.5" cy="12" r="1.4"/>',
+    rounded: '<rect x="3.5" y="6.5" width="17" height="11" rx="3.5"/>'
+  };
+  function glyph(shape) { var g = GLYPH[shape]; return g ? U.raw('<svg class="shape-ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true" focusable="false">' + g + '</svg>') : ''; }
+  function cardCell(p) {
+    var id = F.Pages.cardId(p), nm = F.Pages.shapeName(p);
+    if (!id && (!nm || (p.card && p.card.status === 'unassigned'))) return '-';
+    return h`<div class="row gap-s card-shape">${glyph(p.card && p.card.shape)}<div>${id ? h`<b>${id}</b>` : ''}${nm ? h`<div class="tiny muted">${nm}</div>` : ''}</div></div>`;
+  }
+  function pilot(pts) {
+    var tagged = pts.filter(function (p) { return F.Pages.cardId(p); }).sort(function (a, b) { return F.Pages.cardId(a) < F.Pages.cardId(b) ? -1 : 1; });
+    if (!tagged.length) return '';
+    return h`<section class="sec pilot-tags" aria-labelledby="h-pilot"><div class="sec-head"><h2 id="h-pilot">Pilot tags</h2><span class="small muted">${tagged.length} physical tag${tagged.length === 1 ? '' : 's'} in the pilot</span></div>
+      <ul class="pilot-list">${tagged.map(function (p) { return h`<li>${glyph(p.card && p.card.shape)}<div class="grow"><b>${F.Pages.cardId(p)}</b> <span class="muted">${F.Pages.shapeName(p) || 'Card'}</span><div><a href="#/patients/${p.id}">${sel.full(p)}</a></div></div></li>`; })}</ul></section>`;
+  }
+
   F.Pages.cards = function () {
     /* Priority: cards to hand out first, then turned-off cards, then active cards by most recent tap */
     var ORD = { unassigned: 0, inactive: 1, active: 2 };
@@ -26,10 +47,12 @@
     return { title: 'Cards', html: h`
       ${F.Pages.head('Cards', h`Folio <em class="it">cards</em>`, 'Issue, assign, replace and turn off cards. Each card carries an unguessable link, never a patient name.')}
       <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div class="stat"><span class="eyebrow">Active cards</span><b>${active}</b></div><div class="stat"><span class="eyebrow red">Not issued</span><b>${unassigned}</b></div><div class="stat"><span class="eyebrow">Last tap</span><b style="font-size:1.6rem">${U.fmt(S.get().access.filter(function (a) { return a.how.indexOf('Card') === 0; }).map(function (a) { return a.time; }).sort().pop())}</b></div></div>
+      ${pilot(pts)}
       <div class="table-wrap sec plain" style="padding:.5rem"><table class="data"><caption class="sr">Folio cards</caption>
-      <thead><tr><th scope="col">Patient</th><th scope="col">Status</th><th scope="col">Issued</th><th scope="col">Last tap</th><th scope="col">Actions</th></tr></thead>
+      <thead><tr><th scope="col">Patient</th><th scope="col">Card</th><th scope="col">Status</th><th scope="col">Issued</th><th scope="col">Last tap</th><th scope="col">Actions</th></tr></thead>
       <tbody>${pts.map(function (p) { var c = p.card, st = ST[c.status]; return h`<tr>
-        <td><div class="row">${U.avatar(p, 34)}<div><a class="rowlink" href="#/patients/${p.id}">${sel.full(p)}</a><div class="tiny muted">${sel.fid(p.folioId)}</div></div></div></td>
+        <td><div class="row">${U.avatar(p, 34)}<div><a class="rowlink" href="#/patients/${p.id}">${sel.full(p)}</a><div class="tiny muted nowrap">Folio ID ${sel.fid(p.folioId)}</div></div></div></td>
+        <td>${cardCell(p)}</td>
         <td>${U.pill(st[0], st[1])}</td>
         <td>${c.issued ? U.fmt(c.issued) : '-'}</td><td>${c.lastTap ? U.fmt(c.lastTap) : '-'}</td>
         <td><div class="row wrap gap-s">${c.status === 'unassigned' ? h`<button class="btn btn-sm btn-primary" data-action="cardIssue" data-pid="${p.id}">Issue card</button>` : h`

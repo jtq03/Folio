@@ -29,7 +29,7 @@ h1[tabindex="-1"]:focus-visible{outline:none;box-shadow:none}
 .btn:hover{background:var(--beige-300)}.btn:active{transform:translateY(1px) scale(.98)}
 .btn-primary{background:var(--green-500);border-color:var(--green-500);color:var(--beige-100)}
 .btn-primary:hover{background:var(--green-900);border-color:var(--green-900)}
-.btn-cta{background:var(--red-500);border-color:var(--red-500);color:#fff}
+.btn-cta{background:var(--highlight);border-color:var(--highlight);color:var(--on-highlight)}
 .btn-cta:hover{background:#B53030;border-color:#B53030}
 .btn-quiet{border-color:transparent}.btn-quiet:hover{background:var(--beige-300)}
 .btn-danger{border-color:#8E2323;color:#8E2323}
