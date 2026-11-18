@@ -45,9 +45,17 @@
     var stepper = h`<ol class="stepper" aria-label="Visit steps">${steps.map(function (s, i) { var n = i + 1; return h`<li class="${n < v.step ? 'done' : ''}" ${n === v.step ? h`aria-current="step"` : ''}><b>${n < v.step ? '✓' : n}</b>${s}</li>`; })}</ol>`;
     var body;
     if (v.step === 1) {
+      /* v3: the teen's self-check from app setup, shown as their view. It never sets a status (teen and clinician ratings only weakly agree). */
+      /* v5: the readiness check. Each skill shows the teen's view (the middle of 3 answers) and the answers behind it. */
+      var sc = p.selfCheck && p.selfCheck.skills ? p.selfCheck : null, VIEW = F.CHECK_WORD, chk = (p.checks || []).length ? p.checks[p.checks.length - 1] : null;
       body = h`<h2>Review skills at Level ${p.level}</h2><p class="muted">Ask ${p.first} to show you, then set where each skill is today. Changes save as you go. On my own means ${p.first} does it without being reminded.</p>
-        ${F.SKILLS.map(function (s) { return h`<div class="visit-skill"><div><b>${s.name}</b><div class="small muted">${s.sub}</div></div>
+        ${p.questions.length ? h`<div class="vq"><div class="eyebrow">${p.first}'s questions for this visit</div><ul>${p.questions.map(function (x) { return h`<li>${x}</li>`; })}</ul></div>` : ''}
+        ${(p.goals || []).length ? h`<div class="vq"><div class="eyebrow">${p.first}'s goals</div><ul>${p.goals.map(function (g) { var q = F.checkItem(g.id); return q ? h`<li>${q.goal} <span class="muted small">· ${g.done.filter(Boolean).length} of 3 steps done</span></li>` : ''; })}</ul></div>` : ''}
+        ${sc ? h`<div class="notice">${ic('info')}<span>${p.first} did ${chk ? 'the readiness check' : 'a self-check'} on ${U.fmtFull(sc.date)}. Their view is under each skill as a starting point for the conversation. It does not set a status.</span></div>` : h`<div class="notice">${ic('info')}<span>${p.first} has not done the readiness check yet. It takes about 3 minutes in the app.</span></div>`}
+        ${F.SKILLS.map(function (s) { return h`<div class="visit-skill"><div><b>${s.name}</b><div class="small muted">${s.sub}</div>${sc && sc.skills[s.id] ? h`<div class="selfview small">${p.first}'s view: <b>${VIEW[sc.skills[s.id]]}</b></div>` : ''}
+          ${chk ? h`<details class="ck-detail small"><summary>${p.first}'s answers</summary><ul>${F.CHECK.filter(function (q) { return q.skill === s.id; }).map(function (q) { return h`<li>${q.q} <b>${chk.answers[q.id] ? VIEW[chk.answers[q.id]] : 'Skipped'}</b></li>`; })}</ul></details>` : ''}</div>
           <div class="seg" role="group" aria-label="${s.name} status">${['learning', 'help', 'own'].map(function (k) { return h`<button data-action="vskill" data-pid="${p.id}" data-sid="${s.id}" data-v="${k}" aria-pressed="${String(p.skills[s.id] === k)}">${F.SKILL_STATUS[k]}</button>`; })}</div></div>`; })}
+        <div class="vmeds"><div><b>Medications and allergies</b><div class="small muted">${p.medsConfirmed ? 'Last confirmed ' + U.fmtFull(p.medsConfirmed.date) + ' by ' + p.medsConfirmed.by : 'Not confirmed yet'}${sel.medsStale(p) ? '. Adult doctors see a "may be out of date" note until it is confirmed.' : '.'}</div></div><button class="btn btn-sm ${sel.medsStale(p) ? 'btn-primary' : ''}" data-action="confirmMeds" data-pid="${p.id}">${ic('check', 16)} ${sel.medsStale(p) ? 'Confirm with ' + p.first : 'Confirm again'}</button></div>
         <div class="row between" style="margin-top:1.25rem"><span class="muted">${own} of 5 on their own · ${req} needed to advance</span><button class="btn btn-primary" data-action="vstep" data-v="2">Next: decide ${ic('arrow', 16)}</button></div>`;
     } else if (v.step === 2) {
       var meets = own >= req, needOverride = v.mode === 'advance' && !meets;

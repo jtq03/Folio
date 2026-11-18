@@ -41,7 +41,7 @@
     U.formModal({ title: 'Who helps with big decisions?', lead: 'Shows in the adult view as "Make big decisions: with help". Leave the name empty if ' + p.first + ' decides alone.', fields: [{ name: 'name', label: 'Name', value: d0.name }, { name: 'rel', label: 'Relationship', value: d0.rel, ph: 'Mother, sibling, partner, support worker' }],
       onSubmit: function (d) { A.setDecisionSupport(p.id, d); U.toast('Saved'); } });
   };
-  F.actions.confirmMeds = function (el) { var p = sel.patient(el.dataset.pid); A.confirmMeds(p.id); U.toast('Medication list confirmed. Adult doctors see today\'s date.'); };
+  F.actions.confirmMeds = function (el) { var p = sel.patient(el.dataset.pid); A.confirmMeds(p.id); U.toast('Medications and allergies confirmed. Adult doctors see today\'s date.'); };
   F.actions.saveHandoff = function (d) {
     var p = sel.patient(d.pid); A.saveHandoff(p.id, d, !!d.final);
     U.toast(d.final ? 'Handoff note shared. Adult teams see it when ' + p.first + ' taps the card.' : 'Handoff draft saved. Adult teams do not see drafts.');
@@ -55,23 +55,25 @@
     U.confirmModal({ title: 'Remove this?', body: 'You can add it again later.', cta: 'Remove', danger: true, onOk: function () { A.remove(el.dataset.pid, el.dataset.list, el.dataset.id); U.toast('Removed'); } });
   };
 
+  /* Priority order for a visit: the teen's own questions, skills, medications and allergies. Context and level reference after. */
   function overview(p) {
     var L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null;
     return h`
     <div class="grid2">
       <div class="stack">
-        <section class="sec"><div class="eyebrow">Level ${p.level} of 10 · ${L.name}</div>
-          ${U.stairs(p.level)}
-          <dl class="kv"><dt>Who leads</dt><dd>${L.leads}</dd><dt>I can</dt><dd>${L.can}</dd><dt>Evidence</dt><dd>${L.evidence}</dd><dt>Unlocks</dt><dd>${L.unlocks}</dd></dl>
-          <p class="small muted" style="margin-top:1rem">${p.levelSignoff ? 'Signed off Level ' + p.levelSignoff.level + ' by ' + p.levelSignoff.by + ', ' + U.fmtFull(p.levelSignoff.date) + '.' : ''} ${nx ? 'Next: Level ' + nx.n + ', ' + nx.name + '.' : 'Final level.'}</p>
-        </section>
+        <section class="sec"><h2>In ${p.first}'s words</h2>
+          ${p.summary3 ? h`<div class="eyebrow" style="margin:.75rem 0 .25rem">${p.first}'s diabetes in 3 sentences</div><div class="s3-quote"><p>${[p.summary3.s1, p.summary3.s2, p.summary3.s3].filter(Boolean).join(' ')}</p></div>` : ''}
+          ${p.questions.length ? h`<div class="eyebrow" style="margin:.75rem 0 .25rem">Questions for this visit</div><ul>${p.questions.map(function (x) { return h`<li>${x}</li>`; })}</ul>` : h`<p class="small muted">No questions added for this visit.</p>`}
+          <div class="eyebrow" style="margin:.75rem 0 .25rem">What I want my doctor to know</div><p>${p.wantDoctorKnow}</p></section>
         <section class="sec"><div class="sec-head"><h2>Skills at this level</h2><a class="btn btn-sm btn-primary" href="#/visit/${p.id}">Start visit</a></div>
-          ${F.SKILLS.map(function (s) { return h`<div class="skillrow"><div class="nm"><b>${s.name}</b><span class="small muted">${s.sub}</span></div>${U.skillPill(p.skills[s.id])}</div>`; })}
-          <p class="small muted">Skills are signed off in person during a visit.</p>
+          ${F.SKILLS.map(function (s) { return h`<div class="skillrow"><div class="nm"><b>${s.name}</b><span class="small muted">${s.sub}</span>${p.selfCheck && p.selfCheck.skills && p.selfCheck.skills[s.id] ? h`<span class="selfview small">${p.first}'s view: <b>${F.CHECK_WORD[p.selfCheck.skills[s.id]]}</b></span>` : ''}</div>${U.skillPill(p.skills[s.id])}</div>`; })}
+          <p class="small muted">Skills are signed off in person during a visit.${p.selfCheck ? ' ' + p.first + '\'s view is from their readiness check on ' + U.fmtFull(p.selfCheck.date) + '.' : ''}</p>
+          ${(p.goals || []).length ? h`<div class="vq" style="margin-top:.75rem"><div class="eyebrow">${p.first}'s goals</div><ul>${p.goals.map(function (g) { var q = F.checkItem(g.id); return q ? h`<li>${q.goal} <span class="muted small">· ${g.done.filter(Boolean).length} of 3 steps done</span></li>` : ''; })}</ul></div>` : ''}
           ${legend()}
         </section>
-        <section class="sec"><div class="sec-head"><h2>Medications and supplies</h2>${sel.medsStale(p) ? U.pill('May be out of date', 'attn') : U.pill('Confirmed', 'green')}</div>
+        <section class="sec"><div class="sec-head"><h2>Medications, supplies and allergies</h2>${sel.medsStale(p) ? U.pill('May be out of date', 'attn') : U.pill('Confirmed', 'green')}</div>
           ${(p.meds || []).length ? h`<ul class="card-list">${p.meds.map(function (m) { return h`<li><div class="grow"><b>${m.name}</b><div class="small muted">${m.kind === 'supply' ? 'Supply' : 'Medication'}${m.detail ? ' · ' + m.detail : ''}</div></div></li>`; })}</ul>` : U.empty('No list yet', p.first + ' adds medications and supplies in the app.')}
+          <p style="margin:.75rem 0 0"><b>Allergies:</b> ${(p.allergies || []).length ? p.allergies.map(function (a) { return a.name + (a.reaction ? ' (' + a.reaction.toLowerCase() + ')' : ''); }).join(', ') : p.noAllergies ? 'No known allergies' : 'Not recorded yet. Ask ' + p.first + ' at the next visit.'}</p>
           <div class="row between wrap" style="margin-top:.75rem"><span class="small muted">${p.medsConfirmed ? 'Last confirmed ' + U.fmtFull(p.medsConfirmed.date) + ' by ' + p.medsConfirmed.by + '.' : 'Not confirmed yet.'} ${p.first} keeps this list in the app. Adult doctors see it first.</span><button class="btn btn-sm btn-primary" data-action="confirmMeds" data-pid="${p.id}">${ic('check', 16)} Confirm list</button></div>
         </section>
       </div>
@@ -85,8 +87,11 @@
           ${(p.supportThisVisit || []).length ? '' : U.empty('Nothing added', 'Add how a new clinician can help ' + p.first + ' in a visit.')}
           <div class="row between wrap" style="margin-top:.75rem"><span><b>Big decisions:</b> ${p.decisionSupport ? 'with help from ' + p.decisionSupport.name + (p.decisionSupport.rel ? ', ' + p.decisionSupport.rel.toLowerCase() : '') : 'on their own'}</span><button class="btn btn-sm" data-action="editDecision" data-pid="${p.id}">${ic('edit', 16)} Edit</button></div>
         </section>
-        <section class="sec"><h2>In ${p.first}'s words</h2><div class="eyebrow" style="margin:.75rem 0 .25rem">What I want my doctor to know</div><p>${p.wantDoctorKnow}</p>
-          ${p.questions.length ? h`<div class="eyebrow" style="margin:.75rem 0 .25rem">Questions for this visit</div><ul>${p.questions.map(function (x) { return h`<li>${x}</li>`; })}</ul>` : ''}</section>
+        <section class="sec"><div class="eyebrow">Level ${p.level} of 10 · ${L.name}</div>
+          ${U.stairs(p.level)}
+          <details class="lvl-more"><summary>What this level means</summary><dl class="kv"><dt>Who leads</dt><dd>${L.leads}</dd><dt>I can</dt><dd>${L.can}</dd><dt>Evidence</dt><dd>${L.evidence}</dd><dt>Unlocks</dt><dd>${L.unlocks}</dd></dl></details>
+          <p class="small muted" style="margin-top:1rem">${p.levelSignoff ? 'Signed off Level ' + p.levelSignoff.level + ' by ' + p.levelSignoff.by + ', ' + U.fmtFull(p.levelSignoff.date) + '.' : ''} ${nx ? 'Next: Level ' + nx.n + ', ' + nx.name + '.' : 'Final level.'}</p>
+        </section>
       </div>
     </div>`;
   }
@@ -110,7 +115,7 @@
     return h`
     <div class="grid2" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
       <section class="sec"><h2>Notes</h2><p class="small muted">Labelled by who wrote them. ${p.first} sees every note. ${p.first} decides who else does.</p>
-        ${sel.notesFor(p).map(function (n) { return h`<article class="note ${n.role}"><div class="meta"><b>${n.kind}</b>${n.draft ? U.pill('Draft', 'blue') : ''}${n.shared ? U.pill('Shown to future care teams', 'green') : U.pill('Not shared onward', 'neutral')}<span class="muted">${n.author} · ${ROLE[n.role]} · ${U.fmt(n.date)}</span></div><p style="margin:0">${n.text}</p>${n.fields ? handoffDl(n.fields) : ''}</article>`; })}
+        ${sel.notesFor(p).map(function (n) { return h`<article class="note ${n.role}"><div class="meta"><b>${n.kind}</b>${n.draft ? U.pill('Draft', 'blue') : ''}${n.shared ? U.visChip('future') : U.visChip('team', 'Maya + care team'.replace('Maya', p.first))}<span class="muted">${n.author} · ${ROLE[n.role]} · ${U.fmt(n.date)}</span></div><p style="margin:0">${n.text}</p>${n.fields ? handoffDl(n.fields) : ''}</article>`; })}
       </section>
       <section class="sec"><h2>Add a note</h2>
         <form data-submit="addNote"><input type="hidden" name="pid" value="${p.id}">

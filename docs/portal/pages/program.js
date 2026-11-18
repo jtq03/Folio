@@ -19,7 +19,7 @@
     var cfg = S.get().program, pts = S.get().patients;
     return { title: 'Levels and skills', html: h`
       ${F.Pages.head('Program', h`Levels and <em class="it">skills</em>`, 'How a program configures levels and skill checklists. Each condition is a package.', h`<button class="btn" data-action="exportLevels">Export CSV</button>`)}
-      <div class="pkg" role="group" aria-label="Condition packages" style="margin-bottom:1.25rem"><button class="chip" aria-pressed="true">Type 1 diabetes</button><button class="chip" disabled>Asthma · soon</button><button class="chip" disabled>Epilepsy · soon</button><button class="chip" disabled>Cystic fibrosis · soon</button></div>
+      <div class="pkg" role="group" aria-label="Condition packages" style="margin-bottom:1.25rem"><button class="chip" aria-pressed="true">Type 1 diabetes</button></div>
       <div class="grid2" style="margin-bottom:1.5rem">
         <section class="sec"><h2>Rules for moving up</h2>
           <div class="setting"><div><label for="rq" style="margin:0">Skills needed to advance</label><p>Out of 5 skill areas.</p></div><select id="rq" style="width:auto" data-change="progReq">${[3, 4, 5].map(function (n) { return h`<option ${n === cfg.requiredSkills ? 'selected' : ''}>${n}</option>`; })}</select></div>

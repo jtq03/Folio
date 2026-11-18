@@ -87,7 +87,7 @@
   F.fx.after = function (root, loc, isNav) {
     bubble(root);
     if (!isNav) return;
-    if (loc.path === '/') countUp(root);
+    /* Count-up removed: it showed wrong numbers (0) for the first second, and clinicians read these at a glance */
     finale(root);
   };
 })(window.Folio);
