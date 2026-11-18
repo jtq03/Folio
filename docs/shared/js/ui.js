@@ -289,8 +289,8 @@
   F.UI.cardFace = function (p, side) {
     var c = p.card || {}, cls = 'fcard ' + side + ' ' + (c.shape || 'rounded') + (c.status === 'inactive' ? ' inactive' : '');
     /* v4 card: Green 800, cream wordmark, contactless mark, a Blue 300 circle, the name and a large Folio ID */
-    if (side === 'front') return h`<div class="${cls}"><span class="fc-circle" aria-hidden="true"></span><div class="fc-top"><span class="fc-brand">${wordmark('', true)}</span><span class="fc-nfc">${ic('nfc', 20)}</span></div><div class="fc-bottom"><div class="fc-name">${p.first} ${p.last}</div><div class="fc-id">${F.Store.sel.fid(p.folioId)}</div><div class="fc-tag">Folio ID</div></div></div>`;
-    return h`<div class="${cls}"><div class="qrbox">${qr(c.token || p.folioId, 200)}</div><div class="fc-right"><h4>Tap or scan</h4><p><b>TAP</b> Hold the card to a phone (NFC chip inside)</p><p><b>SCAN</b> Point a camera at the code</p><p><b>TYPE</b> folio.example/id and the number on the front</p></div></div>`;
+    if (side === 'front') return h`<div class="${cls}"><span class="fc-circle" aria-hidden="true"></span><div class="fc-top"><span class="fc-brand">${wordmark('', true)}</span><span class="fc-nfc">${ic('nfc', 20)}</span></div><div class="fc-bottom"><div class="fc-name">${p.first} ${p.last}</div><div class="fc-id">${F.Store.sel.fid(p.folioId)}</div><div class="fc-tag">Folio ID${p.cardId ? ' · Card ' + String(p.cardId).toUpperCase() : ''}</div></div></div>`;
+    return h`<div class="${cls}"><div class="qrbox">${qr(c.token || p.folioId, 200)}</div><div class="fc-right"><h4>Tap or scan</h4><p><b>TAP</b> Hold the card to a phone (NFC chip inside)</p><p><b>SCAN</b> Point a camera at the code</p><p><b>TYPE</b> folio.example/id and the number on the front${p.cardId ? ', or ' + String(p.cardId).toUpperCase() : ''}</p></div></div>`;
   };
   F.root = new URL('../../', ROOT_SRC).href;
   F.cardUrl = function (token) { return F.root + 'card/?t=' + encodeURIComponent(token); };

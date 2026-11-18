@@ -9,9 +9,15 @@
 
   /* v3 first run: one welcome card per person, shown once. No tour (tutorials did not help in NN/g testing).
      It leads with "no extra form" (P1) and gives one real thing to try. */
-  var WKEY = 'folio.portal.welcomed';
-  function welcomed(id) { try { return (JSON.parse(localStorage.getItem(WKEY) || '[]')).indexOf(id) >= 0; } catch (e) { return true; } }
-  F.actions.welcomeDone = function () { var me = sel.me(); try { var l = JSON.parse(localStorage.getItem(WKEY) || '[]'); if (l.indexOf(me.id) < 0) l.push(me.id); localStorage.setItem(WKEY, JSON.stringify(l)); } catch (e) {} F.rerender(false); };
+  /* Remembered per device in localStorage through F.Mem (portal/memory.js). Log out forgets it. */
+  function welcomed(id) { return F.Mem ? F.Mem.welcomed(id) : false; }
+  F.actions.welcomeDone = function () {
+    if (F.Mem) F.Mem.markWelcomed(sel.me().id);
+    F.rerender(false);
+    /* The button is gone, so keep keyboard focus at the top of the page instead of dropping it on the body */
+    var h1 = document.querySelector('#main h1'); if (h1) { h1.setAttribute('tabindex', '-1'); h1.focus({ preventScroll: true }); }
+    F.UI.toast('Welcome card hidden on this device. Log out to see it again.');
+  };
   var ROLE_TIPS = {
     Admin: ['Check skills with the teen in Visit mode. Changes save as you go.', 'Sign off a level in person. The teen sees it in their app right away.', 'When a teen is ready to move, write the handoff note once. It goes with their card.', 'As an admin you also manage the team, cards and program settings.'],
     Clinician: ['Check skills with the teen in Visit mode. Changes save as you go.', 'Sign off a level in person. The teen sees it in their app right away.', 'When a teen is ready to move, write the handoff note once. It goes with their card.'],
@@ -25,7 +31,7 @@
       <h2 id="wc-h">Welcome to Folio, ${me.name.replace(/^Dr\. [A-Z]\. /, 'Dr. ')}</h2>
       <p class="lead">Folio records the readiness check you already do. It does not add a form.</p>
       <ul class="wc-tips">${tips.map(function (t) { return h`<li>${ic('check', 16)}<span>${t}</span></li>`; })}</ul>
-      <div class="row wrap" style="gap:.6rem;margin-top:1rem">${coord ? h`<a class="btn btn-primary" href="#/cards">Hand out a card</a>` : h`<a class="btn btn-primary" href="#/visit/p1">Practise on a sample patient</a>`}<button class="btn" data-action="welcomeDone">Got it</button></div>
+      <div class="row wrap" style="gap:.6rem;margin-top:1rem">${coord ? h`<a class="btn btn-primary" href="#/cards">Hand out a card</a>` : h`<a class="btn btn-primary" href="#/visit/p1">Practise on a sample patient</a>`}<button class="btn" data-action="welcomeDone" aria-describedby="wc-h">Got it</button></div>
       <p class="small muted" style="margin:.75rem 0 0">${coord ? 'Eli T. is enrolled and still needs a card.' : 'Maya R. is a sample patient. Reset the demo data in Settings any time.'}</p></section>`;
   }
 

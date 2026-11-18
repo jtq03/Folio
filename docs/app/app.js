@@ -444,7 +444,24 @@
   F.actions.a11yApp = function (el) { S.a11y.set(el.dataset.k, el.checked ? el.dataset.on : el.dataset.off); };
   F.actions.install = function () { if (deferred) { deferred.prompt(); deferred = null; render(false); } };
   /* v3: the first-run welcome (welcome.js) signs a teen in on this device */
-  F.app = { setPatient: function (id) { try { localStorage.setItem(PKEY, id); } catch (e) {} cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {}; if (location.hash && location.hash !== '#/') history.replaceState(null, '', '#/'); render('swap'); }, me: function () { return me(); } };
+  /* Log out: stop pending work, close every sheet and menu at once, forget the device setup, rebuild Home underneath
+     with no animation, then show the welcome. Nothing reloads, so the service worker and the install are untouched. */
+  function signOut() {
+    saveWantNow(); clearTimeout(wantTimer); wantTimer = null; wantDirty = false;
+    sheets.forEach(function (r) { r.closed = true; if (r.wrap) r.wrap.remove(); }); sheets = [];
+    try { N.closeSwipes(); } catch (e) {} try { if (N.contextOpen && N.contextOpen()) N.closeContext(); } catch (e) {}
+    try { if (window.FolioIntro && FolioIntro.playing) FolioIntro.skip(); } catch (e) {}
+    try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) {}
+    if (F.Welcome && F.Welcome.open) F.Welcome.close();
+    if (F.Session) F.Session.clear();
+    F.ui.freshNotes = []; cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {};
+    if (location.hash && location.hash !== '#/') history.replaceState(null, '', location.pathname + location.search + '#/');
+    var boxT = document.getElementById('toasts'); if (boxT) [].forEach.call(boxT.querySelectorAll('.toast:not(.ios-update)'), function (t) { t.remove(); });
+    render('swap');
+    if (cur) cur.el.scrollTop = 0;
+    if (F.Welcome) F.Welcome.start(false);
+  }
+  F.app = { signOut: signOut, setPatient: function (id) { try { localStorage.setItem(PKEY, id); } catch (e) {} cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {}; if (location.hash && location.hash !== '#/') history.replaceState(null, '', '#/'); render('swap'); }, me: function () { return me(); } };
   F.actions.asPatient = function (el) { saveWantNow(); try { localStorage.setItem(PKEY, el.value); } catch (e) {} cardFile = null; lvlFile = null; tabMem = {}; scrollMem = {}; tabMem['/about'] = '/about';
     /* Patch in place: keep the scroll position and focus, and do not replay entrance animations */
     var keep = N.scrollSnapshot(); render(false); keep(); el.blur && el.blur(); U.toast('Now viewing as ' + sel.full(me())); };
@@ -502,7 +519,7 @@
       <div class="ios-profile" data-rise>
         <span class="ios-av-hero">${U.avatar(p, 116)}<button type="button" class="ios-av-badge" data-action="pickAvatar" aria-label="Change profile photo">${xi('camera', 22)}</button></span>
         <h1 tabindex="-1">${sel.full(p)}</h1>
-        <div class="meta">Age ${p.age} · Folio ID ${sel.fid(p.folioId)}</div>
+        <div class="meta">Age ${p.age} · Folio ID ${sel.fid(p.folioId)}${p.cardId ? h` · <span class="nw">Card ${sel.cardId(p)}</span>` : ''}</div>
         <span class="ios-chip">${xi('heart', 16)} ${p.condition}</span>
         <p class="ios-cap" style="margin-top:8px">Diagnosis is set by your clinic.</p>${F.fx ? raw(F.fx.nickRow(p)) : ''}
       </div>
@@ -540,9 +557,14 @@
           ${F.Plant ? h`<h3 class="ios-gh" style="margin:14px 4px 8px"><span>How Folio shows your progress</span></h3><div class="ios-seg" role="group" aria-label="How Folio shows your progress" style="--n:3;--i:${Math.max(0, ['plant', 'stickers', 'bar'].indexOf(F.Plant.mode()))}">${['plant', 'stickers', 'bar'].map(function (m) { return h`<button type="button" data-action="motiv" data-v="${m}" aria-pressed="${String(F.Plant.mode() === m)}">${F.Plant.MODES[m]}</button>`; })}</div>` : ''}
           <p class="ios-gf">Text size follows your iPhone's Display and Text Size setting. Switch progress style any time.</p></section>
         ${standalone ? '' : h`<section class="ios-sec" aria-labelledby="i-h"><h2 class="ios-gh" id="i-h">${tile(ic('plus', 18), 3, true)}<span>Add Folio to your home screen</span></h2><div class="ios-list"><div class="ios-row has-tile">${tile(shareSvg, 1)}<span class="ios-rt"><b>${N.ios ? 'In Safari, tap Share, then Add to Home Screen' : 'Install it like an app'}</b><small>${N.ios ? 'On iOS 26, Share is in the ··· menu. ' : ''}Folio then opens full screen and works offline.</small></span></div>${deferred ? h`<button type="button" class="ios-row ios-addrow" data-action="install"><b>Install Folio</b></button>` : ''}</div></section>`}
+        <section class="ios-sec fm-acct" aria-labelledby="acct-h"><h2 class="ios-gh" id="acct-h">${tile(ic('lock', 18), 3, true)}<span>Account</span></h2>
+          <div class="ios-list"><div class="ios-row fm-who">${U.avatar(p, 44)}<span class="ios-rt"><b>Signed in as ${sel.full(p)}</b><small>On this ${N.ios ? 'iPhone' : 'device'} · Folio ID ${sel.fid(p.folioId)}${p.cardId ? ' · Card ' + sel.cardId(p) : ''}</small></span></div>
+            <button type="button" class="ios-row destructive fm-logout" data-action="logOut"><span class="ios-rt"><b>Log out</b></span></button></div>
+          <p class="ios-gf">Folio remembers you on this ${N.ios ? 'iPhone' : 'device'} until you log out. Logging out brings back the welcome so someone else can set up. Your clinic keeps your Folio.</p></section>
         <section class="ios-sec" aria-labelledby="d-h"><h2 class="ios-gh" id="d-h"><span>Prototype</span></h2>
           <div class="ios-list"><label class="ios-row ios-selrow"><span class="ios-rt"><b>View the app as</b></span><select class="ios-select" data-change="asPatient" aria-label="View the app as">${st.patients.map(function (x) { return h`<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${sel.full(x)} · L${x.level}</option>`; })}</select>${raw('<svg class="ios-chev" width="12" height="18" viewBox="0 0 12 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7l4-4 4 4M2 11l4 4 4-4"/></svg>')}</label></div>
-          <div class="ios-list" style="margin-top:12px"><button type="button" class="ios-row" data-action="replayWelcome"><span class="ios-rt"><b>Show the welcome again</b><small>Run first-time setup as a teen or a parent</small></span>${CHEV}</button></div>
+          <div class="ios-list" style="margin-top:12px"><button type="button" class="ios-row" data-action="replayWelcome"><span class="ios-rt"><b>Show the welcome again</b><small>Run first-time setup as a teen or a parent</small></span>${CHEV}</button>
+            <button type="button" class="ios-row" data-action="resetDemoApp"><span class="ios-rt"><b class="destr">Reset demo data</b><small>Every person, note and card goes back to the start. You stay signed in.</small></span></button></div>
           <div class="ios-list" style="margin-top:12px" ${debugOn() ? '' : 'hidden'}><button type="button" class="ios-row" data-action="hapticLab"><span class="ios-rt"><b>Haptics test</b><small>Check which taps make your phone tick</small></span>${CHEV}</button></div>
           <p class="ios-gf">Demo only. Switch patient to try other levels.</p></section>
       </div>` };
@@ -644,7 +666,7 @@
     if (!rec || rec.closed) return; rec.closed = true;
     if (rec.dragged) { rec.sheet.style.transition = 'transform .24s cubic-bezier(.3,0,.8,.15)'; rec.sheet.style.transform = 'translateY(100%)'; }
     rec.wrap.classList.add('out'); if (rec.onClose) { try { rec.onClose(); } catch (e) {} }
-    var nt = topSheet(); if (nt) nt.wrap.removeAttribute('inert'); else appEl.removeAttribute('inert');
+    var nt = topSheet(); if (nt) nt.wrap.removeAttribute('inert'); else if (!(F.Welcome && F.Welcome.open)) appEl.removeAttribute('inert');
     setTimeout(function () {
       rec.wrap.remove(); sheets = sheets.filter(function (r) { return r !== rec; });
       if (rec.prev && document.body.contains(rec.prev) && !rec.prev.closest('[inert]')) { var keep = N.scrollSnapshot(); try { rec.prev.focus({ preventScroll: true }); } catch (e) {} keep(); }
@@ -913,6 +935,16 @@
   F.actions.motiv = function (el) { if (!F.Plant) return; F.Plant.setMode(el.dataset.v); N.haptic('light'); U.toast('Progress style: ' + F.Plant.MODES[el.dataset.v]); };
   F.actions.parentShare = function (el) { var p = me(), on = el.checked; A.setParentShare(p.id, el.dataset.k, on); U.toast(on ? 'Your parent can now see this' : 'Hidden from your parent'); };
   F.actions.replayWelcome = function () { if (F.Welcome) F.Welcome.start(true); };
+  /* ---------- Log out (session.js keeps the list of what this phone remembers) ---------- */
+  F.actions.logOut = function () {
+    N.haptic('warning');
+    U.confirmModal({ title: 'Log out of Folio on this device?', body: 'Setup, the person you connected and your check answers are cleared from this phone. The welcome starts again.', cta: 'Log Out', danger: true,
+      onOk: function () { F.app.signOut(); } });
+  };
+  F.actions.resetDemoApp = function () {
+    U.confirmModal({ title: 'Reset demo data?', body: 'Every person, note, card and check goes back to the starting demo on this device. You stay signed in.', cta: 'Reset Demo Data', danger: true,
+      onOk: function () { saveWantNow(); S.reset(); cardFile = null; lvlFile = null; render('swap'); U.toast('Demo data reset'); } });
+  };
 
   /* =====================================================================
      Router and persistent shell

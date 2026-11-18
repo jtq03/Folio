@@ -51,6 +51,18 @@
         (p.meds || []).forEach(function (m) { var fm = fromSeed.meds.filter(function (x) { return x.id === m.id; })[0]; if (fm && fm.refill && !m.refill) m.refill = fm.refill; });
       });
     }
+    /* v6 trade-show update, safe to run on every load: add the four people with printed Folio tags (FO-1001 to FO-1004)
+       if this saved copy does not have them yet. Nothing already saved is changed or removed. */
+    if (Array.isArray(st.patients)) {
+      F.SEED.patients.forEach(function (sp) {
+        if (!sp.cardId) return;
+        var have = st.patients.filter(function (x) { return x.id === sp.id; })[0];
+        if (!have) { if (!st.patients.some(function (x) { return x.cardId === sp.cardId; })) st.patients.push(JSON.parse(JSON.stringify(sp))); }
+        else if (!have.cardId && have.first === sp.first && have.last === sp.last) have.cardId = sp.cardId;
+      });
+      if (Array.isArray(st.access) && Array.isArray(F.SEED.access)) F.SEED.access.forEach(function (a) { if (a.pid && /^p(8|9|10|11)$/.test(a.pid) && !st.access.some(function (x) { return x.id === a.id; })) st.access.push(JSON.parse(JSON.stringify(a))); });
+      st.mig.v6 = true;
+    }
     if (Array.isArray(st.resources)) {
       st.resources = st.resources.map(function (r) {
         var fresh = F.SEED.resources.filter(function (x) { return x.id === r.id; })[0];
@@ -90,7 +102,19 @@
   var sel = {
     patient: function (id) { return state.patients.filter(function (p) { return p.id === id; })[0]; },
     byToken: function (t) { return state.patients.filter(function (p) { return p.card && p.card.token && p.card.token === t && p.card.status === 'active'; })[0]; },
-    byFolioId: function (q) { q = String(q).replace(/\D/g, ''); return state.patients.filter(function (p) { return p.folioId === q; })[0]; },
+    /* Older callers pass the 8-digit Folio ID. It now also accepts a printed card code (FO-1004), so every lookup is forgiving. */
+    byFolioId: function (q) { return sel.byAnyId(q); },
+    /* Either id type, typed any way: '8314 0572', '83140572', 'FO-1004', 'fo 1004', 'fo1004', ' FO-1004 ', or just '1004'. */
+    byAnyId: function (q) {
+      var s = String(q == null ? '' : q).toUpperCase().replace(/[\s\-_.\u2010-\u2015\u2212]/g, '');
+      if (!s) return undefined;
+      var m = s.match(/^F[O0](\d{3,6})$/); /* FO, or F and a zero typed by mistake */
+      if (!/[A-Z]/.test(s) && s.replace(/\D/g, '').length === 8) s = s.replace(/\D/g, '');
+      if (/^\d{8}$/.test(s)) return state.patients.filter(function (p) { return p.folioId === s; })[0];
+      var code = m ? m[1] : /^\d{3,6}$/.test(s) ? s : '';
+      if (!code) return undefined;
+      return state.patients.filter(function (p) { return p.cardId && String(p.cardId).replace(/\D/g, '') === code; })[0];
+    },
     level: function (n) { return F.LEVELS[Math.min(Math.max(n, 1), 10) - 1]; },
     ownCount: function (p) { return F.SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; }).length; },
     me: function () { return state.team.filter(function (u) { return u.id === state.me; })[0]; },
@@ -115,6 +139,8 @@
       var since = p.levelSignoff ? p.levelSignoff.date : '';
       return ev.filter(function (e) { return e.type !== 'signOff' && (!since || e.date >= since); }).length;
     },
+    /* The printed tag code, written the way it is on the card: FO-1004 */
+    cardId: function (p) { return p && p.cardId ? String(p.cardId).toUpperCase() : ''; },
     fid: function (id) { return String(id).replace(/(\d{4})(\d{4})/, '$1 $2'); },
     full: function (p) { return p.first + ' ' + p.last; },
     notesFor: function (p, audience) {
@@ -289,6 +315,22 @@
         var p = sel.patient(pid), ev = (p.plant && p.plant.events) || [];
         if (ev.some(function (e) { return e.label === label && e.date === today(); })) return false;
         grow(p, 'practice', label); return true;
+      });
+    },
+    /* Log out on a demo phone: put back what first-run setup wrote for this person (nickname, readiness checks, goals),
+       from the seed, so the next person sees setup fresh. Everything else (notes, cards, visits) is kept. */
+    clearSetup: function (pid) {
+      commit(function () {
+        var p = sel.patient(pid); if (!p) return;
+        var sp = F.SEED.patients.filter(function (x) { return x.id === pid; })[0];
+        var copy = function (k, d) { return sp && sp[k] !== undefined ? JSON.parse(JSON.stringify(sp[k])) : d; };
+        p.nickname = copy('nickname', '');
+        p.checks = copy('checks', []); p.goals = copy('goals', []); p.selfCheck = copy('selfCheck', null);
+        if (p.checks.length && !p.selfCheck) { var lc = p.checks[p.checks.length - 1]; p.selfCheck = { skills: lc.skills, date: lc.date }; }
+        if (p.plant && Array.isArray(p.plant.events)) {
+          var keep = sp && sp.plant ? sp.plant.events.map(function (e) { return e.id; }) : [];
+          p.plant.events = p.plant.events.filter(function (e) { return e.type !== 'check' || keep.indexOf(e.id) >= 0; });
+        }
       });
     },
     setTaskDue: function (pid, id, iso) { commit(function () { var t = (sel.patient(pid).careTasks || []).filter(function (x) { return x.id === id; })[0]; if (t) t.due = iso || ''; }); },

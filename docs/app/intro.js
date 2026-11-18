@@ -1,4 +1,4 @@
-/* Folio opening intro. Plays once per app session (cold launch or new tab), tap anywhere to skip.
+/* Folio opening intro. Plays on every app launch (cold launch or new tab, not a reload), tap anywhere to skip.
    Independent of app.js and docs/shared: it only reads brand colours, and calls Folio.native.haptic if present.
    The first frame is the iOS launch image redrawn live, then the deck is tossed and rebuilt card by card,
    the star pops in, the wordmark is written, and the sheet turns like a page to reveal the app underneath.
@@ -18,10 +18,12 @@
   function reduced() {
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.getAttribute('data-motion') === 'reduce'; } catch (e) { return false; }
   }
-  /* Once per device, not once per session: people opening Folio several times a day do not need to watch it again.
-     Add ?intro=1 to the address to replay it for a demo. */
-  function seen() { try { if (/[?&]intro=1/.test(location.search)) return false; return localStorage.getItem(KEY) === '1' || sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
-  function markSeen() { try { localStorage.setItem(KEY, '1'); sessionStorage.setItem(KEY, '1'); } catch (e) {} }
+  /* Once per app launch: every cold open of the installed app (or a new tab) plays it, a reload in the same session
+     does not. sessionStorage only, because iOS wipes it when the app is closed or killed and keeps it while the app is
+     just in the background. Older builds kept a once-per-device flag in localStorage: it is ignored and removed.
+     Add ?intro=1 to the address to force it. Tap anywhere skips it; Reduce Motion gets a calm fade. */
+  function seen() { try { if (/[?&]intro=1/.test(location.search)) return false; return sessionStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+  function markSeen() { try { sessionStorage.setItem(KEY, '1'); } catch (e) {} try { localStorage.removeItem(KEY); } catch (e) {} }
   function svg(cls, vb, body) { return '<svg class="' + cls + '" viewBox="' + vb + '" aria-hidden="true">' + body + '</svg>'; }
   function letters(withStar) {
     return '<span>f</span><span>o</span><span>l</span><span class="fi-ri">ı' + (withStar ? svg('fi-istar', '-12 -12 24 24', STAR_WORD) : '') + '</span><span>o</span>';

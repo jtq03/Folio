@@ -8,12 +8,22 @@
   F.actions.plvClear = function () { F.ui.plv = 0; if (/lv=/.test(location.hash)) history.replaceState(null, '', '#/patients'); F.rerender(false); };
   F.actions.pfilter = function (el) { F.ui.pf = el.dataset.v; F.rerender(false); };
 
+  /* Physical Folio tags in the pilot carry a short card ID (FO-1001). Feature checked: shows only when the data has p.cardId. */
+  var SHAPES = { star: 'Star', cloud: 'Cloud', heart: 'Heart', tag: 'Rectangular tag', rounded: 'Rounded card' };
+  F.Pages.cardId = function (p) { return (p && (p.cardId || (p.card && p.card.cardId))) || ''; };
+  F.Pages.shapeName = function (p) { var k = p && p.card && p.card.shape; return SHAPES[k] || ''; };
+  F.Pages.cidChip = function (p) { var c = F.Pages.cardId(p); return c ? h`<span class="cid" title="Card ID">${c}</span>` : ''; };
+  function norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
   F.Pages.patients = function (params, q) {
     var ui = F.ui;
-    var all = S.get().patients, term = (ui.pq || '').toLowerCase().replace(/\s+/g, ''), digits = term.replace(/\D/g, '');
+    /* Forgiving search: name, the 8-digit Folio ID (spaces or not) or the card ID ("FO-1004", "fo1004", "FO 1004") */
+    var all = S.get().patients, term = norm(ui.pq), digits = term.replace(/\D/g, ''), cardQ = /^fo\d*$/.test(term);
     var list = all.filter(function (p) {
       var okF = (ui.pf === 'all' || sel.status(p) === ui.pf) && (!ui.plv || p.level === ui.plv);
-      var okQ = !term || (sel.full(p).toLowerCase().replace(/\s+/g, '').indexOf(term) >= 0) || (digits && p.folioId.indexOf(digits) >= 0);
+      var cid = norm(F.Pages.cardId(p));
+      var okQ = !term || norm(sel.full(p)).indexOf(term) >= 0 ||
+        (cardQ ? cid && cid.indexOf(term) === 0 : digits && (String(p.folioId).indexOf(digits) >= 0 || (digits.length >= 3 && cid.indexOf(digits) >= 0)));
       return okF && okQ;
     });
     var PRI = { attention: 0, ready: 1, track: 2, transferred: 3 };
@@ -27,7 +37,7 @@
       html: h`
       ${F.Pages.head('Patients', 'My patients', 'Patients who opted in to Folio. Open one to review skills, add notes or start a visit.', h`<a class="btn btn-primary" href="#/add">${ic('plus')} Add patient</a>`)}
       <div class="toolbar" role="search">
-        <div class="search">${ic('search', 18)}<label class="sr" for="pq">Search by name or Folio ID</label><input id="pq" type="search" placeholder="Search name or Folio ID" value="${ui.pq}" data-bind="pq" data-rerender autocomplete="off"></div>
+        <div class="search">${ic('search', 18)}<label class="sr" for="pq">Search by name, Folio ID or card ID</label><input id="pq" type="search" placeholder="Search name, Folio ID or card ID (FO-1001)" value="${ui.pq}" data-bind="pq" data-rerender autocomplete="off"></div>
         <div class="chips" role="group" aria-label="Filter">${chip('all', 'All ' + all.length)}${chip('attention', 'Needs attention ' + cnt('attention'))}${chip('ready', 'Ready to advance ' + cnt('ready'))}${chip('track', 'On track ' + cnt('track'))}${ui.plv ? h`<button class="chip" aria-pressed="true" data-action="plvClear" aria-label="Clear level ${ui.plv} filter">Level ${ui.plv} ${ic('x', 14)}</button>` : ''}</div>
         <label class="sr" for="ps">Sort by</label>
         <select id="ps" style="width:auto" data-bind="ps" data-rerender><option value="priority" ${ui.ps === 'priority' ? 'selected' : ''}>Sort: needs action first</option><option value="name" ${ui.ps === 'name' ? 'selected' : ''}>Sort: name</option><option value="level" ${ui.ps === 'level' ? 'selected' : ''}>Sort: level</option><option value="note" ${ui.ps === 'note' ? 'selected' : ''}>Sort: oldest note</option></select>
@@ -39,7 +49,7 @@
           <thead><tr><th scope="col">Patient</th><th scope="col">Folio ID</th><th scope="col">Level</th><th scope="col">Last note</th><th scope="col">Status</th><th scope="col"><span class="sr">Actions</span></th></tr></thead>
           <tbody>${list.map(function (p) { return h`<tr class="${sel.status(p) === 'ready' ? 'is-ready' : ''}">
             <td><div class="row">${U.avatar(p, 36)}<div><a class="rowlink" href="#/patients/${p.id}">${sel.full(p)}</a><div class="tiny muted">Age ${p.age} · ${p.condition}</div></div></div></td>
-            <td>${sel.fid(p.folioId)}</td>
+            <td><span class="fid-cell">${sel.fid(p.folioId)}${F.Pages.cidChip(p)}</span></td>
             <td><div><b>${p.level} · ${sel.level(p.level).name}</b></div>${U.lvbar(p.level)}</td>
             <td>${U.fmt(p.lastNote)}</td>
             <td>${U.statusPill(p)}</td>

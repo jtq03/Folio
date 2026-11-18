@@ -77,12 +77,18 @@
   F.actions.exportAll = function () { F.download('folio-roster.csv', [['Name', 'Folio ID', 'Age', 'Level', 'Status']].concat(S.get().patients.map(function (p) { return [sel.full(p), p.folioId, p.age, p.level, sel.status(p)]; }))); };
 
   F.Pages.settings = function () {
-    var a = S.a11y.get(), cfg = S.get().program, st = S.get().clinic;
+    var a = S.a11y.get(), cfg = S.get().program, st = S.get().clinic, me = sel.me();
     var seg = function (k, label) { return h`<div class="setting"><div><b id="lb-${k}">${label}</b></div><div class="seg" role="group" aria-labelledby="lb-${k}">${OPTS[k].map(function (o) { return h`<button data-action="a11y" data-k="${k}" data-v="${o[0]}" aria-pressed="${String(a[k] === o[0])}">${o[1]}</button>`; })}</div></div>`; };
     var sw = function (k, label, desc) { return h`<div class="setting"><div><b>${label}</b><p>${desc}</p></div><label class="switch"><input type="checkbox" ${cfg[k] !== false ? 'checked' : ''} data-change="notify" data-k="${k}" aria-label="${label}"><span class="track"></span></label></div>`; };
     var checks = ['Patient and guardian consent recorded at enrolment', 'Every profile open is logged', 'Folio stores links to records, never records', 'Card sessions time out', 'Patients can see who opened their profile'];
     return { title: 'Settings', html: h`
       ${F.Pages.head('Settings', h`<em class="it">Settings</em>`, 'Accessibility settings apply on this device and take effect straight away.')}
+      <section class="sec account-sec" aria-labelledby="h-account">
+        <h2 id="h-account">Account</h2>
+        <div class="account-row">${U.avatar(me, 52)}<div class="grow"><b>${me.name}</b><span class="small muted">${me.title} · ${me.role}</span><span class="small">Signed in on this device. Folio remembers you after a reload or restart until you log out.</span></div>
+          <button class="btn" data-action="signOut">Log out</button></div>
+        <p class="small muted account-note">Log out goes back to the sign-in screen and shows the welcome card again, so the demo can start over. Patient data stays. To put the patients back to the start, use Reset demo data below.</p>
+      </section>
       <div class="settings-grid">
         <section class="sec"><h2>Accessibility</h2><p class="small muted">Text scales everywhere. Reduce motion removes sliding and lifting.</p>${seg('text', 'Text size')}${seg('contrast', 'Contrast')}${seg('motion', 'Motion')}${seg('spacing', 'Text spacing')}</section>
         <section class="sec"><h2>Notifications</h2>${sw('n_ready', 'Patient ready to advance', 'When a patient reaches the skills needed.')}${sw('n_attn', 'Needs attention', 'When no visit note has been added for a while.')}${sw('n_tap', 'Card tapped', 'Each time a card opens a profile.')}</section>
@@ -91,7 +97,7 @@
           <ul class="card-list" style="margin-top:.5rem">${checks.map(function (c) { return h`<li>${ic('check', 18)}<span>${c}</span></li>`; })}</ul>
           <p class="small muted">Prototype checklist. Not legal advice. A real deployment needs a privacy review under the rules that apply to the hospital.</p></section>
         <section class="sec"><h2>Clinic</h2><dl class="kv"><dt>Hospital</dt><dd>${st.org}</dd><dt>Team</dt><dd>${st.team}</dd><dt>Condition package</dt><dd>Type 1 diabetes</dd></dl></section>
-        <section class="sec"><h2>Data</h2><div class="row wrap"><button class="btn" data-action="exportAll">Export roster (CSV)</button><button class="btn btn-danger" data-action="resetDemo">Reset demo data</button></div></section>
+        <section class="sec"><h2>Data</h2><p class="small muted">Reset demo data puts patients, notes, cards and the access log back to the starting demo on this device. You stay signed in.</p><div class="row wrap"><button class="btn" data-action="exportAll">Export roster (CSV)</button><button class="btn btn-danger" data-action="resetDemo">Reset demo data</button></div></section>
       </div>` };
   };
 })(window.Folio);
