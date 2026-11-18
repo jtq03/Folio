@@ -110,4 +110,7 @@ dialog.modal.wide{max-width:min(760px,94vw)}
 .enter .lvbar i.on{transform-origin:left;animation:grow .5s var(--ease) both;animation-delay:calc(var(--i) * 55ms + 250ms)}
 @media (prefers-reduced-motion:reduce){:root[data-motion="auto"] *,:root[data-motion="auto"] *::before,:root[data-motion="auto"] *::after{animation-duration:.001ms!important;animation-delay:0s!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
 :root[data-motion="reduce"] *,:root[data-motion="reduce"] *::before,:root[data-motion="reduce"] *::after{animation-duration:.001ms!important;animation-delay:0s!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+/* The page itself also stops smooth scrolling when motion is reduced (the * rules above skip html) */
+:root[data-motion="reduce"]{scroll-behavior:auto}
+@media (prefers-reduced-motion:reduce){:root[data-motion="auto"]{scroll-behavior:auto}}
 @media print{#demobar,.tabs,.no-print{display:none!important}}

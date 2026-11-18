@@ -22,6 +22,35 @@
         if (fromSeed && n.id === 'n1' && /symptoms down/.test(n.text || '')) { var sn = fromSeed.notes.filter(function (x) { return x.id === 'n1'; })[0]; if (sn) { n.text = sn.text; n.fields = sn.fields; n.draft = true; } }
       });
     });
+    /* v3 first-run update, once per saved copy: the sample handoff is shared (so the adult view shows who takes over),
+       Maya gets her allergy and parent sharing, and Jordan carries the draft example instead. */
+    st.mig = st.mig || {};
+    if (!st.mig.v3) {
+      st.mig.v3 = true;
+      (st.patients || []).forEach(function (p) {
+        var fromSeed = seedP[p.id]; if (!fromSeed) return;
+        if (p.id === 'p1') {
+          (p.notes || []).forEach(function (n) { if (n.id === 'n1' && n.kind === 'Handoff note') n.draft = false; });
+          if (!p.allergies.length && !p.noAllergies) p.allergies = JSON.parse(JSON.stringify(fromSeed.allergies));
+          p.parentShare = JSON.parse(JSON.stringify(fromSeed.parentShare));
+        }
+        if (p.id === 'p4' && !(p.notes || []).some(function (n) { return n.id === 'n4'; })) p.notes.unshift(JSON.parse(JSON.stringify(fromSeed.notes[0])));
+      });
+    }
+    /* v5 readiness check update, once per saved copy: Maya gets her October check, two goals, her 3-sentence summary
+       and dated items for Coming up, unless the saved copy already has its own. */
+    if (!st.mig.v5) {
+      st.mig.v5 = true;
+      (st.patients || []).forEach(function (p) {
+        var fromSeed = seedP[p.id]; if (!fromSeed || p.id !== 'p1') return;
+        var copy = function (k) { return JSON.parse(JSON.stringify(fromSeed[k])); };
+        if (!p.checks.length) { p.checks = copy('checks'); var lc = p.checks[p.checks.length - 1]; p.selfCheck = { skills: lc.skills, date: lc.date }; }
+        if (!p.goals.length) p.goals = copy('goals');
+        if (!p.summary3) p.summary3 = copy('summary3');
+        (p.careTasks || []).forEach(function (t) { var ft = fromSeed.careTasks.filter(function (x) { return x.id === t.id; })[0]; if (ft && ft.due && !t.due) t.due = ft.due; });
+        (p.meds || []).forEach(function (m) { var fm = fromSeed.meds.filter(function (x) { return x.id === m.id; })[0]; if (fm && fm.refill && !m.refill) m.refill = fm.refill; });
+      });
+    }
     if (Array.isArray(st.resources)) {
       st.resources = st.resources.map(function (r) {
         var fresh = F.SEED.resources.filter(function (x) { return x.id === r.id; })[0];
@@ -50,7 +79,8 @@
     return o;
   }
   function randFolioId() { var s = ''; for (var i = 0; i < 8; i++) s += Math.floor(Math.random() * 10); return s; }
-  var today = function () { return new Date().toISOString().slice(0, 10); };
+  /* Local date, not UTC: in Ontario evenings, UTC already says tomorrow */
+  var today = function () { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
 
   /* Plant growth events. Nothing is ever removed, so the plant never shrinks. */
   function grow(p, type, label) {
@@ -96,9 +126,10 @@
 
   var act = {
     setSkill: function (pid, sid, status) { commit(function (s) { var p = sel.patient(pid); p.skills[sid] = status; }); },
-    practise: function (pid) {
+    /* sid is optional: Home's "Your next step" card names the skill, older callers move the first Learning one */
+    practise: function (pid, sid) {
       return commit(function () {
-        var p = sel.patient(pid), skill = F.SKILLS.filter(function (k) { return p.skills[k.id] === 'learning'; })[0];
+        var p = sel.patient(pid), skill = F.SKILLS.filter(function (k) { return sid ? k.id === sid && p.skills[k.id] === 'learning' : p.skills[k.id] === 'learning'; })[0];
         if (!skill) return null;
         p.skills[skill.id] = 'help'; grow(p, 'practice', 'You practised ' + skill.name.toLowerCase()); return skill;
       });
@@ -203,7 +234,66 @@
         p.lastNote = today();
       });
     },
-    removeResource: function (id) { commit(function (s) { s.resources = s.resources.filter(function (x) { return x.id !== id; }); }); }
+    removeResource: function (id) { commit(function (s) { s.resources = s.resources.filter(function (x) { return x.id !== id; }); }); },
+    /* v3 first-run actions */
+    setMe: function (id) { commit(function (s) { if (s.team.some(function (u) { return u.id === id; })) s.me = id; }); },
+    /* The teen's own view of each skill, from setup. Shown to the care team as a talking point. It never changes the level. */
+    setSelfCheck: function (pid, skills) { commit(function () { sel.patient(pid).selfCheck = skills ? { skills: skills, date: today() } : null; }); },
+    setParentShare: function (pid, key, on) { commit(function () { var p = sel.patient(pid); if (!p.parentShare) p.parentShare = {}; p.parentShare[key] = !!on; }); },
+    setTaskOwner: function (pid, id, owner) { commit(function () { var t = (sel.patient(pid).careTasks || []).filter(function (x) { return x.id === id; })[0]; if (t && F.OWNERS[owner]) t.owner = owner; }); },
+    editAllergy: function (pid, item) {
+      commit(function () {
+        var p = sel.patient(pid), arr = p.allergies || (p.allergies = []), i = -1;
+        arr.forEach(function (x, k) { if (x.id === item.id) i = k; });
+        if (i >= 0) arr[i] = Object.assign(arr[i], item); else { item.id = uid('al'); arr.push(item); }
+        p.noAllergies = false; p.medsConfirmed = null;
+      });
+    },
+    removeAllergy: function (pid, id) { commit(function () { var p = sel.patient(pid); p.allergies = (p.allergies || []).filter(function (x) { return x.id !== id; }); p.medsConfirmed = null; }); },
+    setNoAllergies: function (pid, v) { commit(function () { var p = sel.patient(pid); p.noAllergies = !!v; if (v) p.allergies = []; p.medsConfirmed = null; }); },
+    /* v5 readiness check. Keeps the last 6 checks. Its per-skill result becomes the self-check the care team sees.
+       It never changes a level or a skill status. The first check of a day grows a leaf. */
+    saveCheck: function (pid, answers) {
+      return commit(function () {
+        var p = sel.patient(pid), c = { date: today(), answers: answers, skills: F.checkSkills(answers) };
+        if (!Array.isArray(p.checks)) p.checks = [];
+        var grew = !p.checks.some(function (x) { return x.date === c.date; });
+        p.checks = p.checks.filter(function (x) { return x.date !== c.date; }).concat([c]).slice(-6);
+        p.selfCheck = { skills: c.skills, date: c.date };
+        if (grew) grow(p, 'check', 'You did your readiness check');
+        return c;
+      });
+    },
+    /* Up to 3 goals. Kept goals keep their ticked steps. */
+    setGoals: function (pid, ids) {
+      commit(function () {
+        var p = sel.patient(pid), old = p.goals || [];
+        p.goals = ids.slice(0, 3).filter(function (id) { return F.checkItem(id); }).map(function (id) {
+          var had = old.filter(function (g) { return g.id === id; })[0];
+          return had || { id: id, date: today(), done: [false, false, false] };
+        });
+      });
+    },
+    toggleGoalStep: function (pid, gid, i) {
+      return commit(function () {
+        var p = sel.patient(pid), g = (p.goals || []).filter(function (x) { return x.id === gid; })[0], q = F.checkItem(gid); if (!g || !q) return null;
+        g.done[i] = !g.done[i];
+        if (g.done[i]) grow(p, 'goal', 'You did a step toward ' + q.goal.charAt(0).toLowerCase() + q.goal.slice(1));
+        return { on: g.done[i], all: g.done.every(Boolean) };
+      });
+    },
+    setSummary3: function (pid, d) { commit(function () { var p = sel.patient(pid); p.summary3 = d && (d.s1 || d.s2 || d.s3) ? { s1: d.s1 || '', s2: d.s2 || '', s3: d.s3 || '', date: today() } : null; }); },
+    /* Practising out loud grows a leaf once a day. It never changes a skill status. */
+    logPractice: function (pid, label) {
+      return commit(function () {
+        var p = sel.patient(pid), ev = (p.plant && p.plant.events) || [];
+        if (ev.some(function (e) { return e.label === label && e.date === today(); })) return false;
+        grow(p, 'practice', label); return true;
+      });
+    },
+    setTaskDue: function (pid, id, iso) { commit(function () { var t = (sel.patient(pid).careTasks || []).filter(function (x) { return x.id === id; })[0]; if (t) t.due = iso || ''; }); },
+    /* A refill date is the teen's reminder, so it does not undo the care team's confirmation of the list */
+    setRefill: function (pid, id, iso) { commit(function () { var m = (sel.patient(pid).meds || []).filter(function (x) { return x.id === id; })[0]; if (m) m.refill = iso || ''; }); }
   };
 
   /* Accessibility settings live per device, not in shared state. */
