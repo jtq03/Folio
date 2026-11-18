@@ -34,6 +34,12 @@
   --highlight: var(--lime); --highlight-hover: #C6DC5E; --highlight-press: #B5CB4C; --on-highlight: var(--green-900);
   --switch-off: #C9BFA6;
   --focus-ring: #3F64A8;
+  /* Tints: soft fills that carry text. Light = the brand pastels. Dark = deep versions of the same hue,
+     so text on a tint is always --on-tint (Green 900 by day, warm cream by night). Use these, not the raw pastels. */
+  --tint-lime: var(--lime-100); --tint-blue: var(--blue-100); --tint-butter: #FBEFC4; --tint-beige: var(--beige-200);
+  --tint-row: var(--lime-100); --on-tint: var(--green-900);
+  --bg-disabled: var(--beige-300);
+  --fg-placeholder: #56676E;
 
   /* Type: Fraunces for headings 24px and up, Figtree for everything else */
   --font-display: 'Fraunces', Georgia, serif;
@@ -85,11 +91,24 @@
     --info-bg: #1F3350;    --info-fg: #A8C4F0;
     --warning-bg: #3D3214; --warning-fg: #F2D27A;
     --error-bg: #47201E;   --error-fg: #F4A9A1;
+    /* Night palette: Green 900 family paper, cards one step lighter, warm cream text, tints as deep hues */
+    --bg-inverse: #0F1913; --fg-inverse: #F3EDE0;
+    --tint-lime: #2C3B20; --tint-blue: #26354D; --tint-butter: #3D3214; --tint-beige: #3A3427;
+    --tint-row: #2A4034; --on-tint: #F3EDE0;
+    --bg-disabled: #29402F; --fg-disabled: #A3B0A6;
+    --fg-placeholder: #A9B8AE;
+    --scrim: rgba(5,10,7,.7);
+    --shadow-float: 0 12px 32px rgba(0,0,0,.45);
+    color-scheme: dark;
   }
+}
+/* High contrast at night: lines and secondary text go to full cream */
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast="high"]:not([data-theme="light"]) { --line: #8FA396; --line-strong: #C9D3CB; --fg-placeholder: #D5DED7; --bg-surface: #13201A; --bg-page: #0E1813; }
 }
 
 /* High contrast: deeper secondary text and stronger lines */
-:root[data-contrast="high"] { --fg-2: var(--fg-1); --text-muted: var(--fg-1); --line: var(--line-strong); --border-strong: var(--fg-1); }
+:root[data-contrast="high"] { --fg-2: var(--fg-1); --text-muted: var(--fg-1); --line: var(--line-strong); --border-strong: var(--fg-1); --fg-placeholder: var(--blue-700); }
 :root[data-text="sm"] { font-size: 93.75%; }
 :root[data-text="md"] { font-size: 100%; }
 :root[data-text="lg"] { font-size: 118%; }

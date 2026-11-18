@@ -52,7 +52,7 @@
 
 .fi-nb { fill: var(--fi-ink); } .fi-ns { stroke: var(--fi-paper); } .fi-nh { fill: var(--fi-paper); }
 .fi-tag { position: absolute; left: calc(var(--s) * -2); top: calc(var(--s) * 1.8); width: calc(var(--s) * 5); text-align: center; white-space: nowrap; opacity: 0;
-  font: 500 max(13px, calc(var(--s) * .078))/1.2 "Figtree", "Prompt Fallback", system-ui, -apple-system, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--fi-ink2); }
+  font: 500 max(13px, calc(var(--s) * .078))/1.2 "Figtree", "Figtree Fallback", system-ui, -apple-system, sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--fi-ink2); }
 
 .fi.run .fi-c, .fi.run .fi-bl, .fi.run .fi-star, .fi.run .fi-clip, .fi.run .fi-clip > .fi-w, .fi.run .fi-nib, .fi.run .fi-istar, .fi.run .fi-bit { will-change: transform, opacity; }
 .fi.out .fi-sheet { will-change: transform, opacity; }

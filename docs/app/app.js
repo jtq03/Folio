@@ -938,7 +938,8 @@
   /* ---------- Log out (session.js keeps the list of what this phone remembers) ---------- */
   F.actions.logOut = function () {
     N.haptic('warning');
-    U.confirmModal({ title: 'Log out of Folio on this device?', body: 'Setup, the person you connected and your check answers are cleared from this phone. The welcome starts again.', cta: 'Log Out', danger: true,
+    var parent = F.Welcome && F.Welcome.mode && F.Welcome.mode() === 'parent';
+    U.confirmModal({ title: 'Log out of Folio on this device?', body: parent ? 'Setup and the teen you connected are cleared from this phone. The welcome starts again.' : 'Setup, the person you connected and your check answers are cleared from this phone. The welcome starts again.', cta: 'Log Out', danger: true,
       onOk: function () { F.app.signOut(); } });
   };
   F.actions.resetDemoApp = function () {

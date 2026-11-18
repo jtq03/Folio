@@ -54,7 +54,7 @@
 /* Toolbar and tables (the clinical table pattern) */
 table.data th { border-bottom: 0; }
 table.data td { border-bottom: 1px solid var(--line); }
-table.data tr:hover td { background: var(--lime-100); }
+table.data tr:hover td { background: var(--tint-row); }
 
 /* Profile hero */
 .hero { background: var(--bg-surface); background-image: none; border-radius: var(--radius-clinical); box-shadow: none; }
@@ -82,8 +82,10 @@ table.data tr:hover td { background: var(--lime-100); }
 .stepper li b { background: var(--bg-surface); color: var(--fg-1); border: 2px solid var(--line-strong); box-shadow: none; }
 .stepper li[aria-current="step"] { color: var(--fg-1); font-weight: 700; background: transparent; }
 .stepper li[aria-current="step"] b { background: var(--fg-1); color: var(--bg-surface); border-color: var(--fg-1); }
+.stepper li.done { color: var(--fg-1); }
 .stepper li.done b { background: var(--green-500); border-color: var(--green-500); color: var(--beige-50); }
-.visit-skill { border-bottom: 1px solid var(--line); }
+.visit-skill { background: var(--bg-inset); box-shadow: none; border: 1px solid var(--line); border-radius: var(--radius-clinical); }
+.visit-skill b, .visit-skill li { color: var(--fg-1); }
 .done-sheet { background: var(--bg-surface); border-radius: var(--radius-card); box-shadow: none; }
 .hbar .t { background: var(--bg-sunken); box-shadow: none; }
 .hbar .t i { background: var(--green-500); }
@@ -95,7 +97,10 @@ table.data tr:hover td { background: var(--lime-100); }
 .notice b, .notice span { color: inherit; }
 
 /* v3 pieces in v4 */
-.welcome-card { background: var(--lime-100); border-left: 0; }
+.welcome-card { background: var(--tint-lime); color: var(--on-tint); border-left: 0; box-shadow: inset 4px 0 0 var(--fg-headline); }
+.welcome-card h2, .welcome-card p, .welcome-card li { color: var(--on-tint); }
+.welcome-card .muted { color: var(--fg-2); }
+.wc-tips .ic { color: var(--fg-headline); }
 .signin-card { background: var(--bg-surface); border-radius: var(--radius-card); box-shadow: none; }
 .signin-acct { background: var(--bg-inset); border: 2px solid transparent; border-radius: var(--radius-row); }
 .signin-acct:hover, .signin-acct:focus-visible { border-color: var(--fg-1); }
@@ -117,6 +122,7 @@ table.data tr:hover td { background: var(--lime-100); }
 /* "Where patients are" bars: flat sunken bars, hover and focus fill Green 800 with cream text */
 .stairs-live li a { background-color: var(--bg-sunken); background-image: none; color: var(--fg-1); border-radius: 6px 6px 0 0; box-shadow: none; }
 .stairs-live li a:hover, .stairs-live li a:focus-visible { background-color: var(--action); color: var(--on-action); }
+.stairs-live li a:hover *, .stairs-live li a:focus-visible * { color: inherit; }
 /* v5: the teen's 3 sentences in their voice, and the readiness check answers in Visit mode */
 .s3-quote { background: var(--voice-patient); border-radius: 20px 20px 20px 8px; padding: .8rem 1rem; }
 .s3-quote p { margin: 0; color: var(--fg-1); }
@@ -124,3 +130,44 @@ table.data tr:hover td { background: var(--lime-100); }
 .ck-detail summary { cursor: pointer; font-weight: 700; color: var(--fg-2); min-height: 32px; display: inline-flex; align-items: center; }
 .ck-detail ul { margin: .25rem 0 0; padding-left: 1.1rem; display: grid; gap: .2rem; }
 .ck-detail li b { white-space: nowrap; }
+
+/* ---------- Night palette for the portal ----------
+   Page #16241D (deep Green 900 paper), cards #1F3128 one step lighter, sidebar a translucent Green 800
+   glass with a hairline, warm cream text. Tints and voices come from tokens.css. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .side { background: rgba(31,49,40,.86); -webkit-backdrop-filter: saturate(140%) blur(18px); backdrop-filter: saturate(140%) blur(18px); box-shadow: inset -1px 0 0 var(--line); }
+  :root:not([data-theme="light"]) .nav-i.on { background: var(--bg-sunken); box-shadow: inset 3px 0 0 var(--lime); }
+  :root:not([data-theme="light"]) .sec, :root:not([data-theme="light"]) .stat, :root:not([data-theme="light"]) .hero { box-shadow: inset 0 0 0 1px var(--line); }
+  :root:not([data-theme="light"]) .welcome-card { box-shadow: inset 0 0 0 1px #3E5530, inset 4px 0 0 var(--lime); }
+  :root:not([data-theme="light"]) .wc-tips .ic { color: var(--lime); }
+  :root:not([data-theme="light"]) .stepper li[aria-current="step"] b { background: var(--fg-1); color: var(--bg-page); }
+}
+@media (prefers-color-scheme: dark) and (prefers-reduced-transparency: reduce) { :root:not([data-theme="light"]) .side { background: var(--green-800); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+:root[data-contrast="high"] .side { -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* ---------- Narrow screens (phone and small tablet) ---------- */
+.setting { flex-wrap: wrap; }
+.setting > div:first-child { flex: 1 1 14rem; min-width: 0; }
+.setting .seg { flex-wrap: wrap; max-width: 100%; }
+.shell, .page, .page-in { min-width: 0; }
+.page-in > * { max-width: 100%; }
+@media (max-width: 960px) {
+  html, body { overflow-x: clip; }
+  .side { -webkit-mask-image: none; mask-image: none; }
+  /* The account stays reachable: a compact Log out pinned to the right end of the top strip */
+  .side .side-foot { display: flex; position: sticky; right: 0; z-index: 2; margin-left: auto; padding: 0 0 0 .5rem; border: 0; background: inherit; box-shadow: -12px 0 12px -6px rgba(15,25,19,.5); }
+  .side .side-foot .demo-links, .side .side-foot .me > .avatar, .side .side-foot .me > div { display: none; }
+  .side .side-foot .me { padding: 0; }
+  .side .side-foot .me .signout { flex-basis: auto; white-space: nowrap; min-height: 44px; padding: 0 .8rem; border: 1.5px solid rgba(252,248,241,.45); color: var(--beige-50); }
+  .page-head { gap: .75rem; }
+  .table-wrap { max-width: 100%; }
+}
+@media (max-width: 600px) {
+  .page { padding: 20px 16px 72px; }
+  .sec, .panel, .hero { padding: 1.1rem; }
+  .page-head h1 { font-size: 2rem; }
+  .setting { flex-direction: column; align-items: stretch; gap: .6rem; }
+  .setting > div:first-child { flex: none; }
+  .setting .seg { align-self: flex-start; }
+  .stats { grid-template-columns: 1fr 1fr; gap: .6rem; }
+}

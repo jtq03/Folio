@@ -2,10 +2,10 @@
    Self-contained: only reads tokens.css variables and card.css (.fcard). */
 
 /* ---------- Dynamic Type + reset ---------- */
-/* Fallback faces sized to match Fraunces and Prompt, so text does not jump when the web fonts arrive (or stay offline) */
+/* Fallback faces sized to match Fraunces and Figtree, so text does not jump when the web fonts arrive (or stay offline) */
 @font-face { font-family: "Fraunces Fallback"; src: local("Georgia"), local("Times New Roman"), local("Liberation Serif"); size-adjust: 110%; ascent-override: 88.9%; descent-override: 23.2%; line-gap-override: 0%; }
-@font-face { font-family: "Prompt Fallback"; src: local("Helvetica Neue"), local("Arial"), local("Liberation Sans"), local("Roboto"); size-adjust: 112.7%; ascent-override: 96.7%; descent-override: 37.4%; line-gap-override: 0%; }
-:root { --font-display: "Fraunces", "Fraunces Fallback", Georgia, serif; --font-ui: "Figtree", "Prompt Fallback", system-ui, -apple-system, sans-serif; }
+@font-face { font-family: "Figtree Fallback"; src: local("Helvetica Neue"), local("Arial"), local("Liberation Sans"), local("Roboto"); size-adjust: 100%; ascent-override: 95%; descent-override: 25%; line-gap-override: 0%; }
+:root { --font-display: "Fraunces", "Fraunces Fallback", Georgia, serif; --font-ui: "Figtree", "Figtree Fallback", system-ui, -apple-system, sans-serif; }
 /* Dynamic Type: iOS body size follows Settings > Display and Text Size. Needs (0,2,0) to beat tokens.css :root[data-text]. */
 html, :root[data-text] { font-size: 17px; color-scheme: light dark; -webkit-text-size-adjust: 100%; }
 @supports (font: -apple-system-body) { html, :root[data-text="md"] { font: -apple-system-body; } }
@@ -540,7 +540,7 @@ html.nsw .ios-sw::before, html.nsw .ios-sw::after { display: none; }
 .ios-stairwrap .ios-eyebrow, .ios-stairwrap .ios-cap { color: var(--obj2); }
 .ios-lvn { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font: 600 1rem/1 var(--font-display); color: var(--ink2); box-shadow: inset 0 0 0 1.5px var(--line2); }
 .ios-lvn.done { background: #395B50; color: #F7F0E2; box-shadow: none; }
-.ios-row.cur .ios-lvn { background: #1F2F16; color: #F7F0E2; box-shadow: 0 0 0 2px var(--sheet), 0 0 0 3.5px #CE3B3B; }
+.ios-row.cur .ios-lvn { background: #1F2F16; color: #F7F0E2; box-shadow: 0 0 0 2px var(--sheet), 0 0 0 3.5px var(--ink); }
 @media (prefers-color-scheme: dark) { .ios-lvn.done { background: #9CC4B1; color: #10180D; } .ios-row.cur .ios-lvn { background: #F0E3CE; color: #10180D; } }
 .ios-done { display: flex; color: var(--tint); }
 .ios-list > .ios-row:has(.ios-lvn) + .ios-row::before { left: 62px; }
