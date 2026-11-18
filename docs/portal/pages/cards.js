@@ -5,7 +5,7 @@
 
   F.actions.cardPreview = function (el) {
     var p = sel.patient(el.dataset.pid);
-    U.modal(h`<h2>${sel.full(p)}'s card</h2><p class="muted small">Sample QR for the prototype. It is not scannable. Use "Open tap view" to see what a clinic sees.</p><div class="fcards">${U.cardFace(p, 'front')}${U.cardFace(p, 'back')}</div><div class="mform-actions"><button class="btn btn-primary" data-close>Done</button></div>`, { cls: 'wide', label: 'Card preview' });
+    U.modal(h`<h2>${sel.full(p)}'s card</h2><p class="muted small">This QR code opens the care team view on any phone camera. Replace card makes a new link, so a printed code stops working.</p><div class="fcards">${U.cardFace(p, 'front')}${U.cardFace(p, 'back')}</div><div class="mform-actions"><button class="btn btn-primary" data-close>Done</button></div>`, { cls: 'wide', label: 'Card preview' });
   };
   F.actions.cardIssue = function (el) {
     var p = sel.patient(el.dataset.pid);

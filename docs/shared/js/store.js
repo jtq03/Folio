@@ -102,6 +102,8 @@
   var sel = {
     patient: function (id) { return state.patients.filter(function (p) { return p.id === id; })[0]; },
     byToken: function (t) { return state.patients.filter(function (p) { return p.card && p.card.token && p.card.token === t && p.card.status === 'active'; })[0]; },
+    /* Any card status, so the scanner can say "This card is not active" instead of "Not a Folio card" */
+    cardByToken: function (t) { return t ? state.patients.filter(function (p) { return p.card && p.card.token && p.card.token === t; })[0] : undefined; },
     /* Older callers pass the 8-digit Folio ID. It now also accepts a printed card code (FO-1004), so every lookup is forgiving. */
     byFolioId: function (q) { return sel.byAnyId(q); },
     /* Either id type, typed any way: '8314 0572', '83140572', 'FO-1004', 'fo 1004', 'fo1004', ' FO-1004 ', or just '1004'. */

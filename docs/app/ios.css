@@ -99,7 +99,7 @@ a.ios-row:active, button.ios-row:active, .ios-rowmain:active { background: rgba(
 .ios-detail { color: var(--ink2); font-size: .94rem; }
 .ios-chev { flex: none; color: var(--ink2); opacity: .6; }
 .ios-row.destructive, .ios-row .destr { color: #B23131; }
-:root[data-contrast="high"] .ios-row.destructive { color: #8E1F1F; }
+:root[data-contrast="high"] .ios-row.destructive { color: var(--error-fg); }
 @media (prefers-color-scheme: dark) { .ios-row.destructive, .ios-eyebrow.red { color: #F08A82; } }
 .ios-rowmain { flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; min-height: 44px; text-align: left; margin: -10px 0 -10px -16px; padding: 10px 0 10px 16px; align-self: stretch; }
 .ios-rowtrail { display: flex; align-items: center; gap: 8px; margin-right: -6px; }

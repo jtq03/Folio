@@ -475,9 +475,21 @@ window.Folio = window.Folio || {};
     for (var j = 0; j < 22; j++) { x = (x * 1664525 + 1013904223) >>> 0; o += a[(x >>> 16) % a.length]; }
     return o;
   }
+  /* Card tokens are frozen here, so a printed QR code (qr-codes/, made by tools/make-qr-pngs.js) keeps working in every
+     fresh browser. They equal tok('folio' + id) today; the literal list protects them if tok() ever changes.
+     Replace card in the portal makes a new random token, and the old printed QR code stops working. p7 (Eli) is the
+     sample patient with no card yet, so the portal can show issuing one. */
+  F.CARD_TOKENS = {
+    p1: 'hyqPr8wzQ3vMTrpPTGWVCL', p2: 'KHH96SWsbgvVP4jh8unr7a', p3: 'cRJt4C7jfvc5JEwKmhNVSP', p4: 'E2KMHExcAJbvEgJVA5Wrnd',
+    p5: '7a47pqG5DXTDzTWpQRnWRT', p6: 'yi5rma8WYcSMvv9zMDNsCg',
+    p8: 'tBp5GWHGnnzkk2gdfdnsAj', p9: 'VKqnDGazsBgugCuFu2NemH', p10: 'HdJeRf2KNqaE2AnYmN7qJF', p11: 'a5KywZbCRDR6VczaBixUd4'
+  };
+  /* Production base for QR payloads, so a code looks and scans the same from localhost, a preview or GitHub Pages */
+  F.PROD_BASE = 'https://jtq03.github.io/Folio/';
+  F.cardUrlProd = function (token) { return F.PROD_BASE + 'card/?t=' + encodeURIComponent(token) + '&via=qr'; };
   F.SEED.patients.forEach(function (p) {
     p.attentionReason = p.attention ? ATTN[p.id] || 'Needs a check-in' : '';
-    p.card = { status: p.id === 'p7' ? 'unassigned' : 'active', shape: TAG_SHAPE[p.id] || 'rounded', token: tok('folio' + p.id), issued: '2026-0' + (3 + (+p.id.slice(1) % 5)) + '-1' + (+p.id.slice(1) % 9), lastTap: p.id === 'p1' ? '2026-10-12' : '' };
+    p.card = { status: p.id === 'p7' ? 'unassigned' : 'active', shape: TAG_SHAPE[p.id] || 'rounded', token: F.CARD_TOKENS[p.id] || tok('folio' + p.id), issued: '2026-0' + (3 + (+p.id.slice(1) % 5)) + '-1' + (+p.id.slice(1) % 9), lastTap: p.id === 'p1' ? '2026-10-12' : '' };
     if (p.id === 'p7') p.card.token = '';
   });
   F.SEED.resources = F.RESOURCES.map(function (r) { return Object.assign({ published: true }, r); });

@@ -99,7 +99,7 @@
   }
   F.actions.showQR = function () {
     var p = me(); N.wakeWanted = true; N.wake.on(); prepCard(p);
-    U.modal(h`<div class="ios-qrbox">${U.qr(p.card.token || p.folioId, 230)}</div><p>Sample code for the prototype. It is not scannable.<br>Folio ID ${sel.fid(p.folioId)}</p><button type="button" class="ios-btn sec" data-action="shareCard">${shareSvg} Share card as an image</button><p class="ios-cap">The image shows your name and Folio ID only. Your private tap link is never shared.</p>`,
+    U.modal(h`<div class="ios-qrbox">${U.cardQr(p, 230)}</div><p>Show this to your care team. Their phone camera opens your care team view.<br>Folio ID ${sel.fid(p.folioId)}${p.cardId ? ' · Card ' + sel.cardId(p) : ''}</p><button type="button" class="ios-btn sec" data-action="shareCard">${shareSvg} Share card as an image</button><p class="ios-cap">The image shows your name and Folio ID only. Your private tap link is never shared.</p>`,
       { label: 'Folio card QR code', head: 'Your Folio card', onClose: function () { N.wakeWanted = false; N.wake.off(); } });
   };
   F.actions.tapShare = function () {

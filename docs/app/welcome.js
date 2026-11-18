@@ -14,7 +14,8 @@
    - Parent home shows skills and tasks, never notes or glucose, plus autonomy-supporting tips (Goethals 2019, Dickinson 2017).
    Per device: localStorage folio.app.setup = 'teen' | 'parent', folio.app.child = the parent's teen,
    folio.app.flow = setup still in progress, so closing the app mid-setup resumes at the same step (see session.js).
-   Find your profile takes the 8-digit Folio ID or the code printed on a Folio tag (FO-1004), typed any way.
+   Find your profile takes the 8-digit Folio ID or the code printed on a Folio tag (FO-1004), typed any way,
+   or "Scan your card" reads the QR code on the card (scan.js) and lands on the same "Is this you?" step.
    Demo: ?welcome=1 forces the welcome. ?logout=1 logs the phone out. About me > Log out brings the welcome back. */
 (function (F) {
   'use strict';
@@ -115,6 +116,7 @@
         ${parent ? '' : stepOf(1)}
         <h1 id="fw-h" tabindex="-1">${parent ? 'Connect to your teen' : 'Find your profile'}</h1>
         <p class="fw-lead" id="fw-hint">${parent ? 'Type your teen\'s Folio ID: the 8 numbers on their Folio card, or the code on their Folio tag, like FO-1004.' : 'Your clinic already started it. Type the 8 numbers on your Folio card, or the code on your Folio tag, like FO-1004.'}</p>
+        ${F.scan ? h`<div class="fw-scanrow"><button type="button" class="ios-btn sec fw-scanbtn" data-action="fwScan">${ic('qr', 22)} Scan your card</button></div><p class="fw-ordiv">or type it</p>` : ''}
         <div class="ios-list"><label class="ios-field" for="fw-id"><span class="fw-lbl">Folio ID or card code</span><input id="fw-id" name="id" type="text" inputmode="text" autocapitalize="characters" autocorrect="off" spellcheck="false" autocomplete="off" enterkeyhint="go" maxlength="16" value="${st.typed || ''}" aria-describedby="${st.err ? 'fw-err fw-hint' : 'fw-hint'}" ${st.err ? h`aria-invalid="true"` : ''}></label></div>
         ${st.err ? h`<p class="fw-err" id="fw-err" role="alert">${ic('info', 16)} ${st.err}</p>` : ''}
         <div class="fw-acts"><button type="submit" class="ios-btn">${parent ? 'Find my teen' : 'Find my profile'}</button></div>
@@ -300,6 +302,17 @@
     var p = sel.byAnyId ? sel.byAnyId(raw0) : sel.byFolioId(raw0);
     if (!p) { st.err = 'We could not find that ID. Check the code on your card and try again.'; haptic('error'); render('field'); return; }
     haptic('success'); go(parent ? 'p-confirm' : 'confirm', { pid: p.id });
+  };
+  /* Scan your card: the camera reads the QR code on the card, then the same "Is this you?" step as typing the ID */
+  F.actions.fwScan = function () {
+    if (!F.scan || !st) return;
+    var from = st.step, parent = from === 'p-find';
+    haptic('light');
+    F.scan.open({ onResult: function (p) {
+      if (!st || st.step !== from) return;
+      st.typed = p.cardId ? sel.cardId(p) : sel.fid(p.folioId);
+      go(parent ? 'p-confirm' : 'confirm', { pid: p.id });
+    } });
   };
   F.actions.fwYours = function (d) {
     var p = pt(), n = String(d.nick || '').trim().slice(0, 24);

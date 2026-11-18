@@ -147,8 +147,27 @@
   function empty(title, body) { return h`<div class="empty"><div class="empty-mark">${mark(44)}</div><h3>${title}</h3><p>${body}</p></div>`; }
   function eyebrow(t) { return h`<div class="eyebrow">${t}</div>`; }
 
-  /* Decorative, not scannable. Deterministic from a seed string. */
-  function qr(seed, size) {
+  /* Real, scannable QR code as crisp SVG (encoder: shared/js/vendor/qrcode.js, MIT, Kazuhiko Arase).
+     qr(text, size, opts): text is encoded as is, so pass F.cardUrlProd(token) for a card. Error correction Q,
+     a 4-module quiet zone, Green 900 ink on a Beige 50 field (about 14:1). opts.label sets the aria-label.
+     The path for each text is cached, so re-renders cost nothing. Without the encoder it falls back to the old
+     decorative pattern so nothing breaks. */
+  var QR_CACHE = {}, QR_INK = '#1F2F16', QR_FIELD = '#F7F0E2';
+  function qrPath(text, ecl) {
+    var key = ecl + '|' + text; if (QR_CACHE[key]) return QR_CACHE[key];
+    var q = window.qrcode(0, ecl); q.addData(String(text), 'Byte'); q.make();
+    var n = q.getModuleCount(), d = '';
+    /* One path of horizontal runs: far fewer nodes than a rect per module */
+    for (var r = 0; r < n; r++) {
+      for (var c = 0; c < n; c++) {
+        if (!q.isDark(r, c)) continue;
+        var s0 = c; while (c + 1 < n && q.isDark(r, c + 1)) c++;
+        d += 'M' + (s0 + 4) + ' ' + (r + 4) + 'h' + (c - s0 + 1) + 'v1h-' + (c - s0 + 1) + 'z';
+      }
+    }
+    return (QR_CACHE[key] = { n: n + 8, d: d });
+  }
+  function qrDecorative(seed, size, label) {
     var N = 25, x = 7, bits = [];
     for (var i = 0; i < seed.length; i++) x = (x * 33 + seed.charCodeAt(i)) >>> 0;
     function rnd() { x = (x * 1664525 + 1013904223) >>> 0; return (x >>> 16) & 1; }
@@ -162,7 +181,21 @@
       var on = finder(r, c) ? fp(r, c) : rnd();
       if (on) cells += '<rect x="' + c + '" y="' + r + '" width="1.02" height="1.02"/>';
     }
-    return raw('<svg class="qr" width="' + (size || 120) + '" height="' + (size || 120) + '" viewBox="-1 -1 ' + (N + 2) + ' ' + (N + 2) + '" role="img" aria-label="Sample QR code. Not scannable in this prototype."><rect x="-1" y="-1" width="' + (N + 2) + '" height="' + (N + 2) + '" fill="#F7F0E2"/><g fill="#1F2F16">' + cells + '</g></svg>');
+    return raw('<svg class="qr" width="' + (size || 120) + '" height="' + (size || 120) + '" viewBox="-1 -1 ' + (N + 2) + ' ' + (N + 2) + '" role="img" aria-label="' + esc(label || 'Sample QR code') + '"><rect x="-1" y="-1" width="' + (N + 2) + '" height="' + (N + 2) + '" fill="' + QR_FIELD + '"/><g fill="' + QR_INK + '">' + cells + '</g></svg>');
+  }
+  function qr(text, size, opts) {
+    opts = opts || {}; text = String(text == null ? '' : text); size = size || 120;
+    var label = opts.label || 'QR code';
+    if (!text || typeof window.qrcode !== 'function') return qrDecorative(text || 'folio', size, label);
+    var m;
+    try { m = qrPath(text, opts.ecl || 'Q'); } catch (e) { try { m = qrPath(text, 'L'); } catch (e2) { return qrDecorative(text, size, label); } }
+    return raw('<svg class="qr qr-real" width="' + size + '" height="' + size + '" viewBox="0 0 ' + m.n + ' ' + m.n + '" shape-rendering="crispEdges" role="img" aria-label="' + esc(label) + '" data-qr="' + esc(text) + '"><rect width="' + m.n + '" height="' + m.n + '" fill="' + QR_FIELD + '"/><path fill="' + QR_INK + '" d="' + m.d + '"/></svg>');
+  }
+  /* The QR for a patient's card: their production tap link, so any phone camera opens the care team view */
+  function cardQr(p, size) {
+    var c = (p && p.card) || {}, code = p && p.cardId ? String(p.cardId).toUpperCase() : p ? F.Store.sel.fid(p.folioId) : '';
+    if (c.token && F.cardUrlProd) return qr(F.cardUrlProd(c.token), size, { label: 'QR code for card ' + code + (c.status === 'inactive' ? '. This card is frozen.' : '') });
+    return qrDecorative((p && p.folioId) || 'folio', size, 'No card yet. Sample pattern, not a working code.');
   }
 
   /* The red-star stamp: used for level sign-offs only. */
@@ -283,14 +316,14 @@
   }
 
   F.UI = { h: h, raw: raw, esc: esc, ic: ic, star: star, mark: mark, wordmark: wordmark, mascot: mascot, plantImg: plantImg, visChip: visChip, lvbar: lvbar, tile: tile, stairs: stairs, avatar: avatar, avatarSvg: avatarSvg, pill: pill, statusPill: statusPill, skillPill: skillPill,
-    empty: empty, eyebrow: eyebrow, qr: qr, stamp: stamp, fmt: fmt, fmtFull: fmtFull, fmtTime: fmtTime, monthYear: monthYear, toast: toast, modal: modal, closeModal: closeModal,
+    empty: empty, eyebrow: eyebrow, qr: qr, cardQr: cardQr, stamp: stamp, fmt: fmt, fmtFull: fmtFull, fmtTime: fmtTime, monthYear: monthYear, toast: toast, modal: modal, closeModal: closeModal,
     formModal: formModal, confirmModal: confirmModal, createApp: createApp };
 
   F.UI.cardFace = function (p, side) {
     var c = p.card || {}, cls = 'fcard ' + side + ' ' + (c.shape || 'rounded') + (c.status === 'inactive' ? ' inactive' : '');
     /* v4 card: Green 800, cream wordmark, contactless mark, a Blue 300 circle, the name and a large Folio ID */
     if (side === 'front') return h`<div class="${cls}"><span class="fc-circle" aria-hidden="true"></span><div class="fc-top"><span class="fc-brand">${wordmark('', true)}</span><span class="fc-nfc">${ic('nfc', 20)}</span></div><div class="fc-bottom"><div class="fc-name">${p.first} ${p.last}</div><div class="fc-id">${F.Store.sel.fid(p.folioId)}</div><div class="fc-tag">Folio ID${p.cardId ? ' · Card ' + String(p.cardId).toUpperCase() : ''}</div></div></div>`;
-    return h`<div class="${cls}"><div class="qrbox">${qr(c.token || p.folioId, 200)}</div><div class="fc-right"><h4>Tap or scan</h4><p><b>TAP</b> Hold the card to a phone (NFC chip inside)</p><p><b>SCAN</b> Point a camera at the code</p><p><b>TYPE</b> folio.example/id and the number on the front${p.cardId ? ', or ' + String(p.cardId).toUpperCase() : ''}</p></div></div>`;
+    return h`<div class="${cls}"><div class="qrbox">${cardQr(p, 200)}</div><div class="fc-right"><h4>Tap or scan</h4><p><b>TAP</b> Hold the card to a phone (NFC chip inside)</p><p><b>SCAN</b> Point a camera at the code</p><p><b>TYPE</b> folio.example/id and the number on the front${p.cardId ? ', or ' + String(p.cardId).toUpperCase() : ''}</p></div></div>`;
   };
   F.root = new URL('../../', ROOT_SRC).href;
   F.cardUrl = function (token) { return F.root + 'card/?t=' + encodeURIComponent(token); };
