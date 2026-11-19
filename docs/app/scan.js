@@ -128,7 +128,7 @@
       </div>`;
     var body;
     if (s === 'starting' || s === 'loading') body = h`<div class="sc-panel"><div class="sc-spin" aria-hidden="true"></div><h2 id="sc-h" tabindex="-1">${s === 'loading' ? 'Getting the scanner ready' : 'Asking for the camera'}</h2><p>${s === 'loading' ? 'One moment.' : 'If your iPhone asks, tap Allow. Folio only uses the camera to read your card.'}</p></div>`;
-    else if (s === 'live') body = h`<div class="sc-live"><h2 id="sc-h" class="sc-title" tabindex="-1">Scan your card</h2><p class="sc-sub">Point your camera at the QR code on the back of your Folio card.</p>
+    else if (s === 'live') body = h`<div class="sc-live"><h2 id="sc-h" class="sc-title" tabindex="-1">${cur.title || 'Scan your card'}</h2><p class="sc-sub">${cur.lead || 'Point your camera at the QR code on the back of your Folio card.'}</p>
         <div class="sc-frame ${cur.hint ? 'hinting' : ''}">${raw(BR)}<span class="sc-line" aria-hidden="true"></span></div>
         <p class="sc-hint" role="status" aria-live="polite">${cur.hint ? 'Hold the card steady, QR code facing the camera, in good light.' : ''}</p></div>`;
     else if (s === 'denied') body = h`<div class="sc-panel"><span class="sc-icon" aria-hidden="true">${si('camera', 30)}</span><h2 id="sc-h" tabindex="-1">Camera is off for Folio</h2><p>To scan, let Folio use the camera:</p><ol class="sc-steps">${STEPS_DENIED.map(function (x) { return h`<li>${x}</li>`; })}</ol><p class="sc-small">In the Safari browser you can also tap the aA button, then Website Settings, then Camera. If you added Folio to your Home Screen, close it fully and open it again to get the question back.</p><button type="button" class="ios-btn" data-sc="retry">Try again</button><p class="sc-or">Or use a photo instead:</p></div>`;
@@ -257,7 +257,7 @@
     var v = el.querySelector('video'); v.muted = true; v.setAttribute('webkit-playsinline', '');
     host.appendChild(el);
     var under = document.getElementById('fw') || document.getElementById('app');
-    cur = { el: el, ui: el.querySelector('.sc-ui'), video: v, state: 'loading', onResult: o.onResult, onCancel: o.onCancel, back: document.activeElement, under: under, underInert: under && under.hasAttribute('inert') };
+    cur = { title: o.title, lead: o.lead, el: el, ui: el.querySelector('.sc-ui'), video: v, state: 'loading', onResult: o.onResult, onCancel: o.onCancel, back: document.activeElement, under: under, underInert: under && under.hasAttribute('inert') };
     if (under) under.setAttribute('inert', '');
     el.addEventListener('click', onClick); el.addEventListener('change', onChange);
     document.addEventListener('keydown', onKey); document.addEventListener('visibilitychange', onVis);

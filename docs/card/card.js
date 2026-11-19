@@ -3,7 +3,7 @@
 (function (F) {
   var h = F.UI.h, ic = F.UI.ic, S = F.Store, sel = S.sel, U = F.UI, A = S.act;
   var app = document.getElementById('app'), params = new URLSearchParams(location.search);
-  var token = params.get('t'), demo = params.get('demo') === '1', via = params.get('via') === 'qr' ? 'Card tap (QR)' : 'Card tap (NFC)';
+  var token = params.get('t'), demo = params.get('demo') === '1', via = params.get('via') === 'qr' ? 'Card tap (QR)' : params.get('via') === 'id' ? 'Typed Folio ID' : 'Card tap (NFC)';
   var pid = null, deadline = 0, ended = false, timer = null, warned = false, openedAt = new Date(), viewer = '';
 
   function minutes() { return (S.get().program.timeout || 10); }
@@ -48,6 +48,29 @@
       <div class="sess">${p ? h`<span class="via" title="How this profile was opened">${ic('check', 14)} Opened by ${demo ? 'demo entry' : how.toLowerCase()} at ${openedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span><span class="ring" aria-hidden="true"><i id="sess-ring" style="--p:${Math.max(0, deadline - Date.now()) / (minutes() * 60000)}"></i></span><span>Session ends in <b id="sess-left" aria-live="off">${clock()}</b></span><button class="btn btn-sm key" data-action="extend">Keep open</button>` : ''}
       <div class="tsz" role="group" aria-label="Text size">${[['md', 'A'], ['lg', 'A+'], ['xl', 'A++']].map(function (t) { return h`<button data-action="textSize" data-v="${t[0]}" aria-pressed="${String(sz === t[0])}" aria-label="Text size ${t[1]}">${t[1]}</button>`; })}</div></div></div></div>${demo && p ? h`<div class="demo-banner" role="note">Demo mode for the Folio team. This is not a real card tap.</div>` : ''}`;
   }
+
+  /* Scan a QR code: opens the camera, and whichever Folio card is held up opens that account (the real tap flow, with consent) */
+  function scanButton(label) {
+    return h`<div class="scanrow"><button class="btn btn-primary" data-action="scanCard">${ic('qr', 18)} ${label || 'Scan a QR code'}</button><p class="tiny muted">Hold a Folio card's QR code up to the camera. It opens that person's care team view.</p>
+      <div class="ordiv" aria-hidden="true"><span>or type the number</span></div>
+      <form class="idform" data-submit="openById" novalidate><label for="idin">Folio ID or card code</label>
+        <div class="idrow"><input id="idin" name="id" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="FO-1004 or 8-digit ID" aria-describedby="iderr"><button class="btn">Open</button></div>
+        <p id="iderr" class="iderr" role="alert" aria-live="polite"></p></form></div>`;
+  }
+  /* Typed ID: same forgiving lookup as the patient app (8-digit Folio ID, or the FO-100x code printed on a card) */
+  F.actions.openById = function (d, form) {
+    var err = form.querySelector('.iderr'), q = String(d.id || '').trim();
+    var fail = function (m) { err.textContent = m; var i = form.querySelector('input'); i.setAttribute('aria-invalid', 'true'); i.focus(); };
+    if (!q) { fail('Type the Folio ID or the card code printed on the card.'); return; }
+    var pt = sel.byAnyId ? sel.byAnyId(q) : sel.byFolioId(q);
+    if (!pt) { fail('We could not find that ID. Check the number on the card and try again.'); return; }
+    if (!pt.card || pt.card.status !== 'active' || !pt.card.token) { fail('This card is not active. Ask the patient or their clinic for help.'); return; }
+    location.href = '?t=' + encodeURIComponent(pt.card.token) + '&via=id';
+  };
+  F.actions.scanCard = function () {
+    if (!F.scan) { U.toast('The scanner could not load. Reload the page and try again.'); return; }
+    F.scan.open({ title: 'Scan a patient\'s card', lead: 'Hold the QR code on the back of their Folio card in front of the camera.', onResult: function (pt) { var t = pt && pt.card && pt.card.token; if (t) location.href = '?t=' + encodeURIComponent(t) + '&via=qr'; } });
+  };
 
   function msgPage(title, body, extra, art) {
     return h`${bar(null)}<main id="main" class="center msg"><div class="art">${U.raw(ART[art || "invalid"])}</div><h1 style="font-size:2rem;margin-bottom:.75rem">${title}</h1><p class="muted" style="margin-inline:auto">${body}</p>${extra || ''}</main>`;
@@ -171,9 +194,10 @@
     if (demo && !params.get('p')) {
       var pts = S.get().patients.filter(function (x) { return x.card.status === 'active'; });
       app.innerHTML = h`${bar(null)}<main id="main" class="center">${U.mark(64)}<div class="eyebrow red">Demo mode</div><h1 style="font-size:2rem;margin:.4rem 0 .6rem">Pick a patient to preview</h1><p class="muted" style="margin-inline:auto">For the Folio team only. A real card opens to the patient's consent screen, and carries an unguessable link, never a name.</p>
-        <div class="pick">${pts.map(function (x) { return h`<a href="?demo=1&p=${x.id}">${U.avatar(x, 40)}<span><b>${sel.full(x)}</b><br><span class="small muted">Folio ID ${sel.fid(x.folioId)}</span></span></a>`; })}</div></main>`.s;
+        ${scanButton()}<div class="pick">${pts.map(function (x) { return h`<a href="?demo=1&p=${x.id}">${U.avatar(x, 40)}<span><b>${sel.full(x)}</b><br><span class="small muted">Folio ID ${sel.fid(x.folioId)}</span></span></a>`; })}</div></main>`.s;
       return;
     }
+    if (!demo && !token) { app.innerHTML = msgPage('Open a patient\'s card', 'Tap the card to the back of your phone, or scan its QR code with the camera.', scanButton(), 'invalid').s; return; }
     var p = demo ? sel.patient(params.get('p')) : S.sel.byToken(token || '');
     if (!p) {
       var inactive = token && S.get().patients.some(function (x) { return x.card.token === token; });
