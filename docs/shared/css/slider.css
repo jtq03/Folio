@@ -1,0 +1,28 @@
+/* Text size slider (F.UI.textSlider): three points with an A under each. Uses currentColor so it works in light, dark
+   and high contrast on any surface. */
+.tsl { width: 100%; max-width: 26rem; color: var(--text, #1F2F16); }
+.tsl-rail { position: relative; height: 44px; }
+.tsl-tick { position: absolute; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: currentColor; opacity: .45; pointer-events: none; }
+.tsl-range { -webkit-appearance: none; appearance: none; position: absolute; inset: 0; width: 100%; height: 44px; margin: 0; padding: 0; background: transparent; cursor: pointer; touch-action: pan-y; }
+.tsl-range::-webkit-slider-runnable-track { height: 6px; border-radius: 99px;
+  background: linear-gradient(to right, var(--tsl-fill, #395B50) 0 var(--p, 0%), rgba(31, 47, 22, .2) var(--p, 0%) 100%);
+  background: linear-gradient(to right, var(--tsl-fill, currentColor) 0 var(--p, 0%), color-mix(in srgb, currentColor 22%, transparent) var(--p, 0%) 100%); }
+.tsl-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
+  background: var(--surface, #F7F0E2); border: 3px solid var(--tsl-fill, currentColor); box-shadow: 0 2px 6px rgba(31, 47, 22, .35); }
+.tsl-range::-moz-range-track { height: 6px; border-radius: 99px; background: color-mix(in srgb, currentColor 22%, transparent); }
+.tsl-range::-moz-range-progress { height: 6px; border-radius: 99px; background: var(--tsl-fill, currentColor); }
+.tsl-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--surface, #F7F0E2); border: 3px solid var(--tsl-fill, currentColor); box-shadow: 0 2px 6px rgba(31, 47, 22, .35); }
+.tsl-range:focus-visible { outline: none; }
+.tsl-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--focus-ring, #3E7CB1), 0 2px 6px rgba(31, 47, 22, .35); }
+.tsl-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px var(--focus-ring, #3E7CB1); }
+.tsl-letters { display: flex; justify-content: space-between; margin: 0 -8px; }
+.tsl-a { width: 44px; min-height: 40px; padding: 0; border: 0; background: transparent; display: grid; place-items: center; cursor: pointer; color: inherit; opacity: .7;
+  font-family: var(--font-display, Georgia, "Times New Roman", serif); font-weight: 600; line-height: 1; -webkit-tap-highlight-color: transparent; }
+.tsl-a0 { font-size: 14px; } .tsl-a1 { font-size: 19px; } .tsl-a2 { font-size: 25px; }
+.tsl-a[data-on] { opacity: 1; }
+.tsl-cap { margin: .25rem 0 0; text-align: center; font-size: .875rem; opacity: .8; }
+@media (prefers-reduced-motion: reduce) { .tsl-range, .tsl-a { transition: none; } }
+.setting-tsl { align-items: flex-start; }
+.setting-tsl .tsl { flex: 0 1 24rem; }
+.tsl-row { display: block; padding: 6px 16px 14px; }
+.tsl-row .tsl { max-width: none; }

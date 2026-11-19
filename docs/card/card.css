@@ -95,7 +95,7 @@ html[data-contrast="high"] .note-sticky{background:var(--bg-surface) !important;
 @media print{.sheetc,.work,.who,.sk2 .it2,body{background:#fff !important;box-shadow:none !important}.who .btn{display:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 
 /* v2 research update: medication list, status legend, structured handoff, consent screen */
-.meds .stale{color:var(--fg-1);background:var(--tint-beige);border-left:4px solid var(--error-fg);padding:.5rem .75rem;border-radius:8px;display:flex;gap:.4rem;align-items:flex-start;flex-wrap:wrap}
+.meds .stale{color:var(--fg-1);background:var(--tint-beige);border:1px solid var(--error-fg);padding:.5rem .75rem;border-radius:8px;display:flex;gap:.4rem;align-items:flex-start;flex-wrap:wrap}
 .meds .stale .ic{flex:none;margin-top:.15rem}
 .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.5rem 1rem;margin:1rem 0 0;padding-top:.9rem;border-top:1px solid var(--line)}
 .legend div{display:flex;gap:.6rem;align-items:flex-start}.legend dt{flex:none}.legend dd{margin:0;color:var(--text-muted)}

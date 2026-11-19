@@ -327,4 +327,29 @@
   };
   F.root = new URL('../../', ROOT_SRC).href;
   F.cardUrl = function (token) { return F.root + 'card/?t=' + encodeURIComponent(token); };
+
+  /* Text size slider: three points (Default, Large, Extra large) with an A under each that grows to match.
+     Dragging previews the size live. Letting go saves it to this device (F.Store.a11y). Shared by the portal,
+     the patient app and the adult care view. */
+  var TSL = [['md', 'Default'], ['lg', 'Large'], ['xl', 'Extra large']];
+  function tslIndex(v) { for (var i = 0; i < TSL.length; i++) if (TSL[i][0] === v) return i; return 0; }
+  F.UI.textSlider = function (o) {
+    o = o || {}; var i = tslIndex(F.Store.a11y.get().text), id = o.id || 'tsl-range';
+    return h`<div class="tsl" data-tsl>
+      <div class="tsl-rail"><i class="tsl-tick" style="left:14px" aria-hidden="true"></i><i class="tsl-tick" style="left:50%" aria-hidden="true"></i><i class="tsl-tick" style="left:calc(100% - 14px)" aria-hidden="true"></i>
+        <input class="tsl-range" id="${id}" type="range" min="0" max="2" step="1" value="${i}" data-bind="tsl" aria-label="${o.label || 'Text size'}" aria-valuetext="${TSL[i][1]}" style="--p:${i * 50}%"></div>
+      <div class="tsl-letters" aria-hidden="true">${TSL.map(function (t, k) { return h`<button type="button" tabindex="-1" class="tsl-a tsl-a${k}" data-tsl-set="${k}" ${k === i ? h`data-on="1"` : ''}>A</button>`; })}</div>
+      <p class="tsl-cap" aria-live="polite">${TSL[i][1]}</p></div>`;
+  };
+  function tslApply(root, i, commit) {
+    if (!root) return;
+    var r = root.querySelector('.tsl-range'); r.value = i; r.style.setProperty('--p', (i * 50) + '%'); r.setAttribute('aria-valuetext', TSL[i][1]);
+    root.querySelectorAll('.tsl-a').forEach(function (b, k) { if (k === i) b.setAttribute('data-on', '1'); else b.removeAttribute('data-on'); });
+    var cap = root.querySelector('.tsl-cap'); if (cap) cap.textContent = TSL[i][1];
+    document.documentElement.dataset.text = TSL[i][0];
+    if (commit) F.Store.a11y.set('text', TSL[i][0]);
+  }
+  document.addEventListener('input', function (e) { var r = e.target.closest && e.target.closest('.tsl-range'); if (r) tslApply(r.closest('[data-tsl]'), +r.value, false); });
+  document.addEventListener('change', function (e) { var r = e.target.closest && e.target.closest('.tsl-range'); if (r) tslApply(r.closest('[data-tsl]'), +r.value, true); });
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-tsl-set]'); if (b) tslApply(b.closest('[data-tsl]'), +b.dataset.tslSet, true); });
 })(window.Folio);
