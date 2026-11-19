@@ -16,7 +16,7 @@
     var to = 'translate(' + pos.x + 'px,' + pos.y + 'px)';
     if (lastBubble && !reduced() && (lastBubble.x !== pos.x || lastBubble.y !== pos.y) && b.animate) {
       b.animate([{ transform: 'translate(' + lastBubble.x + 'px,' + lastBubble.y + 'px)', width: lastBubble.w + 'px' }, { transform: to, width: pos.w + 'px' }], { duration: 420, easing: 'cubic-bezier(.3,1.25,.5,1)' });
-      on.classList.add('fx-pop');
+      on.classList.add('fx-tilepop');
     }
     b.style.transform = to; b.style.opacity = '1';
     lastBubble = pos;
