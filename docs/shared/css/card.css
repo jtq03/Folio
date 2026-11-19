@@ -1,10 +1,8 @@
-/* Folio ID card. Front = paper, back = deep green with QR. Shapes: rounded, square, tab. */
+/* Folio ID card. Front shows the Folio ID, back carries the QR. Shapes (F.CARD_SHAPES): star, heart, cloud, tag and
+   rounded (the ID card, the default). Old saved shapes (square, tab) have no rules here, so they render as the ID card. */
 .fcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
 @media(max-width:700px){.fcards{grid-template-columns:1fr}}
 .fcard{position:relative;aspect-ratio:1.586;border-radius:18px;padding:1.1rem 1.2rem;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:var(--shadow-paper);container-type:inline-size}
-.fcard.square{border-radius:4px}
-.fcard.tab{border-radius:18px 18px 18px 18px;clip-path:none}
-.fcard.tab::before{content:"";position:absolute;right:14px;top:14px;width:18px;height:18px;border-radius:50%;background:var(--bg);box-shadow:inset 0 1px 3px rgba(31,47,22,.4)}
 .fcard.front{background:var(--beige-200);color:var(--green-900)}
 .fcard.back{background:var(--green-900);color:var(--beige-100)}
 .fcard .fc-brand{font:600 clamp(1.1rem,9cqw,1.7rem)/1 var(--font-display)}
@@ -37,32 +35,77 @@
 .fcard.back p b { color: var(--lime); }
 .fcard.back p { color: var(--beige-200); }
 
-/* ---------- Physical tag shapes (preview only). Add one class to .fcard: star, cloud, heart or tag.
-   Shapes are clip-path only (no SVG). Each sets a square or near-square box and pads the content into the
-   shape's safe area, so text never touches the cut edge. Front shows the Folio ID, back keeps the QR. ---------- */
-.fcard.star, .fcard.cloud, .fcard.heart { aspect-ratio: 1; border-radius: 0; text-align: center; align-items: center; justify-content: center; gap: .25rem; }
-.fcard.star .fc-circle, .fcard.cloud .fc-circle, .fcard.heart .fc-circle, .fcard.tag .fc-circle { display: none; }
-.fcard.star .fc-top, .fcard.cloud .fc-top, .fcard.heart .fc-top { justify-content: center; gap: .4rem; }
-.fcard.star.back .fc-right, .fcard.cloud.back .fc-right, .fcard.heart.back .fc-right { padding: 0; }
-.fcard.star.back .qrbox, .fcard.cloud.back .qrbox, .fcard.heart.back .qrbox { position: static; transform: none; width: 34cqw; height: 34cqw; margin: 0 auto .3rem; flex: none; }
-.fcard.star.back p, .fcard.cloud.back p, .fcard.heart.back p { display: none; }
-/* Star: five points, safe area is the central pentagon (about 38% of the box) */
-.fcard.star { clip-path: polygon(50% 2%, 61.8% 36%, 97.5% 36.5%, 69% 58%, 79.4% 92%, 50% 71.5%, 20.6% 92%, 31% 58%, 2.5% 36.5%, 38.2% 36%); padding: 34% 28% 26%; }
-.fcard.star .fc-brand, .fcard.star .fc-nfc, .fcard.star .fc-name, .fcard.star .fc-tag { display: none; }
-.fcard.star .fc-id { font-size: clamp(.8rem, 9cqw, 1.3rem); }
-/* Cloud: three overlapping bumps on a flat base */
-.fcard.cloud { aspect-ratio: 1.3; clip-path: none; border-radius: 50% 50% 18% 18% / 60% 60% 20% 20%; padding: 16% 14% 12%;
-  -webkit-mask: radial-gradient(circle at 28% 52%, #000 26%, transparent 26.5%), radial-gradient(circle at 52% 36%, #000 30%, transparent 30.5%), radial-gradient(circle at 76% 52%, #000 24%, transparent 24.5%), linear-gradient(#000, #000) 50% 100% / 82% 46% no-repeat;
-          mask: radial-gradient(circle at 28% 52%, #000 26%, transparent 26.5%), radial-gradient(circle at 52% 36%, #000 30%, transparent 30.5%), radial-gradient(circle at 76% 52%, #000 24%, transparent 24.5%), linear-gradient(#000, #000) 50% 100% / 82% 46% no-repeat; }
-.fcard.cloud .fc-nfc, .fcard.cloud .fc-tag { display: none; }
-/* Heart: two lobes and a point, safe area is the upper middle */
-.fcard.heart { clip-path: polygon(50% 96%, 10% 58%, 3% 42%, 3% 26%, 10% 13%, 22% 6%, 36% 7%, 50% 20%, 64% 7%, 78% 6%, 90% 13%, 97% 26%, 97% 42%, 90% 58%); padding: 20% 22% 34%; }
-.fcard.heart .fc-nfc, .fcard.heart .fc-tag, .fcard.heart .fc-brand { display: none; }
-/* Tag: luggage-style rectangle with a clipped top corner pair and a punched hole */
-.fcard.tag { aspect-ratio: 1.75; border-radius: 10px; padding-left: 18%; clip-path: polygon(12% 0, 100% 0, 100% 100%, 12% 100%, 0 78%, 0 22%); }
-.fcard.tag::before { content: ""; position: absolute; left: 5%; top: 50%; width: 7cqw; height: 7cqw; margin-top: -3.5cqw; border-radius: 50%; background: var(--bg-page); box-shadow: inset 0 0 0 2px var(--line-strong); }
-.fcard.tag.back .qrbox { left: 18%; }
-.fcard.tag.back .fc-right { padding-left: calc(40cqw + 18% - 1rem + .9rem); }
+/* ---------- Card shapes. Add one class to .fcard: star, heart, cloud or tag (rounded is the plain card above).
+   Star and heart and cloud are cut with clip-path or mask from a fixed box, and every child is placed inside the
+   shape's safe area (worked out from the shape's geometry), so the QR is never cut: its 4-module quiet zone stays
+   whole. Front = wordmark and Folio ID, back = the QR alone. Front and back share the box, so a flip lines up.
+   The width is set (not just a max), so the app's back face (height 100%, width auto) matches the front. ---------- */
+.fcard.star, .fcard.heart, .fcard.cloud, .fcard.tag { width: min(100%, 19rem); margin-inline: auto; border-radius: 0; padding: 0; text-align: center; }
+.fcard.tag { width: min(100%, 13.5rem); }
+.fcard:is(.star, .heart, .cloud) .fc-circle { display: none; }
+.fcard:is(.star, .heart, .cloud).front { align-items: center; justify-content: center; gap: .2rem; }
+.fcard:is(.star, .heart, .cloud) .fc-top { justify-content: center; }
+.fcard:is(.star, .heart, .cloud) .fc-nfc, .fcard:is(.star, .heart, .cloud) .fc-tag { display: none; }
+.fcard:is(.star, .heart, .cloud, .tag).back .fc-right p { display: none; }
+.fcard:is(.star, .heart, .cloud).back .fc-right { display: none; }
+.fcard:is(.star, .heart, .cloud, .tag).back .qrbox { top: auto; transform: none; border-radius: 6px; }
+
+/* Star: five chubby points (inner radius half the outer). Largest safe square: 43% of the box, centred at 50% 55% */
+.fcard.star { aspect-ratio: 1; clip-path: polygon(50% 2.5%, 64.5% 32%, 97.1% 36.7%, 73.5% 59.6%, 79.1% 92%, 50% 76.8%, 20.9% 92%, 26.5% 59.6%, 2.9% 36.7%, 35.5% 32%); }
+.fcard.star.front { padding: 30% 25% 26%; }
+.fcard.star .fc-brand .wordmark { font-size: clamp(.7rem, 6cqw, 1.1rem); }
+.fcard.star .fc-name { display: none; }
+.fcard.star .fc-id { font-size: clamp(.8rem, 8.4cqw, 1.5rem); }
+.fcard.star.back .qrbox { left: 31%; top: 36%; width: 38cqw; height: 38cqw; }
+
+/* Heart: two round lobes and a point (mask: two circles plus a 90 degree wedge tangent to them).
+   Safe square: 36% of the box, centred at 50% 45% */
+.fcard.heart { aspect-ratio: 1;
+  -webkit-mask: radial-gradient(27.6% 27.6% at 30% 36%, #000 99%, transparent 100%), radial-gradient(27.6% 27.6% at 70% 36%, #000 99%, transparent 100%), conic-gradient(from -45deg at 50% 89.6%, #000 90deg, transparent 0) 0 100% / 100% 48% no-repeat;
+          mask: radial-gradient(27.6% 27.6% at 30% 36%, #000 99%, transparent 100%), radial-gradient(27.6% 27.6% at 70% 36%, #000 99%, transparent 100%), conic-gradient(from -45deg at 50% 89.6%, #000 90deg, transparent 0) 0 100% / 100% 48% no-repeat; }
+.fcard.heart.front { padding: 22% 22% 34%; }
+.fcard.heart .fc-brand .wordmark { font-size: clamp(.7rem, 6cqw, 1.1rem); }
+.fcard.heart .fc-name { font-size: clamp(.6rem, 4.2cqw, .85rem); }
+.fcard.heart .fc-id { font-size: clamp(.8rem, 8.4cqw, 1.5rem); }
+.fcard.heart.back .qrbox { left: 32%; top: 27%; width: 36cqw; height: 36cqw; }
+
+/* Cloud: three bumps on a rounded base, landscape 1.35. Built from circles in a 135 x 100 grid
+   (A 36,60 r24; B 64,42 r30; C 97,56 r24; base 24..111 x 52..88 with round ends). Safe square: 44 x 44 at 67.5,60 */
+.fcard.cloud { aspect-ratio: 1.35;
+  -webkit-mask: radial-gradient(17.8% 24% at 26.7% 60%, #000 99%, transparent 100%), radial-gradient(22.2% 30% at 47.4% 42%, #000 99%, transparent 100%), radial-gradient(17.8% 24% at 71.9% 56%, #000 99%, transparent 100%), radial-gradient(13.3% 18% at 17.8% 70%, #000 99%, transparent 100%), radial-gradient(13.3% 18% at 82.2% 70%, #000 99%, transparent 100%), linear-gradient(#000, #000) 50% 81.25% / 64.4% 36% no-repeat;
+          mask: radial-gradient(17.8% 24% at 26.7% 60%, #000 99%, transparent 100%), radial-gradient(22.2% 30% at 47.4% 42%, #000 99%, transparent 100%), radial-gradient(17.8% 24% at 71.9% 56%, #000 99%, transparent 100%), radial-gradient(13.3% 18% at 17.8% 70%, #000 99%, transparent 100%), radial-gradient(13.3% 18% at 82.2% 70%, #000 99%, transparent 100%), linear-gradient(#000, #000) 50% 81.25% / 64.4% 36% no-repeat; }
+.fcard.cloud.front { padding: 15% 22% 12%; }
+.fcard.cloud .fc-brand .wordmark { font-size: clamp(.7rem, 5.4cqw, 1.1rem); }
+.fcard.cloud .fc-name { font-size: clamp(.6rem, 3.8cqw, .85rem); }
+.fcard.cloud .fc-id { font-size: clamp(.8rem, 7.6cqw, 1.5rem); }
+.fcard.cloud.back .qrbox { left: 34%; top: 38%; width: 32cqw; height: 32cqw; }
+
+/* Tag: a tall luggage tag. The body (::before) starts below a string loop (::after), has chamfered top corners and a
+   punched hole cut with a mask, so the page shows through the hole in any theme. */
+.fcard.tag { aspect-ratio: .6; overflow: visible; justify-content: flex-start; padding: 40% 10% 9%; text-align: left; }
+.fcard.tag.front, .fcard.tag.back { background: transparent; }
+.fcard.tag::before { content: ""; position: absolute; inset: 11% 0 0; border-radius: 0 0 14px 14px; background: var(--tag-bg, var(--green-800));
+  clip-path: polygon(17% 0, 83% 0, 100% 10%, 100% 100%, 0 100%, 0 10%);
+  -webkit-mask: radial-gradient(6% 4.05% at 50% 9%, transparent 96%, #000 100%); mask: radial-gradient(6% 4.05% at 50% 9%, transparent 96%, #000 100%); }
+.fcard.tag::after { content: ""; position: absolute; left: 41%; width: 18%; top: 0; height: 19.4%; border: 2px solid #A88B5C; border-bottom-color: transparent; border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%; box-sizing: border-box; }
+.fcard.tag.front { --tag-bg: var(--green-800); }
+.fcard.tag.back { --tag-bg: var(--green-900); }
+/* The Blue 300 circle is painted inside the body so it never spills past the tag edge, and sits clear of the text */
+.fcard.tag .fc-circle { display: none; }
+.fcard.tag.front::before { background: radial-gradient(34% 23% at 100% 54%, var(--blue-300) 99%, transparent 100%), var(--tag-bg); }
+.fcard.tag .fc-top, .fcard.tag .fc-bottom { position: relative; }
+.fcard.tag .fc-bottom { margin-top: auto; }
+.fcard.tag .fc-brand .wordmark { font-size: clamp(.9rem, 10cqw, 1.4rem); }
+.fcard.tag .fc-name { font-size: clamp(.7rem, 6.6cqw, .95rem); }
+.fcard.tag .fc-id { font-size: clamp(1.1rem, 13cqw, 1.8rem); }
+.fcard.tag .fc-tag { font-size: clamp(.5rem, 4.6cqw, .62rem); }
+.fcard.tag.back { justify-content: flex-end; }
+.fcard.tag.back .qrbox { left: 17%; top: 40%; width: 66cqw; height: 66cqw; }
+.fcard.tag.back .fc-right { padding: 0; text-align: center; }
+.fcard.tag.back h4 { font-size: clamp(.8rem, 8cqw, 1.1rem); margin: 0; }
 .fcard.back h4 { color: var(--beige-50); }
-.fcard.star.back h4, .fcard.heart.back h4 { font-size: clamp(.7rem, 6cqw, 1rem); }
-.fcard.tag.back p:not(:first-of-type) { display: none; }
+
+/* Preview grid: shaped cards sit centred in their column */
+.fcards .fcard:is(.star, .heart, .cloud, .tag) { align-self: center; }
+/* Patient app card: the rectangular shine would show outside a cut shape, so it is off for those shapes */
+.fa-float:has(.fcard:is(.star, .heart, .cloud, .tag)) .fa-shine { display: none; }

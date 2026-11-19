@@ -94,7 +94,6 @@ A persona walkthrough found no first run anywhere. The README section "Why each 
 ## Usability pass
 - Priority order on every main screen. The README section "Usability pass" lists U1 to U18 with reasons.
 - **Removed from view:**
-  - Card shape choice: the portal no longer offers it. `F.CARD_SHAPES` and `setCardShape` stay in the code, and every card uses 'rounded'.
   - The "soon" condition packages.
   - The sticker book in plant and level-only modes.
   - The count-up on portal Home stats.
@@ -134,7 +133,7 @@ Source: "Folio Design System Redesign.zip" from Claude Design (v4). Only its ful
   - v4 shows the plant as a readiness marker in clinical tables. Folio keeps the plant private to the teen.
   - v4 lists a blood sugar chart. Folio never shows glucose numbers, so none is built.
   - v4 says Red 500 is the star and mascot only. Folio still uses the star for the new-note badge, the guide finish line, the profile ring and the sign-off stamp.
-  - v4 has four card shapes. The usability pass kept one.
+  - v4 has four card shapes. The usability pass kept one; card shapes are now back (see Card shapes below).
   - The v4 calendar pattern (month, week strip) is not built. Visits use the ticket and phone reminders.
   - v4 names Lucide as a stand-in icon set. Folio keeps its own icons at a 2px stroke until the paper-cut set arrives.
 
@@ -157,4 +156,10 @@ From a review of MyTransition (McMaster and CanChild). README R1 to R7 give the 
 - Not synced: `me`, `mig`, accessibility, sign-in, setup, seen markers, and every key other than folio.proto.v2. With sync on, app Log out does not clear setup answers on the shared patient (`clearSetup` returns early).
 - Reset demo data replaces the whole workspace (PUT, new `meta.reset`); other devices go back to the seed and take the workspace.
 - Tests (scratchpad): `mockrtdb.js` is a Node mock of the REST API with SSE; `sy.js` drives portal, app and adult view as separate browser contexts against it.
+
+## Card shapes (restored)
+- The usability pass removed the shape choice; it is back. `F.CARD_SHAPES` (data.js) is, in picker order: star, heart, cloud, tag, rounded ('ID card', the default). `F.cardShape(s)` maps old saved values (square, tab) and anything unknown to 'rounded'; card.css has no rules for square or tab, so they render as the ID card everywhere. No migration.
+- Portal Cards: a radiogroup of five icon buttons (visible labels, arrow keys, check badge plus bold underlined label when selected) per row and in the Issue card sheet. A row change saves at once via `setCardShape`; the sheet saves on Issue card. The preview modal has the picker too.
+- `shared/css/card.css`: star (clip-path), heart and cloud (CSS masks of circles and a wedge), tag (portrait luggage tag, chamfered top, punched hole by mask, string loop), ID card (landscape). The QR on every back sits inside the shape's computed safe area and decodes with jsQR (checked in Playwright). The patient app Home card flips with the same shape. The app's QR sheet stays a plain square QR.
+- Pilot tags in the seed: Sam Orr star, Amber Baiden cloud, Lauren Martin heart, Jake Querin tag, everyone else ID card.
 

@@ -465,7 +465,10 @@ window.Folio = window.Folio || {};
     Nurse: 'View patients, update skills, write notes. Cannot sign off a level.',
     Coordinator: 'Add patients and manage cards. Cannot see clinical notes.'
   };
-  F.CARD_SHAPES = { rounded: 'Rounded card', square: 'Square corners', tab: 'Keyring tab', star: 'Star tag', cloud: 'Cloud tag', heart: 'Heart tag', tag: 'Luggage tag' };
+  /* Card shapes offered in the portal, in picker order. 'rounded' (the ID card) is the default; old saved values
+     (square, tab) and anything unknown render as the ID card, so no migration is needed. */
+  F.CARD_SHAPES = { star: 'Star', heart: 'Heart', cloud: 'Cloud', tag: 'Tag', rounded: 'ID card' };
+  F.cardShape = function (s) { return Object.prototype.hasOwnProperty.call(F.CARD_SHAPES, s) ? s : 'rounded'; };
   /* The shape of each printed trade-show tag */
   var TAG_SHAPE = { p8: 'star', p9: 'cloud', p10: 'heart', p11: 'tag' };
   var ATTN = { p2: 'No visit note since Sep 30', p5: 'Progress paused after illness. Check in.' };
