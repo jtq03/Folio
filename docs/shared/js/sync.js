@@ -344,7 +344,7 @@
   var es = null, esFails = 0, esT = 0, pollT = 0, polling = false, snapT = 0;
   function openStream() {
     closeStream();
-    if (document.hidden) return;
+    if (document.hidden || readOnly) return;
     if (!online()) { setStatus('offline'); return; }
     if (!window.EventSource || esFails >= 3) { startPolling(); return; }
     if (!connected) setStatus('connecting');
@@ -360,6 +360,9 @@
     es.onerror = function () {
       if (!opened || (es && es.readyState === 2)) {
         esFails++; closeStream();
+        /* A stream refused by the rules only says "error", so one plain read finds out why (and serves the data if it can) */
+        if (!opened && esFails === 1) pollOnce();
+        if (readOnly) return;
         if (!online()) { setStatus('offline'); return; }
         setStatus(connected ? 'offline' : 'connecting');
         esT = setTimeout(openStream, Math.min(30000, 1000 * Math.pow(2, esFails)));

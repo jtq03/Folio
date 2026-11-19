@@ -15,3 +15,5 @@
   :root:not([data-motion="reduce"]) .sync-chip[data-sync-state="syncing"] .sync-dot { animation: sync-pulse 1.2s ease-in-out infinite; }
 }
 @keyframes sync-pulse { 50% { opacity: .35; } }
+.sync-sec .btn-link { background: none; border: 0; padding: 0; font: inherit; color: var(--info-fg); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.sync-sec .btn-link:focus-visible { outline: var(--focus-ring, 3px solid currentColor); outline-offset: 2px; }
