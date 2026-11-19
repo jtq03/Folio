@@ -84,6 +84,6 @@
     notFound: function () { return { title: 'Not found', html: h`<h1>That page is not in the binder</h1><p><a href="#/">Back to Home</a></p>` }; } });
 
   F.actions.resetDemo = function () {
-    F.UI.confirmModal({ title: 'Reset demo data?', body: 'Patients, notes, cards, the access log, the team list and program settings go back to the starting demo on this device. You stay signed in, and accessibility settings stay as they are. This cannot be undone.', cta: 'Reset demo data', danger: true, onOk: function () { S.reset(); F.UI.toast('Demo data reset'); } });
+    F.UI.confirmModal({ title: 'Reset demo data?', body: F.Sync && F.Sync.enabled ? 'Patients, notes, cards, the access log, the team list and program settings go back to the starting demo on every device in this workspace (' + F.Sync.ws + '), not just this one. You stay signed in, and accessibility settings stay as they are. This cannot be undone.' : 'Patients, notes, cards, the access log, the team list and program settings go back to the starting demo on this device. You stay signed in, and accessibility settings stay as they are. This cannot be undone.', cta: 'Reset demo data', danger: true, onOk: function () { S.reset(); F.UI.toast('Demo data reset'); } });
   };
 })(window.Folio);

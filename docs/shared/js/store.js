@@ -80,7 +80,19 @@
   /* A failed write (usually storage full) used to vanish silently. Tell the page so it can roll back and explain. */
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch (e) { try { window.dispatchEvent(new CustomEvent('folio:savefail', { detail: { error: e } })); } catch (e2) {} return false; } }
   function emit() { subs.forEach(function (f) { f(); }); }
-  function commit(fn) { var r = fn(state); save(); emit(); return r; }
+  /* Sync hooks (sync.js). Local changes notify onCommit listeners; changes that came from another device go through
+     applyRemote, which never notifies them, so a remote update is never sent back out (no echo loop). */
+  var commitHooks = [], resetHooks = [];
+  function commit(fn) { var r = fn(state); save(); emit(); commitHooks.forEach(function (f) { try { f(); } catch (e) {} }); return r; }
+  /* A remote update should not jump the screen while someone types: hold the re-render until the field loses focus */
+  var heldEmit = false;
+  function typing() { var a = document.activeElement; return !!(a && a !== document.body && (a.isContentEditable || (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !/^(checkbox|radio|button|submit|range|file)$/i.test(a.type || '')))); }
+  function emitRemote() {
+    if (!typing()) { emit(); return; }
+    if (heldEmit) return; heldEmit = true;
+    document.addEventListener('focusout', function go() { setTimeout(function () { if (typing()) return; document.removeEventListener('focusout', go, true); heldEmit = false; emit(); }, 0); }, true);
+  }
+  function applyRemote(fn) { var r = fn(state); migrate(state); save(); emitRemote(); return r; }
   window.addEventListener('storage', function (e) { if (e.key === KEY) { state = load(); emit(); } });
 
   var uid = function (p) { return p + Math.random().toString(36).slice(2, 8); };
@@ -322,6 +334,8 @@
     /* Log out on a demo phone: put back what first-run setup wrote for this person (nickname, readiness checks, goals),
        from the seed, so the next person sees setup fresh. Everything else (notes, cards, visits) is kept. */
     clearSetup: function (pid) {
+      /* With sync on, the patient's data is shared with the care team's devices, so logging out a phone leaves it alone */
+      if (F.Sync && F.Sync.enabled) return;
       commit(function () {
         var p = sel.patient(pid); if (!p) return;
         var sp = F.SEED.patients.filter(function (x) { return x.id === pid; })[0];
@@ -352,7 +366,9 @@
 
   F.Store = {
     get: function () { return state; }, sub: function (f) { subs.push(f); }, commit: commit, sel: sel, act: act,
-    reset: function () { state = seed(); save(); emit(); },
+    reset: function () { state = seed(); save(); emit(); resetHooks.forEach(function (f) { try { f(); } catch (e) {} }); },
+    onCommit: function (f) { commitHooks.push(f); }, onReset: function (f) { resetHooks.push(f); }, applyRemote: applyRemote,
+    seed: seed, migrate: migrate, persist: save,
     a11y: { get: function () { return a11y; }, set: function (k, v) { a11y[k] = v; try { localStorage.setItem(A11Y_KEY, JSON.stringify(a11y)); } catch (e) {} applyA11y(); emit(); } }
   };
 })(window.Folio);

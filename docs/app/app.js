@@ -561,8 +561,9 @@
         ${standalone ? '' : h`<section class="ios-sec" aria-labelledby="i-h"><h2 class="ios-gh" id="i-h">${tile(ic('plus', 18), 3, true)}<span>Add Folio to your home screen</span></h2><div class="ios-list"><div class="ios-row has-tile">${tile(shareSvg, 1)}<span class="ios-rt"><b>${N.ios ? 'In Safari, tap Share, then Add to Home Screen' : 'Install it like an app'}</b><small>${N.ios ? 'On iOS 26, Share is in the ··· menu. ' : ''}Folio then opens full screen and works offline.</small></span></div>${deferred ? h`<button type="button" class="ios-row ios-addrow" data-action="install"><b>Install Folio</b></button>` : ''}</div></section>`}
         <section class="ios-sec fm-acct" aria-labelledby="acct-h"><h2 class="ios-gh" id="acct-h">${tile(ic('lock', 18), 3, true)}<span>Account</span></h2>
           <div class="ios-list"><div class="ios-row fm-who">${U.avatar(p, 44)}<span class="ios-rt"><b>Signed in as ${sel.full(p)}</b><small>On this ${N.ios ? 'iPhone' : 'device'} · Folio ID ${sel.fid(p.folioId)}${p.cardId ? ' · Card ' + sel.cardId(p) : ''}</small></span></div>
+            ${F.Sync && F.Sync.enabled ? h`<div class="ios-row sync-row"><span class="ios-rt"><b>Synced across your devices</b><small class="sync-chip" data-sync-state="${F.Sync.status}" role="status"><span class="sync-dot" aria-hidden="true"></span><span data-sync-text>${F.Sync.text()}</span></small></span></div>` : ''}
             <button type="button" class="ios-row destructive fm-logout" data-action="logOut"><span class="ios-rt"><b>Log out</b></span></button></div>
-          <p class="ios-gf">Folio remembers you on this ${N.ios ? 'iPhone' : 'device'} until you log out. Logging out brings back the welcome so someone else can set up. Your clinic keeps your Folio.</p></section>
+          <p class="ios-gf">Folio remembers you on this ${N.ios ? 'iPhone' : 'device'} until you log out. Logging out brings back the welcome so someone else can set up. Your clinic keeps your Folio.${F.Sync && F.Sync.enabled ? '' : ' Sync is off. Devices keep their own copy.'}</p></section>
         <section class="ios-sec" aria-labelledby="d-h"><h2 class="ios-gh" id="d-h"><span>Prototype</span></h2>
           <div class="ios-list"><label class="ios-row ios-selrow"><span class="ios-rt"><b>View the app as</b></span><select class="ios-select" data-change="asPatient" aria-label="View the app as">${st.patients.map(function (x) { return h`<option value="${x.id}" ${x.id === p.id ? 'selected' : ''}>${sel.full(x)} · L${x.level}</option>`; })}</select>${raw('<svg class="ios-chev" width="12" height="18" viewBox="0 0 12 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7l4-4 4 4M2 11l4 4 4-4"/></svg>')}</label></div>
           <div class="ios-list" style="margin-top:12px"><button type="button" class="ios-row" data-action="replayWelcome"><span class="ios-rt"><b>Show the welcome again</b><small>Run first-time setup as a teen or a parent</small></span>${CHEV}</button>
@@ -945,7 +946,7 @@
       onOk: function () { F.app.signOut(); } });
   };
   F.actions.resetDemoApp = function () {
-    U.confirmModal({ title: 'Reset demo data?', body: 'Every person, note, card and check goes back to the starting demo on this device. You stay signed in.', cta: 'Reset Demo Data', danger: true,
+    U.confirmModal({ title: 'Reset demo data?', body: F.Sync && F.Sync.enabled ? 'Every person, note, card and check goes back to the starting demo on every device that shares this demo, not just this phone. You stay signed in.' : 'Every person, note, card and check goes back to the starting demo on this device. You stay signed in.', cta: 'Reset Demo Data', danger: true,
       onOk: function () { saveWantNow(); S.reset(); cardFile = null; lvlFile = null; render('swap'); U.toast('Demo data reset'); } });
   };
 
