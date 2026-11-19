@@ -300,7 +300,8 @@
     if (path.indexOf('access/') === 0) return parseRec(at(['access', ek(path.slice(7))]));
     return parseRec(at([path]));
   }
-  function merge(paths) {
+  var staleT = {};
+  function merge(paths, recheck) {
     var apply = [], addAccess = [], dirty = false;
     var haveAccess = {}; (st().access || []).forEach(function (a) { if (a && a.id) haveAccess[a.id] = 1; });
     paths.forEach(function (path) {
@@ -314,9 +315,11 @@
       var lv = book.v[path] || [0, ''], rv = [r.u, r.c], c = cmp(rv, lv);
       var exists = localValue(path) !== undefined;
       if (c > 0 || !exists) { apply.push({ path: path, val: r.val, v: rv }); }
-      else if (c < 0) {
-        /* This device has the newer copy: make sure it goes up again (the server may hold an older write) */
-        if (hash(r.j) !== book.h[path]) { book.d[path] = 1; dirty = true; }
+      else if (c < 0 && hash(r.j) !== book.h[path]) {
+        /* This device has the newer copy and the server holds an older write. The device that made the newer copy
+           sends it again now; any other device waits a moment and only steps in if it is still stale. */
+        if (lv[1] === cid || recheck) { book.d[path] = 1; dirty = true; }
+        else { clearTimeout(staleT[path]); staleT[path] = setTimeout(function () { delete staleT[path]; merge([path], true); }, 2500); }
       }
     });
     if (apply.length || addAccess.length) {

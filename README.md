@@ -31,6 +31,38 @@ Install the patient app on a phone: open `/app/` on the published site, then use
 
 Every card QR encodes its tap link, `https://jtq03.github.io/Folio/card/?t=TOKEN&via=qr`. Make print-ready PNGs (Node 18+, no install needed) with `node tools/make-qr-pngs.js`. It writes `qr-codes/` (black on white 1200 px, brand colours in `brand/`, sample patients in `samples/`, and a 28 mm print sheet) and decodes every file to check it. Replace card makes a new link, so reprint after a replace. In the app, the welcome screen's "Scan your card" reads the QR with the camera, or from a photo.
 
+## Turn on sync (5 minutes)
+
+By default every browser keeps its own copy of the demo data. Sync mirrors the shared data (patients, notes, cards, photos, the access log, team, resources, program and clinic settings) to a Firebase Realtime Database, so a photo added in the patient app shows on the portal a moment later. Each device still keeps a full local copy and works offline.
+
+The database URL is already in `docs/shared/js/config.js` (`syncUrl`). The workspace name is the shared secret, so it is never committed: `workspace` stays empty, and sync stays off on a device until it has joined a workspace.
+
+1. In the Firebase console, create a project (Spark, the free plan, is enough). Build > Realtime Database > Create database. Pick a location and start in locked mode.
+2. Rules tab: paste one of these and Publish.
+
+   Demo rules (any workspace name):
+   ```json
+   {"rules":{"folio":{"$ws":{".read":true,".write":true}}}}
+   ```
+   Stricter (refuses names shorter than 20 characters, recommended):
+   ```json
+   {"rules":{"folio":{"$ws":{".read":"$ws.length >= 20",".write":"$ws.length >= 20"}}}}
+   ```
+3. Copy the database URL (like `https://your-project-default-rtdb.firebaseio.com`) into `syncUrl` in `docs/shared/js/config.js` if it is not there already, and commit.
+4. Pick a long, random workspace name of at least 20 characters, such as `folio-` followed by 20 random letters and digits. Share it only with the team, never in the repo.
+5. On the first device, open any surface once with `?ws=NAME` (for example `https://jtq03.github.io/Folio/?ws=NAME`). The device remembers it, takes it out of the address bar, and says "Synced with your team workspace". The first device to join an empty workspace fills it with its data.
+6. On every other device, use Settings > Sync > Copy setup link in the portal (or About me > Copy setup link in the app) and open the link there. The portal also copies links for the app and the adult view.
+
+To try sync on one device without changing anything, open a surface with `?sync=URL&ws=NAME` (the URL override lasts for that tab only). `?ws=` with no name turns sync off on that device again.
+
+What the status says: "Synced just now", "Syncing", "Offline, will sync when you are back", "Sync is blocked. Check the database rules." (Firebase answered 401 or 403, usually unpublished rules), or "Workspace name is too short. Use at least 20 characters."
+
+How it works, in short: writes are REST `PATCH` calls (`?print=silent`), reads are a Server-Sent Events stream, with a 4 second poll as the fallback. Each record is stored as `{u, c, s, j}` where `j` is the JSON as a string. The newest edit of a patient wins (whole patient record, last writer wins). The access log only grows and is merged by id. Reset demo data, after its confirmation, resets every device in the workspace. Log out on a phone, sign-in, setup, accessibility settings and other per-device markers are never synced.
+
+Security, honestly: with these rules anyone who knows the workspace name can read and change everything in it, photos included. That is fine for fictional demo data and nothing else. Never put real patient data or real photos of children there. A real system needs real sign-in (Firebase Authentication or a hospital identity provider), per-user rules, audit logging and a privacy review under PHIPA.
+
+Limits to know: the free plan allows 100 simultaneous connections, 1 GB stored and 10 GB downloaded a month. Photos are 256 px JPEGs (about 10 to 30 KB each) and every device downloads the whole workspace when it opens, so keep it to demo use.
+
 ## Try the story
 
 1. Portal > Patients > Maya R. Start visit, review skills, decide, write one note, sign off. The red star stamp lands.

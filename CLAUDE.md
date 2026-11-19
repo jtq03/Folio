@@ -147,3 +147,14 @@ From a review of MyTransition (McMaster and CanChild). README R1 to R7 give the 
 - **Portal:** Visit mode step 1 shows the teen's goals, view and answers per skill. The profile overview shows the 3 sentences and goals.
 - **Adult view:** At a glance opens with "In Maya's words" when the teen has written their 3 sentences.
 - **Flags:** TRANSITION-Q items are licensed, so none are used. The READDY item list could not be read, so Folio's questions are original and need a diabetes educator's review. The 3 sentences sit above allergies in the adult view; the team may want allergies first for ER use.
+
+## Sync across devices
+- Files: `shared/js/config.js` (loaded before store.js: `F.CONFIG`, `F.SYNC`, the `?ws=` and `?sync=` overrides), `shared/js/sync.js` (after store.js: `F.Sync`), `shared/css/sync.css`. All three index.html files load them and `sw.js` caches them (v16).
+- Off unless a device has both a URL and a workspace. `syncUrl` is committed; the workspace name is the secret and is never committed. A device joins with `?ws=NAME` (saved to localStorage `folio.sync.ws`, removed from the address bar, one toast). Names under 20 characters show an error and stay off. Settings > Sync and About me have Copy setup link.
+- Firebase Realtime Database over REST, no SDK: PATCH writes (`?print=silent`), an EventSource stream for reads, polling every 4 s as the fallback. Layout `/folio/<ws>/{patients/<id>, team, resources, program, clinic, access/<id>, meta}`. Each record is `{u, c, s, j}` with `j` a JSON string.
+- Store hooks: `S.onCommit`, `S.onReset`, `S.applyRemote(fn)` (runs migrate, saves, re-renders, never fires onCommit, and holds the re-render while someone types), `S.persist`, `S.seed`, `S.migrate`. Patients carry `_u`.
+- Merge: last writer wins per record by (u, client id); the access log is a union by id, newest first, capped at 500. Local-first: bookkeeping in `folio.sync.book.<ws>` (hashes, versions, pending records) so edits made offline or in a closed tab go up on the next open. Nothing is sent before the first read, so a device that missed a reset cannot undo it.
+- Not synced: `me`, `mig`, accessibility, sign-in, setup, seen markers, and every key other than folio.proto.v2. With sync on, app Log out does not clear setup answers on the shared patient (`clearSetup` returns early).
+- Reset demo data replaces the whole workspace (PUT, new `meta.reset`); other devices go back to the seed and take the workspace.
+- Tests (scratchpad): `mockrtdb.js` is a Node mock of the REST API with SSE; `sy.js` drives portal, app and adult view as separate browser contexts against it.
+
