@@ -78,6 +78,18 @@
 
   F.Pages.settings = function () {
     var a = S.a11y.get(), cfg = S.get().program, st = S.get().clinic, me = sel.me();
+    /* Sync across devices (shared/js/sync.js). Off: one plain line. On: live status, workspace and Sync now. */
+    var syncSec = function () {
+      var Y = F.Sync || { status: 'off', text: function () { return 'Sync is off. Devices keep their own copy.'; } };
+      if (Y.status === 'off') return h`<section class="sec sync-sec" aria-labelledby="h-sync"><h2 id="h-sync">Sync</h2><p class="small muted">Sync is off. Devices keep their own copy.</p><p class="small muted">To join your team, open the setup link a teammate copied from their Settings.</p></section>`;
+      return h`<section class="sec sync-sec" aria-labelledby="h-sync"><h2 id="h-sync">Sync</h2>
+        <p class="sync-line"><span class="sync-chip" data-sync-state="${Y.status}" role="status" aria-live="polite"><span class="sync-dot" aria-hidden="true"></span><span data-sync-text>${Y.text()}</span></span></p>
+        <dl class="kv"><dt>Workspace</dt><dd><code>${Y.ws}</code></dd></dl>
+        <div class="row wrap">${Y.enabled ? h`<button class="btn" data-action="syncNow">${ic('refresh', 16)} Sync now</button>` : ''}<button class="btn" data-action="syncCopy" data-v="portal">Copy setup link</button></div>
+        <p class="small muted">Open the setup link on a new device to join this workspace. For the other parts of Folio: <button class="btn-link" data-action="syncCopy" data-v="app">copy the patient app link</button> or <button class="btn-link" data-action="syncCopy" data-v="card">copy the adult view link</button>.</p>
+        <p class="small muted">Patients, notes, cards, the access log, the team list, resources and program settings sync to every device that uses this workspace. Sign-in, accessibility and other settings for this device stay on this device. Reset demo data resets every device in this workspace.</p>
+        <p class="small muted">Prototype only. Anyone who has the setup link or the workspace name can read this demo data, photos included. Never add real patient details or real photos. A real service needs proper sign-in.</p></section>`;
+    };
     var seg = function (k, label) { return h`<div class="setting"><div><b id="lb-${k}">${label}</b></div><div class="seg" role="group" aria-labelledby="lb-${k}">${OPTS[k].map(function (o) { return h`<button data-action="a11y" data-k="${k}" data-v="${o[0]}" aria-pressed="${String(a[k] === o[0])}">${o[1]}</button>`; })}</div></div>`; };
     var sw = function (k, label, desc) { return h`<div class="setting"><div><b>${label}</b><p>${desc}</p></div><label class="switch"><input type="checkbox" ${cfg[k] !== false ? 'checked' : ''} data-change="notify" data-k="${k}" aria-label="${label}"><span class="track"></span></label></div>`; };
     var checks = ['Patient and guardian consent recorded at enrolment', 'Every profile open is logged', 'Folio stores links to records, never records', 'Card sessions time out', 'Patients can see who opened their profile'];
@@ -97,7 +109,10 @@
           <ul class="card-list" style="margin-top:.5rem">${checks.map(function (c) { return h`<li>${ic('check', 18)}<span>${c}</span></li>`; })}</ul>
           <p class="small muted">Prototype checklist. Not legal advice. A real deployment needs a privacy review under the rules that apply to the hospital.</p></section>
         <section class="sec"><h2>Clinic</h2><dl class="kv"><dt>Hospital</dt><dd>${st.org}</dd><dt>Team</dt><dd>${st.team}</dd><dt>Condition package</dt><dd>Type 1 diabetes</dd></dl></section>
-        <section class="sec"><h2>Data</h2><p class="small muted">Reset demo data puts patients, notes, cards and the access log back to the starting demo on this device. You stay signed in.</p><div class="row wrap"><button class="btn" data-action="exportAll">Export roster (CSV)</button><button class="btn btn-danger" data-action="resetDemo">Reset demo data</button></div></section>
+        ${syncSec()}
+        <section class="sec"><h2>Data</h2><p class="small muted">${F.Sync && F.Sync.enabled ? 'Reset demo data puts patients, notes, cards and the access log back to the starting demo on every device in this workspace. You stay signed in.' : 'Reset demo data puts patients, notes, cards and the access log back to the starting demo on this device. You stay signed in.'}</p><div class="row wrap"><button class="btn" data-action="exportAll">Export roster (CSV)</button><button class="btn btn-danger" data-action="resetDemo">Reset demo data</button></div></section>
       </div>` };
   };
+  F.actions.syncCopy = function (el) { if (!F.Sync || !F.Sync.copy) return; F.Sync.copy(el.dataset.v).then(function (y) { U.toast(y ? 'Link copied. Open it on the new device.' : 'Could not copy. The link is ' + F.Sync.link(el.dataset.v)); }); };
+  F.actions.syncNow = function () { if (!F.Sync || !F.Sync.enabled) return; F.Sync.now().then(function () { U.toast(F.Sync.status === 'synced' ? 'Synced' : F.Sync.text()); }); };
 })(window.Folio);

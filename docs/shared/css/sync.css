@@ -1,0 +1,19 @@
+/* Sync status chip (shared/js/sync.js). Used in portal Settings and the patient app's About me. v4 tokens only. */
+.sync-line { margin: .25rem 0 .75rem; }
+.sync-chip { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; color: var(--success-fg); }
+.sync-sec .sync-chip { padding: .2rem .7rem; border-radius: var(--radius-pill, 999px); background: var(--success-bg); }
+.sync-dot { width: .55rem; height: .55rem; border-radius: 50%; background: currentColor; flex: none; }
+.sync-chip[data-sync-state="syncing"], .sync-chip[data-sync-state="connecting"] { color: var(--info-fg); }
+.sync-sec .sync-chip[data-sync-state="syncing"], .sync-sec .sync-chip[data-sync-state="connecting"] { background: var(--info-bg); }
+.sync-chip[data-sync-state="offline"] { color: var(--warning-fg); }
+.sync-sec .sync-chip[data-sync-state="offline"] { background: var(--warning-bg); }
+.sync-chip[data-sync-state="error"] { color: var(--error-fg); }
+.sync-sec .sync-chip[data-sync-state="error"] { background: var(--error-bg); }
+.sync-row .sync-chip { font-weight: 500; }
+.sync-sec code { font-size: .9em; word-break: break-all; }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduce"]) .sync-chip[data-sync-state="syncing"] .sync-dot { animation: sync-pulse 1.2s ease-in-out infinite; }
+}
+@keyframes sync-pulse { 50% { opacity: .35; } }
+.sync-sec .btn-link { background: none; border: 0; padding: 0; font: inherit; color: var(--info-fg); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.sync-sec .btn-link:focus-visible { outline: var(--focus-ring, 3px solid currentColor); outline-offset: 2px; }
