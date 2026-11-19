@@ -1,16 +1,17 @@
 /* Folio portal opening intro. Owned by portal/intro.js. Adapted from docs/app/intro.css for a full desktop viewport.
    Sizes are multiples of --s (the mark's width), set by intro.js from the window size. The sheet uses the page's own
-   beige and paper grain (fixed, like body in paper.css), so the first frame matches the portal background. */
+   colour in each scheme (beige paper in light, night paper in dark), so the first frame matches the portal background. */
 .fi {
-  --fi-paper: var(--beige-100, #F7F0E2); --fi-vig: rgba(31, 47, 22, .05); --fi-ink: #1F2F16; --fi-ink2: #2D493E; --fi-halo: rgba(255, 251, 240, .7);
-  --fi-edge: transparent; --fi-shadow: rgba(31, 47, 22, .24);
+  /* Explicit colours only (no theme variables that flip): light = warm paper and Green 900 ink */
+  --fi-paper: #F7F0E2; --fi-vig: rgba(31, 47, 22, .05); --fi-ink: #1F2F16; --fi-ink2: #2D493E; --fi-halo: rgba(255, 251, 240, .7);
+  --fi-edge: transparent; --fi-shadow: rgba(31, 47, 22, .24); --fi-grain: var(--grain, none);
   position: absolute; inset: 0; z-index: 115; overflow: hidden; perspective: 3200px;
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: pointer; touch-action: manipulation;
 }
 .fi-sheet {
   position: absolute; inset: 0; transform-origin: 0 50%; -webkit-backface-visibility: hidden; backface-visibility: hidden;
   background-color: var(--fi-paper);
-  background-image: var(--grain, none), linear-gradient(180deg, transparent 55%, var(--fi-vig) 100%);
+  background-image: var(--fi-grain), linear-gradient(180deg, transparent 55%, var(--fi-vig) 100%);
   background-attachment: fixed, scroll;
 }
 .fi-curl { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgba(31, 47, 22, 0), rgba(31, 47, 22, .22) 80%, rgba(255, 251, 240, .5)); }
@@ -63,9 +64,20 @@
 .fi-portal.calm .fi-c, .fi-portal.calm .fi-sh, .fi-portal.calm .fi-star, .fi-portal.calm .fi-w0 { opacity: 1; }
 .fi-portal.calm .fi-wl, .fi-portal.calm .fi-wf, .fi-portal.calm .fi-ws, .fi-portal.calm .fi-nib { visibility: hidden; }
 
-/* Dark safe: the portal has no dark theme, so the sheet keeps the page's light paper and ink in every scheme.
-   If tokens.css gains a dark --beige-100 later, the sheet follows it; the ink then follows --text. */
-.fi-portal { --fi-ink: var(--text, #1F2F16); color-scheme: light; }
+/* The intro has its own palette that follows the colour scheme, with the same guard as tokens.css
+   (Settings can force light). Dark = night paper #16241D, the portal's dark page colour, so the first frame
+   matches the page; cream wordmark (14:1), tagline #C9D3CB (10:1), cream outlines so the dark card layers
+   show, star stays Red 500. The old rule took --text, which flips to cream in dark while the paper stayed light. */
+.fi-portal { color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fi-portal {
+    --fi-paper: #16241D; --fi-vig: rgba(0, 0, 0, .22); --fi-ink: #F3EDE0; --fi-ink2: #C9D3CB; --fi-halo: transparent;
+    --fi-edge: rgba(243, 237, 224, .55); --fi-shadow: rgba(0, 0, 0, .55); --fi-grain: none; color-scheme: dark;
+  }
+  :root:not([data-theme="light"]) .fi-portal .fi-c { box-shadow: 0 1px 2px rgba(0, 0, 0, .4), inset 0 0 0 1.5px var(--fi-edge); }
+  :root:not([data-theme="light"]) .fi-portal .fi-star { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+  :root:not([data-theme="light"]) .fi-portal .fi-curl { background: linear-gradient(90deg, rgba(0, 0, 0, .1), rgba(0, 0, 0, .45) 85%, rgba(243, 237, 224, .12)); }
+}
 @media (prefers-reduced-motion: reduce) { .fi-portal { cursor: default; } }
 html[data-contrast="high"] .fi-sheet { background-image: none; }
 @media (prefers-contrast: more) { .fi-sheet { background-image: none; } }

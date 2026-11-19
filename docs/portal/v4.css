@@ -121,8 +121,13 @@ table.data tr:hover td { background: var(--tint-row); }
 .visit-skill .seg button[aria-pressed="true"] { background: var(--fg-1); color: var(--bg-surface); box-shadow: none; }
 /* "Where patients are" bars: flat sunken bars, hover and focus fill Green 800 with cream text */
 .stairs-live li a { background-color: var(--bg-sunken); background-image: none; color: var(--fg-1); border-radius: 6px 6px 0 0; box-shadow: none; }
-.stairs-live li a:hover, .stairs-live li a:focus-visible { background-color: var(--action); color: var(--on-action); }
-.stairs-live li a:hover *, .stairs-live li a:focus-visible * { color: inherit; }
+/* Doubled class: the shared rule a:not(.btn):not(.nav-i):hover (0,3,1) used to win and paint the text in the fill colour */
+.stairs.stairs-live li a:hover, .stairs.stairs-live li a:focus-visible, .stairs.stairs-live li a.fx-pop-on { background-color: var(--action); color: var(--on-action); }
+.stairs.stairs-live li a:is(:hover, :focus-visible, .fx-pop-on) > span { color: inherit; }
+/* The count chip sits on the card above the step, so it keeps its own dark chip and cream text in every state */
+.stairs.stairs-live li a .cnt, .stairs.stairs-live li a:is(:hover, :focus-visible, .fx-pop-on) .cnt { background: #1F2F16; color: #FCF8F1; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stairs.stairs-live li a .cnt, :root:not([data-theme="light"]) .stairs.stairs-live li a:is(:hover, :focus-visible, .fx-pop-on) .cnt { background: #F3EDE0; color: #16241D; } }
+.stairs.stairs-live li a:focus-visible { outline: 3px solid var(--focus-ring, #395B50); outline-offset: 2px; }
 /* v5: the teen's 3 sentences in their voice, and the readiness check answers in Visit mode */
 .s3-quote { background: var(--voice-patient); border-radius: 20px 20px 20px 8px; padding: .8rem 1rem; }
 .s3-quote p { margin: 0; color: var(--fg-1); }
@@ -173,3 +178,27 @@ table.data tr:hover td { background: var(--tint-row); }
   .setting .seg { align-self: flex-start; }
   .stats { grid-template-columns: 1fr 1fr; gap: .6rem; }
 }
+
+/* ---------- Cards: shape picker (radiogroup of icon buttons) ----------
+   Selected: filled Green 900 tile, a check badge and a bold label, so the choice never rests on colour alone. */
+.shape-note { display: flex; align-items: flex-start; gap: .5rem; margin: -.25rem 0 1rem; color: var(--fg-2); max-width: 60rem; }
+.shape-note .shape-ic { flex: none; margin-top: .1rem; color: var(--fg-1); }
+.shape-note b { color: var(--fg-1); }
+.shape-pick { display: flex; flex-wrap: wrap; gap: .35rem; margin: .35rem 0 .1rem; }
+.shape-opt { display: inline-flex; flex-direction: column; align-items: center; gap: .2rem; min-width: 3.25rem; padding: .2rem .15rem; border: 0; border-radius: 10px; background: transparent; color: var(--fg-1); cursor: pointer; font: 600 .75rem/1.1 var(--font-ui); }
+.shape-tile { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; border: 1.5px solid var(--line-strong); background: var(--bg-surface, transparent); color: var(--fg-1); transition: background-color var(--dur-fast, .15s), border-color var(--dur-fast, .15s); }
+.shape-opt:hover .shape-tile { border-color: var(--fg-1); background: var(--bg-sunken); }
+.shape-opt[aria-checked="true"] .shape-tile { background: var(--fg-1); border-color: var(--fg-1); color: var(--bg-page); }
+.shape-opt[aria-checked="true"] .shape-lbl { font-weight: 800; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; }
+.shape-tick { display: none; position: absolute; right: -6px; top: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--lime, #D4E86E); box-shadow: 0 0 0 2px var(--bg-page); }
+.shape-tick::after { content: ""; position: absolute; left: 6px; top: 3px; width: 4px; height: 8px; border: solid #1F2F16; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.shape-opt[aria-checked="true"] .shape-tick { display: block; }
+.shape-opt:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.shape-lbl { white-space: nowrap; color: var(--fg-1); }
+table.data .shape-pick { flex-wrap: nowrap; gap: .2rem; }
+table.data .shape-opt { min-width: 2.9rem; }
+table.data .shape-tile { width: 38px; height: 38px; }
+.modal .shape-pick { margin: .5rem 0 1rem; }
+.shape-opt .shape-tile .shape-ic { color: inherit; }
+/* Night: the green card shapes sit on a green sheet, so the preview gets a thin cream outline that follows each cut shape */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fcards { filter: drop-shadow(0 0 .6px rgba(243,237,224,.9)) drop-shadow(0 0 .6px rgba(243,237,224,.6)); } }

@@ -81,11 +81,77 @@
     a.classList.remove('fx-wig'); void a.offsetWidth; a.classList.add('fx-wig');
   });
 
+  /* Home staircase popover: level name and who is on that step. One paper popover on <body> (position fixed),
+     so the card edge never clips it. Shown on hover, on keyboard focus, and on a first touch tap (a second tap
+     follows the link). Placed above the step, flipped below when there is no room, and slid sideways to stay
+     inside the card. The link's aria-label already says the same, so the popover is aria-hidden. */
+  var pop = null, popFor = null, touchArmed = null;
+  function popEl() {
+    if (pop && pop.isConnected) return pop;
+    pop = document.createElement('div'); pop.className = 'fx-pop'; pop.setAttribute('aria-hidden', 'true'); pop.id = 'fx-pop';
+    document.body.appendChild(pop); return pop;
+  }
+  function stepLevel(a) { var m = /[?&]lv=(\d+)/.exec(a.getAttribute('href') || ''); return m ? +m[1] : 0; }
+  function popHtml(n) {
+    var L = (F.LEVELS || []).filter(function (l) { return l.n === n; })[0], st = S.get(), sel = S.sel;
+    var who = (st.patients || []).filter(function (p) { return p.level === n; });
+    var people = who.length ? '<ul class="fx-pop-who">' + who.map(function (p) { return '<li>' + U.avatar(p, 24).s + '<span>' + U.esc(sel.full(p)) + '</span></li>'; }).join('') + '</ul>'
+      : '<p class="fx-pop-none">No one yet</p>';
+    return '<span class="fx-pop-eb">Level ' + n + (who.length ? ' · ' + who.length + (who.length === 1 ? ' patient' : ' patients') : '') + '</span>' +
+      '<b class="fx-pop-t">' + U.esc(L ? L.name : '') + '</b>' + people + '<i class="fx-pop-ar"></i>';
+  }
+  function place(a) {
+    var el = popEl(), r = a.getBoundingClientRect(), card = a.closest('.sec') || document.body, cr = card.getBoundingClientRect();
+    var vw = document.documentElement.clientWidth, vh = window.innerHeight, gap = 10;
+    var lo = Math.max(8, cr.left + 8), hi = Math.min(vw - 8, cr.right - 8);
+    el.style.maxWidth = Math.max(160, Math.min(240, hi - lo)) + 'px';
+    var w = el.offsetWidth, ht = el.offsetHeight, cx = r.left + r.width / 2;
+    var left = Math.min(Math.max(cx - w / 2, lo), hi - w); left = Math.max(8, left);
+    /* The count chip sits above the step: start above it */
+    var chip = a.querySelector('.cnt'), topEdge = chip ? Math.min(r.top, chip.getBoundingClientRect().top) : r.top;
+    var top = topEdge - gap - ht, below = top < 8;
+    if (below) top = Math.min(r.bottom + gap, vh - ht - 8);
+    el.classList.toggle('below', below);
+    el.style.left = Math.round(left) + 'px'; el.style.top = Math.round(top) + 'px';
+    el.style.setProperty('--ax', Math.round(Math.min(Math.max(cx - left, 14), w - 14)) + 'px');
+  }
+  function showPop(a) {
+    var n = stepLevel(a); if (!n) return;
+    var el = popEl(); if (popFor !== a) { if (popFor) popFor.classList.remove('fx-pop-on'); el.innerHTML = popHtml(n); }
+    popFor = a; a.classList.add('fx-pop-on'); el.classList.add('on'); place(a);
+  }
+  function hidePop() {
+    if (popFor) popFor.classList.remove('fx-pop-on');
+    popFor = null; touchArmed = null; if (pop) pop.classList.remove('on');
+  }
+  function stepOf(t) { return t && t.closest ? t.closest('.stairs-live li a') : null; }
+  document.addEventListener('pointerover', function (e) { if (e.pointerType === 'touch') return; var a = stepOf(e.target); if (a) showPop(a); });
+  document.addEventListener('pointerout', function (e) { if (e.pointerType === 'touch') return; var a = stepOf(e.target); if (a && !a.contains(e.relatedTarget) && document.activeElement !== a) hidePop(); });
+  document.addEventListener('focusin', function (e) { var a = stepOf(e.target); if (a) showPop(a); else if (popFor) hidePop(); });
+  document.addEventListener('focusout', function (e) { var a = stepOf(e.target); if (a && !stepOf(e.relatedTarget)) hidePop(); });
+  document.addEventListener('pointerdown', function (e) { if (e.pointerType === 'touch') touchArmed = touchArmed && stepOf(e.target) === touchArmed ? touchArmed : null; });
+  document.addEventListener('click', function (e) {
+    var a = stepOf(e.target);
+    if (!a) { if (popFor) hidePop(); return; }
+    /* Touch: the first tap shows who is on the step, the second tap opens the Patients list */
+    if (matchMedia('(hover: none)').matches && touchArmed !== a) { e.preventDefault(); showPop(a); touchArmed = a; return; }
+    hidePop();
+  }, true);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && popFor) hidePop(); });
+  window.addEventListener('scroll', function () { if (popFor) place(popFor); }, true);
+  window.addEventListener('resize', function () { if (popFor) place(popFor); });
+  window.addEventListener('hashchange', hidePop);
+
   /* Loops pause when the tab is hidden */
   document.addEventListener('visibilitychange', function () { document.documentElement.classList.toggle('fx-hidden', document.hidden); });
 
   F.fx.after = function (root, loc, isNav) {
     bubble(root);
+    /* A store re-render swaps the steps: keep the popover on the new node for the same level, or close it */
+    if (popFor && !popFor.isConnected) {
+      var n = stepLevel(popFor), again = n && document.querySelector('.stairs-live li a[href$="lv=' + n + '"]');
+      popFor = null; if (again && !isNav && (again.matches(':hover') || document.activeElement === again)) showPop(again); else hidePop();
+    }
     if (!isNav) return;
     /* Count-up removed: it showed wrong numbers (0) for the first second, and clinicians read these at a glance */
     finale(root);
