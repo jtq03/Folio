@@ -14,11 +14,15 @@
    signed-in person "me", migration flags). Those live outside the synced keys. */
 (function (F) {
   'use strict';
-  var S = F.Store, CFG = F.SYNC || { url: '', ws: 'folio-demo' };
+  var S = F.Store, CFG = F.SYNC || { url: '', ws: '' };
   var SCHEMA = 1, KEYS = ['team', 'resources', 'program', 'clinic'], ACCESS_CAP = 500;
   var listeners = [];
+  var MIN_WS = 20, SHORT = 'Workspace name is too short. Use at least 20 characters.', BLOCKED = 'Sync is blocked. Check the database rules.';
+  var tooShort = !!(CFG.url && CFG.ws && CFG.ws.length < MIN_WS);
   var Sync = F.Sync = {
-    enabled: !!CFG.url, ws: CFG.ws, url: CFG.url, status: CFG.url ? 'connecting' : 'off', last: 0, mode: '',
+    /* enabled: this device is syncing. A workspace that is too short shows an error and keeps sync off. */
+    enabled: !!(CFG.url && CFG.ws) && !tooShort, ws: CFG.ws, url: CFG.url, last: 0, mode: '',
+    status: tooShort ? 'error' : CFG.url && CFG.ws ? 'connecting' : 'off', why: tooShort ? SHORT : '',
     onStatus: function (fn) { listeners.push(fn); },
     now: function () { return Promise.resolve(); },
     /* Plain words for the status chip */
@@ -28,7 +32,7 @@
         case 'connecting': return 'Connecting';
         case 'syncing': return 'Syncing';
         case 'offline': return 'Offline, will sync when you are back';
-        case 'error': return Sync.why || 'Sync paused. Check the database rules.';
+        case 'error': return Sync.why || BLOCKED;
         default: return 'Synced ' + ago(Sync.last);
       }
     },
@@ -52,6 +56,27 @@
     if (st === 'synced') Sync.last = Date.now();
     var changed = Sync.status !== st; Sync.status = st; Sync.why = why || '';
     paint(); if (changed) listeners.forEach(function (f) { try { f(st); } catch (e) {} });
+  }
+  /* Setup links: open one on a new device to join this workspace. surface is portal, app or card. */
+  Sync.link = function (surface) {
+    var base = (F.CONFIG.links || {})[surface] || '';
+    return base && Sync.ws ? base + (base.indexOf('?') < 0 ? '?' : '&') + 'ws=' + encodeURIComponent(Sync.ws) : '';
+  };
+  Sync.copy = function (surface) {
+    var t = Sync.link(surface); if (!t) return Promise.resolve(false);
+    function legacy() { try { var a = document.createElement('textarea'); a.value = t; a.setAttribute('readonly', ''); a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select(); var r = document.execCommand('copy'); a.remove(); return r; } catch (e) { return false; } }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).then(function () { return true; }, function () { return legacy(); }); } catch (e) {}
+    return Promise.resolve(legacy());
+  };
+  /* One toast after opening a setup link, once the first sync finishes (or the error, if it cannot) */
+  if (CFG.joined) {
+    var toasted = false;
+    var joinToast = function () {
+      if (toasted || !(F.UI && F.UI.toast)) return;
+      if (Sync.status === 'synced') { toasted = true; F.UI.toast('Synced with your team workspace'); }
+      else if (Sync.status === 'error') { toasted = true; F.UI.toast(Sync.text()); }
+    };
+    listeners.push(joinToast); setTimeout(joinToast, 600);
   }
   document.addEventListener('folio:rendered', paint);
   setInterval(paint, 30000);
@@ -185,7 +210,7 @@
   }
   function fail(e) {
     inflight = false;
-    if (e && e.denied) { readOnly = true; setStatus('error', 'Sync paused. The database rules do not allow this workspace.'); return; }
+    if (e && e.denied) { readOnly = true; setStatus('error', BLOCKED); return; }
     setStatus('offline');
     retryN = Math.min(retryN + 1, 6); clearTimeout(retryT);
     retryT = setTimeout(function () { flush(); }, Math.min(30000, 1000 * Math.pow(2, retryN)) + Math.random() * 300);
@@ -330,7 +355,7 @@
     es.addEventListener('put', function (e) { esFails = 0; clearTimeout(snapT); try { onEvent('put', JSON.parse(e.data)); } catch (x) {} });
     es.addEventListener('patch', function (e) { esFails = 0; try { onEvent('patch', JSON.parse(e.data)); } catch (x) {} });
     es.addEventListener('keep-alive', function () {});
-    es.addEventListener('cancel', function () { closeStream(); readOnly = true; setStatus('error', 'Sync paused. The database rules do not allow this workspace.'); });
+    es.addEventListener('cancel', function () { closeStream(); readOnly = true; setStatus('error', BLOCKED); });
     es.addEventListener('auth_revoked', function () { closeStream(); esT = setTimeout(openStream, 1000); });
     es.onerror = function () {
       if (!opened || (es && es.readyState === 2)) {
@@ -347,7 +372,7 @@
   function pollOnce() {
     if (!online()) { setStatus('offline'); return Promise.resolve(); }
     Sync.stats.polls++;
-    return req('GET', '').then(function (data) { mirror = data; snapshot(); }, function (e) { if (e && e.denied) { readOnly = true; setStatus('error', 'Sync paused. The database rules do not allow this workspace.'); } else setStatus('offline'); });
+    return req('GET', '').then(function (data) { mirror = data; snapshot(); }, function (e) { if (e && e.denied) { readOnly = true; setStatus('error', BLOCKED); } else setStatus('offline'); });
   }
   function startPolling() {
     Sync.mode = 'poll'; if (polling) return; polling = true;
