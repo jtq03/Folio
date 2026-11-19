@@ -90,7 +90,7 @@
         <p class="small muted account-note">Log out goes back to the sign-in screen and shows the welcome card again, so the demo can start over. Patient data stays. To put the patients back to the start, use Reset demo data below.</p>
       </section>
       <div class="settings-grid">
-        <section class="sec"><h2>Accessibility</h2><p class="small muted">Text scales everywhere. Reduce motion removes sliding and lifting.</p>${seg('text', 'Text size')}${seg('contrast', 'Contrast')}${seg('motion', 'Motion')}${seg('spacing', 'Text spacing')}</section>
+        <section class="sec"><h2>Accessibility</h2><p class="small muted">Text scales everywhere. Reduce motion removes sliding and lifting.</p><div class="setting setting-tsl"><div><b id="lb-text">Text size</b><p>Drag to make text larger everywhere on this device.</p></div>${U.textSlider({ id: 'tsl-portal', label: 'Text size' })}</div>${seg('contrast', 'Contrast')}${seg('motion', 'Motion')}${seg('spacing', 'Text spacing')}</section>
         <section class="sec"><h2>Notifications</h2>${sw('n_ready', 'Patient ready to advance', 'When a patient reaches the skills needed.')}${sw('n_attn', 'Needs attention', 'When no visit note has been added for a while.')}${sw('n_tap', 'Card tapped', 'Each time a card opens a profile.')}</section>
         <section class="sec"><h2>Privacy and compliance</h2>
           <div class="setting"><div><label for="to" style="margin:0">Card session timeout</label><p>How long a tap-opened profile stays open.</p></div><select id="to" style="width:auto" data-change="timeout">${[5, 10, 15, 30].map(function (n) { return h`<option value="${n}" ${n === (cfg.timeout || 10) ? 'selected' : ''}>${n} minutes</option>`; })}</select></div>

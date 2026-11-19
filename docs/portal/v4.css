@@ -97,7 +97,7 @@ table.data tr:hover td { background: var(--tint-row); }
 .notice b, .notice span { color: inherit; }
 
 /* v3 pieces in v4 */
-.welcome-card { background: var(--tint-lime); color: var(--on-tint); border-left: 0; box-shadow: inset 4px 0 0 var(--fg-headline); }
+.welcome-card { background: var(--tint-lime); color: var(--on-tint); border-left: 0; box-shadow: inset 0 0 0 1px rgba(31,47,22,.12); }
 .welcome-card h2, .welcome-card p, .welcome-card li { color: var(--on-tint); }
 .welcome-card .muted { color: var(--fg-2); }
 .wc-tips .ic { color: var(--fg-headline); }
@@ -136,9 +136,9 @@ table.data tr:hover td { background: var(--tint-row); }
    glass with a hairline, warm cream text. Tints and voices come from tokens.css. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .side { background: rgba(31,49,40,.86); -webkit-backdrop-filter: saturate(140%) blur(18px); backdrop-filter: saturate(140%) blur(18px); box-shadow: inset -1px 0 0 var(--line); }
-  :root:not([data-theme="light"]) .nav-i.on { background: var(--bg-sunken); box-shadow: inset 3px 0 0 var(--lime); }
+  :root:not([data-theme="light"]) .nav-i.on { background: rgba(252,248,241,.12); box-shadow: none; }
   :root:not([data-theme="light"]) .sec, :root:not([data-theme="light"]) .stat, :root:not([data-theme="light"]) .hero { box-shadow: inset 0 0 0 1px var(--line); }
-  :root:not([data-theme="light"]) .welcome-card { box-shadow: inset 0 0 0 1px #3E5530, inset 4px 0 0 var(--lime); }
+  :root:not([data-theme="light"]) .welcome-card { box-shadow: inset 0 0 0 1px #3E5530; }
   :root:not([data-theme="light"]) .wc-tips .ic { color: var(--lime); }
   :root:not([data-theme="light"]) .stepper li[aria-current="step"] b { background: var(--fg-1); color: var(--bg-page); }
 }

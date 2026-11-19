@@ -25,7 +25,9 @@
     if (warn && !warned) { warned = true; U.toast('Less than a minute left. Choose Keep open to stay.'); }
   }
 
-  F.actions.textSize = function (el) { S.a11y.set('text', el.dataset.v); };
+  F.actions.cardSettings = function () {
+    U.modal(h`<h2>Settings</h2><h3 class="set-h" style="font-size:1.05rem;margin:1rem 0 .25rem">Text size</h3><p class="muted small" style="margin:0 0 .5rem">Makes text larger on this device.</p>${U.textSlider({ id: 'tsl-card', label: 'Text size' })}<div class="mform-actions"><button class="btn btn-primary" data-close>Done</button></div>`, { label: 'Settings' });
+  };
   F.actions.clinNote = function (d) {
     d.text = String(d.text || '').trim(); d.who = String(d.who || '').trim();
     if (!d.who || !d.text) { var bad = document.getElementById(d.who ? 'cn' : 'cw'); if (bad) { bad.setAttribute('aria-invalid', 'true'); bad.focus(); } U.toast('Add your name and a note first.'); return; }
@@ -46,7 +48,7 @@
     var sz = S.a11y.get().text;
     return h`<div class="bar"><div class="in"><span>${U.wordmark('', true)}</span><span class="tag">Care team view</span>
       <div class="sess">${p ? h`<span class="via" title="How this profile was opened">${ic('check', 14)} Opened by ${demo ? 'demo entry' : how.toLowerCase()} at ${openedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span><span class="ring" aria-hidden="true"><i id="sess-ring" style="--p:${Math.max(0, deadline - Date.now()) / (minutes() * 60000)}"></i></span><span>Session ends in <b id="sess-left" aria-live="off">${clock()}</b></span><button class="btn btn-sm key" data-action="extend">Keep open</button>` : ''}
-      <div class="tsz" role="group" aria-label="Text size">${[['md', 'A'], ['lg', 'A+'], ['xl', 'A++']].map(function (t) { return h`<button data-action="textSize" data-v="${t[0]}" aria-pressed="${String(sz === t[0])}" aria-label="Text size ${t[1]}">${t[1]}</button>`; })}</div></div></div></div>${demo && p ? h`<div class="demo-banner" role="note">Demo mode for the Folio team. This is not a real card tap.</div>` : ''}`;
+      <button type="button" class="btn btn-sm bar-settings" data-action="cardSettings">${ic('settings', 16)} Settings</button></div></div></div>${demo && p ? h`<div class="demo-banner" role="note">Demo mode for the Folio team. This is not a real card tap.</div>` : ''}`;
   }
 
   /* Scan a QR code: opens the camera, and whichever Folio card is held up opens that account (the real tap flow, with consent) */
