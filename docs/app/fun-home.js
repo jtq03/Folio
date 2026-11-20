@@ -27,7 +27,8 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function hash(s) { var x = 2166136261; for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
   function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
-  function ownCount(p) { return F.SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; }).length; }
+  /* Level system v2: own skills in the current level (of 4) */
+  function ownCount(p) { return F.Store.sel.ownCount(p); }
   function toast(m, star) { try { U.toast(m, star); } catch (e) {} }
   function animate(el, kf, o) { try { if (el.animate) return el.animate(kf, o); } catch (e) {} return null; }
   function done(a, ms) { return a && a.finished ? a.finished.catch(function () {}) : new Promise(function (r) { setTimeout(r, ms || 0); }); }
@@ -79,8 +80,8 @@
     var own = ownCount(p), pool;
     /* v3: the first Home after setup is not a "welcome back" */
     try { if (sessionStorage.getItem('folio.app.new') === p.id) return 'Welcome to Folio, {n}'; } catch (e) {}
-    if (p.transferred || (p.level >= 10 && own === 5)) pool = GREET.top;
-    else if (own >= 4 || p.level >= 9) pool = GREET.near.concat(GREET[tod]);
+    if (p.transferred || (p.level >= 10 && own === F.skillsOfLevel(10).length)) pool = GREET.top;
+    else if (own >= 3 || p.level >= 9) pool = GREET.near.concat(GREET[tod]);
     else pool = GREET[tod].concat(GREET.any);
     return pool[hash(p.id + today() + tod) % pool.length];
   }
@@ -93,13 +94,13 @@
     var n = new Date(); return Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5);
   }
   function subline(p) {
-    var own = ownCount(p), vd = visitDays(p), help = F.SKILLS.some(function (s) { return p.skills[s.id] === 'help'; });
+    var own = ownCount(p), vd = visitDays(p), help = F.Store.sel.currentSkills(p).some(function (s) { return p.skills[s.id] === 'help'; });
     if (p.transferred) return 'You made it to adult care. That took real work.';
     if (unreadNote(p)) return 'Your care team left you a new note.';
     if (vd === 0) return 'Visit day. You have got this.';
     if (vd === 1) return 'Visit tomorrow. Got your questions ready?';
     if (vd != null && vd <= 3) return 'Next visit in ' + vd + ' days. You are ready for it.';
-    if (own === 5) return 'All five skills on your own. Time to get signed off.';
+    if (own === F.Store.sel.currentSkills(p).length) return 'Every skill at this level on your own. Time to get signed off.';
     if (own >= 3) return own + ' skills on your own. That is real progress.';
     if (own > 0) return own + ' on your own already. Keep it going.';
     if (help) return 'Keep practising. It all adds up.';
@@ -279,7 +280,7 @@
       U.toast = function (m, s) { caught = [m, s]; };
       try { orig(el, e); } finally { U.toast = real; }
       var after = me(), sk = null;
-      if (after) F.SKILLS.forEach(function (s) { if (!sk && before[s.id] !== after.skills[s.id]) sk = s; });
+      if (after) F.ALL_SKILLS.forEach(function (s) { if (!sk && before[s.id] !== after.skills[s.id]) sk = s; });
       if (!sk) { if (caught) toast(caught[0], caught[1]); return; }
       toast(PRAISE[praiseI++ % PRAISE.length].replace('{s}', sk.name));
       if (box && box.width && !reduced()) confetti(box.left + box.width / 2, box.top + 6, { n: 18, spread: 110 });
@@ -345,6 +346,10 @@
     { id: 'run', sk: 'run', name: 'Run my appointments', g: 'stairs', s: 'ticket', c: '#D8E3D2', fill: 1, hint: 'Get Run my appointments on your own' },
     { id: 'support', sk: 'support', name: 'Own my support', g: 'people', s: 'hex', c: '#395B50', dark: 1, hint: 'Get Own my support on your own' }
   ];
+  /* Level system v2: one sticker per skill, drawn by stickers.js. The peel-and-slap below stays the same.
+     New storage key so the 40 skill stickers already earned do not all slap in at once on the first open. */
+  var SKEY = F.Stickers ? 'folio.fun.stk2.' : 'folio.fun.stk.';
+  if (F.Stickers) STICKERS = F.Stickers.list().map(function (x) { return { id: x.id, name: x.name }; });
   function stickerSvg(d, locked) {
     var shape = SHAPES[d.s], ink = d.dark ? '#F7F0E2' : '#1F2F16', glyph;
     if (d.g === 'star') glyph = '<g transform="translate(32 32) scale(1.15)" fill="#CE3B3B"><rect x="-2.200" y="-12" width="4.400" height="24" rx="2.200"/><rect x="-2.200" y="-12" width="4.400" height="24" rx="2.200" transform="rotate(60)"/><rect x="-2.200" y="-12" width="4.400" height="24" rx="2.200" transform="rotate(120)"/></g>';
@@ -353,24 +358,26 @@
     return '<svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" focusable="false"><g class="fa-cut" fill="#FBF6EC" stroke="#FBF6EC" stroke-width="8" stroke-linejoin="round">' + shape + '</g><g fill="' + d.c + '">' + shape + '</g><g fill="url(#fa-sheen)" opacity=".5">' + shape + '</g>' + glyph + '</svg>';
   }
   function derived(p) {
+    if (F.Stickers) return F.Stickers.earnedMap(p);
     var out = {};
     STICKERS.forEach(function (d) {
       if (d.lv && (d.lv < p.level || (d.lv === 10 && p.transferred) || (d.lv < 10 && p.transferred))) out[d.id] = 1;
-      if (d.sk && p.skills[d.sk] === 'own') out[d.id] = 1;
+      if (d.sk && F.ALL_SKILLS.some(function (s) { return s.area === d.sk && p.skills[s.id] === 'own'; })) out[d.id] = 1;
     });
     return out;
   }
   function stkState(p) {
-    var key = 'folio.fun.stk.' + p.id, st = lsGet(key, null), der = derived(p);
+    var key = SKEY + p.id, st = lsGet(key, null), der = derived(p);
     if (!st || !st.seen) { st = { seen: Object.keys(der) }; lsSet(key, st); }
     var earned = {}; st.seen.forEach(function (id) { earned[id] = 1; }); Object.keys(der).forEach(function (id) { earned[id] = 1; });
     var fresh = Object.keys(der).filter(function (id) { return st.seen.indexOf(id) < 0; });
     return { key: key, st: st, earned: earned, fresh: fresh };
   }
-  function markSeen(p, id) { var k = 'folio.fun.stk.' + p.id, st = lsGet(k, { seen: [] }); if (st.seen.indexOf(id) < 0) { st.seen.push(id); lsSet(k, st); } }
+  function markSeen(p, id) { var k = SKEY + p.id, st = lsGet(k, { seen: [] }); if (st.seen.indexOf(id) < 0) { st.seen.push(id); lsSet(k, st); } }
   var toasted = {};
   var sheetEl = null, sheetSig = '', slapping = false;
   function sheetHTML(p, ss) {
+    if (F.Stickers) return F.Stickers.book(p, { fresh: ss.fresh });
     var n = Object.keys(ss.earned).length;
     var cells = STICKERS.map(function (d, i) {
       var got = ss.earned[d.id] && ss.fresh.indexOf(d.id) < 0, pending = ss.fresh.indexOf(d.id) >= 0;
@@ -435,6 +442,7 @@
     ss.fresh.forEach(function (sid) { if (toasted[p.id + sid]) return; toasted[p.id + sid] = 1; var d = STICKERS.filter(function (x) { return x.id === sid; })[0]; toast('New sticker: ' + d.name + '. Find it in Levels.', true); });
   }
   document.addEventListener('click', function (e) {
+    if (F.Stickers) return; /* stickers.js opens the inspector */
     var b = e.target.closest && e.target.closest('.fa-st'); if (!b || !e.isTrusted) return;
     var d = STICKERS.filter(function (x) { return x.id === b.dataset.sid; })[0], cap = sheetEl && sheetEl.querySelector('.fa-stk-cap'); if (!d) return;
     var got = b.classList.contains('got');

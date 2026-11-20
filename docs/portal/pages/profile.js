@@ -50,6 +50,19 @@
     var rows = [['meds', 'Medications and repeats'], ['referrals', 'Referrals and who takes over'], ['upcoming', 'Upcoming and due'], ['managed', 'How diabetes has been managed'], ['watch', 'What to watch']].filter(function (r) { return f && f[r[0]]; });
     return rows.length ? h`<dl class="kv" style="margin-top:.5rem">${rows.map(function (r) { return h`<dt>${r[1]}</dt><dd>${f[r[0]]}</dd>`; })}</dl>` : '';
   }
+  /* The teen's view of one level skill: from their latest readiness check, else the area view from setup */
+  function skillView(p, s) {
+    var c = (p.checks || []).length ? p.checks[p.checks.length - 1] : null;
+    return (c && F.checkSkillView(c.answers, s.id)) || (p.selfCheck && p.selfCheck.skills && p.selfCheck.skills[s.area]) || '';
+  }
+  /* All 10 levels, each with its goal and 4 skills: done, current or upcoming */
+  function roadmap(p) {
+    return h`<details class="lvl-more roadmap"><summary>All levels: goals and skills</summary><ol class="rm-list">${F.LEVELS.map(function (l) {
+      var st = p.transferred || l.n < p.level ? 'done' : l.n === p.level ? 'current' : 'upcoming', own = l.skills.filter(function (s) { return p.skills[s.id] === 'own'; }).length;
+      return h`<li class="rm-lv rm-${st}" ${st === 'current' ? h`aria-current="step"` : ''}><details ${st === 'current' ? 'open' : ''}><summary><span class="rm-n">${l.n}</span><span class="rm-t"><b>${l.name}: ${l.goal}</b><span class="small muted">${st === 'done' ? 'Done' : st === 'current' ? 'Current level' : 'Upcoming'} · ${own} of ${l.skills.length} on their own</span></span></summary>
+        <ul class="rm-skills">${l.skills.map(function (s) { return h`<li><span><b>${s.name}</b><span class="small muted">${s.can}</span></span>${st === 'upcoming' && p.skills[s.id] === 'learning' ? U.pill('Not started', 'neutral') : U.skillPill(p.skills[s.id])}</li>`; })}</ul></details></li>`;
+    })}</ol></details>`;
+  }
   function legend() { return h`<dl class="legend small">${['own', 'help', 'learning'].map(function (k) { return h`<div><dt>${U.skillPill(k)}</dt><dd>${F.SKILL_STATUS_HELP[k]}</dd></div>`; })}</dl>`; }
   F.actions.removeItem = function (el) {
     U.confirmModal({ title: 'Remove this?', body: 'You can add it again later.', cta: 'Remove', danger: true, onOk: function () { A.remove(el.dataset.pid, el.dataset.list, el.dataset.id); U.toast('Removed'); } });
@@ -65,8 +78,10 @@
           ${p.summary3 ? h`<div class="eyebrow" style="margin:.75rem 0 .25rem">${p.first}'s diabetes in 3 sentences</div><div class="s3-quote"><p>${[p.summary3.s1, p.summary3.s2, p.summary3.s3].filter(Boolean).join(' ')}</p></div>` : ''}
           ${p.questions.length ? h`<div class="eyebrow" style="margin:.75rem 0 .25rem">Questions for this visit</div><ul>${p.questions.map(function (x) { return h`<li>${x}</li>`; })}</ul>` : h`<p class="small muted">No questions added for this visit.</p>`}
           <div class="eyebrow" style="margin:.75rem 0 .25rem">What I want my doctor to know</div><p>${p.wantDoctorKnow}</p></section>
-        <section class="sec"><div class="sec-head"><h2>Skills at this level</h2><a class="btn btn-sm btn-primary" href="#/visit/${p.id}">Start visit</a></div>
-          ${F.SKILLS.map(function (s) { return h`<div class="skillrow"><div class="nm"><b>${s.name}</b><span class="small muted">${s.sub}</span>${p.selfCheck && p.selfCheck.skills && p.selfCheck.skills[s.id] ? h`<span class="selfview small">${p.first}'s view: <b>${F.CHECK_WORD[p.selfCheck.skills[s.id]]}</b></span>` : ''}</div>${U.skillPill(p.skills[s.id])}</div>`; })}
+        <section class="sec"><div class="sec-head"><h2>Level ${p.level} goal: ${L.goal}</h2><a class="btn btn-sm btn-primary" href="#/visit/${p.id}">Start visit</a></div>
+          <p class="small muted">${L.intro}</p>
+          <p class="small"><b>${sel.ownCount(p)} of ${sel.currentSkills(p).length}</b> on their own · ${sel.need(p)} needed to move up</p>
+          ${sel.currentSkills(p).map(function (s) { var vw = skillView(p, s); return h`<div class="skillrow" data-skill="${s.id}"><div class="nm"><b>${s.name}</b><span class="small muted">${s.can}</span>${vw ? h`<span class="selfview small">${p.first}'s view: <b>${F.CHECK_WORD[vw]}</b></span>` : ''}</div>${U.skillPill(p.skills[s.id])}</div>`; })}
           <p class="small muted">Skills are signed off in person during a visit.${p.selfCheck ? ' ' + p.first + '\'s view is from their readiness check on ' + U.fmtFull(p.selfCheck.date) + '.' : ''}</p>
           ${(p.goals || []).length ? h`<div class="vq" style="margin-top:.75rem"><div class="eyebrow">${p.first}'s goals</div><ul>${p.goals.map(function (g) { var q = F.checkItem(g.id); return q ? h`<li>${q.goal} <span class="muted small">· ${g.done.filter(Boolean).length} of 3 steps done</span></li>` : ''; })}</ul></div>` : ''}
           ${legend()}
@@ -89,7 +104,8 @@
         </section>
         <section class="sec"><div class="eyebrow">Level ${p.level} of 10 · ${L.name}</div>
           ${U.stairs(p.level)}
-          <details class="lvl-more"><summary>What this level means</summary><dl class="kv"><dt>Who leads</dt><dd>${L.leads}</dd><dt>I can</dt><dd>${L.can}</dd><dt>Evidence</dt><dd>${L.evidence}</dd><dt>Unlocks</dt><dd>${L.unlocks}</dd></dl></details>
+          <details class="lvl-more"><summary>What this level means</summary><dl class="kv"><dt>Goal</dt><dd>${L.goal}</dd><dt>Who leads</dt><dd>${L.leads}</dd><dt>Unlocks</dt><dd>${L.unlocks}</dd></dl></details>
+          ${roadmap(p)}
           <p class="small muted" style="margin-top:1rem">${p.levelSignoff ? 'Signed off Level ' + p.levelSignoff.level + ' by ' + p.levelSignoff.by + ', ' + U.fmtFull(p.levelSignoff.date) + '.' : ''} ${nx ? 'Next: Level ' + nx.n + ', ' + nx.name + '.' : 'Final level.'}</p>
         </section>
       </div>

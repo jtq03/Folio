@@ -33,6 +33,8 @@
   /* Each skill's "learn how" link opens the resource that teaches it */
   var SKILL_RES = { know: 'r13', manage: 'r9', speak: 'r3', run: 'r14', support: 'r2' };
   function plantOn() { return !!(F.Plant && F.Plant.mode() === 'plant'); }
+  /* Skill stickers (stickers.js): a small sticker on each skill row, in stickers mode only */
+  function stkChip(s, deco) { return F.Stickers && F.Plant && F.Plant.mode() === 'stickers' ? raw(F.Stickers.chip(s.id, me(), { deco: deco })) : ''; }
   var EV_ICON = { practice: ['check', 4], guide: ['book', 1], careTask: ['visit', 2], signOff: ['levels', 3], goal: ['check', 4], check: ['levels', 3] };
   var KIND_ICON = { Guide: ['book', 1], Checklist: ['visit', 2], Video: ['play', 3], Worksheet: ['edit', 5] };
   function kindTile(r) { var k = KIND_ICON[r.kind] || ['book', 1]; return tile(k[0] === 'play' ? xi('play', 22) : ic(k[0], 22), k[1]); }
@@ -120,9 +122,9 @@
     N.shareText({ title: r.title, text: r.title + '\n\n' + r.body + '\n\nFrom Folio' });
   };
   F.actions.shareProfile = function () {
-    var p = me(), own = F.SKILLS.filter(function (s2) { return p.skills[s2.id] === 'own'; }).map(function (s2) { return s2.name; }), L = sel.level(p.level);
+    var p = me(), own = sel.currentSkills(p).filter(function (s2) { return p.skills[s2.id] === 'own'; }).map(function (s2) { return s2.name; }), L = sel.level(p.level);
     var want = p.wantDoctorKnow && p.wantDoctorKnow !== 'Nothing added yet.' ? p.wantDoctorKnow : '';
-    var t = 'Folio summary for ' + sel.full(p) + ' (age ' + p.age + ')\nCondition: ' + p.condition + '\nLevel ' + p.level + ' of 10: ' + L.name + '\nSkills on my own: ' + (own.length ? own.join(', ') : 'still building') +
+    var t = 'Folio summary for ' + sel.full(p) + ' (age ' + p.age + ')\nCondition: ' + p.condition + '\nLevel ' + p.level + ' of 10: ' + L.name + '\nGoal: ' + L.goal + '\nSkills on my own at this level: ' + (own.length ? own.join(', ') : 'still building') +
       (want ? '\n\nWhat I want my doctor to know:\n' + want : '') + (p.questions.length ? '\n\nQuestions for my next visit:\n' + p.questions.map(function (q) { return '- ' + q; }).join('\n') : '') + '\n\nFolio ID ' + sel.fid(p.folioId);
     N.shareText({ title: p.first + ' on Folio', text: t });
   };
@@ -167,12 +169,12 @@
 
   function home(params, q) {
     var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p);
-    var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
+    var todo = sel.currentSkills(p).filter(function (s) { return p.skills[s.id] !== 'own'; });
     /* v3: drafts never show, and the slot holds a note to the teen. A shared handoff note gets its own sticky. */
     var notes = sel.notesFor(p).filter(function (n) { return n.role === 'peds' && !n.draft; });
     var note = notes.filter(function (n) { return n.kind !== 'Handoff note'; })[0], handoff = notes.filter(function (n) { return n.kind === 'Handoff note' && n.shared; })[0];
     var mine = (p.selfCheck && p.selfCheck.skills) || {}, lrn = todo.filter(function (s) { return p.skills[s.id] === 'learning'; });
-    var next = lrn.filter(function (s) { return mine[s.id] !== 'own'; })[0] || lrn[0] || todo[0], rest = todo.filter(function (s) { return s !== next; });
+    var next = lrn.filter(function (s) { return mine[s.area] !== 'own'; })[0] || lrn[0] || todo[0], rest = todo.filter(function (s) { return s !== next; });
     /* Priority order: status, a new note from the care team, a visit in the next 14 days, the next step, then everything else */
     var fresh = !!(note && (seenSet().indexOf(note.id) < 0 || (F.ui.freshNotes || []).indexOf(note.id) >= 0)), vd = visitDate(p.nextVisit), soon = !!(vd && vd.getTime() > Date.now() && vd.getTime() - Date.now() < 14 * 864e5);
     var noteBlock = note ? h`<section data-rise style="--d:2" aria-label="${fresh ? 'New note' : 'Note'} from your care team"><article class="ios-sticky"><span class="ios-tape b" aria-hidden="true"></span><div class="ios-eyebrow">${fresh ? 'New · ' : ''}From ${note.author} · ${U.monthYear(note.date)}</div><p>${note.text}</p>${seenBy(p, note)}</article></section>` : '';
@@ -195,8 +197,8 @@
         ${soon ? '' : ticket(p)}
         ${comingUp(p)}
         ${nx && rest.length ? h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="wk"><h2 class="ios-gh" id="wk">${tile(ic('levels', 18), 4, true)}<span>Also working toward Level ${nx.n}: ${nx.name}</span></h2>
-          <div class="ios-list">${rest.map(function (s) { var i = F.SKILLS.indexOf(s); return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[p.skills[s.id]]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>
-          <p class="ios-gf">Tap a skill to learn how. Your care team signs skills off with you in person.</p></section>` : nx && !todo.length ? h`<section class="ios-sec" data-rise style="--d:2"><div class="ios-list"><div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div></section>` : ''}
+          <div class="ios-list">${rest.map(function (s) { var i = sel.currentSkills(p).indexOf(s); return h`<a class="ios-row has-tile" href="#/resources/${(s.guide || SKILL_RES[s.area || s.id])}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[p.skills[s.id]]}. Learn how">${tile(ic(SKILL_ICON[s.area || s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>
+          <p class="ios-gf">Tap a skill to learn how. Your care team signs skills off with you in person.</p></section>` : nx && !todo.length ? h`<section class="ios-sec" data-rise style="--d:2"><div class="ios-list"><div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>All skills at this level on your own</b><small>Your care team signs off at your next visit.</small></span></div></div></section>` : ''}
         ${note && !fresh ? noteBlock : ''}
         ${handoff ? h`<section data-rise style="--d:3" aria-label="Your handoff note"><article class="ios-sticky"><span class="ios-tape" aria-hidden="true"></span><div class="ios-eyebrow">Handoff note for your adult team · ${U.monthYear(handoff.date)}</div><p>${handoff.text}</p><p class="ios-cap">Written by ${handoff.author}</p>${seenBy(p, handoff)}</article></section>` : ''}
         ${pocket(p)}
@@ -210,10 +212,10 @@
   function nextStep(p, todo) {
     /* Skip skills the teen told setup they already do (their view, still checked by the care team) */
     var mine = (p.selfCheck && p.selfCheck.skills) || {}, learning = todo.filter(function (k) { return p.skills[k.id] === 'learning'; });
-    var s = learning.filter(function (k) { return mine[k.id] !== 'own'; })[0] || learning[0] || todo[0], st = p.skills[s.id], i = F.SKILLS.indexOf(s), said = mine[s.id];
-    var r = (S.get().resources || []).filter(function (x) { return x.id === SKILL_RES[s.id] && x.published !== false; })[0];
+    var s = learning.filter(function (k) { return mine[k.area] !== 'own'; })[0] || learning[0] || todo[0], st = p.skills[s.id], i = sel.currentSkills(p).indexOf(s), said = mine[s.area];
+    var r = (S.get().resources || []).filter(function (x) { return x.id === (s.guide || SKILL_RES[s.area || s.id]) && x.published !== false; })[0];
     return h`<section class="ios-sec" data-rise style="--d:2" aria-labelledby="ns-h"><h2 class="ios-gh" id="ns-h">${tile(xi('sparkle', 18), 4, true)}<span>Your next step</span></h2>
-      <div class="ios-list ns-card"><div class="ios-row has-tile">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span></div>
+      <div class="ios-list ns-card"><div class="ios-row has-tile">${tile(ic(SKILL_ICON[s.area || s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span></div>
         ${r ? h`<a class="ios-row has-tile" href="#/resources/${r.id}">${tile(ic('book', 22), 1)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}</small></span>${CHEV}</a>` : ''}</div>
       ${said ? h`<p class="ios-gf">You said: ${said === 'own' ? 'I do it' : said === 'help' ? 'with help' : 'not yet'}. Your care team talks it through with you at your next visit.</p>` : ''}
       ${st === 'learning' ? h`<div style="margin-top:14px"><button type="button" class="ios-btn" data-action="practise" data-sid="${s.id}">${xi('sparkle', 20)} I practised this</button><p class="ios-gf" style="text-align:center">Moves ${s.name.toLowerCase()} to With help${plantOn() ? ' and grows a leaf' : ''}. Your care team checks it with you.</p></div>` : h`<p class="ios-gf">You are doing this with help. Your care team checks it at your next visit.</p>`}</section>`;
@@ -222,7 +224,7 @@
   function goalRes(q) { return q.res ? (S.get().resources || []).filter(function (x) { return x.id === q.res && x.published !== false; })[0] : null; }
   function goalCard(p, g) {
     var q = F.checkItem(g.id); if (!q) return '';
-    var sk = F.SKILLS.filter(function (k) { return k.id === q.skill; })[0], i = F.SKILLS.indexOf(sk), n = g.done.filter(Boolean).length, r = goalRes(q);
+    var sk = F.AREAS.filter(function (k) { return k.id === q.skill; })[0], i = F.AREAS.indexOf(sk), n = g.done.filter(Boolean).length, r = goalRes(q);
     return h`<div class="ios-list goal-card ${n === 3 ? 'all' : ''}" data-key="goal-${g.id}">
       <div class="ios-row has-tile">${tile(ic(SKILL_ICON[q.skill], 22), (i % 5) + 1)}<span class="ios-rt"><b>${q.goal}</b><small>${sk.name} · ${n === 3 ? 'All 3 steps done' : n + ' of 3 steps done'}</small></span></div>
       ${q.steps.map(function (st, k) { return h`<div class="ios-row mc-task gstep ${g.done[k] ? 'done' : ''}" data-key="gs-${g.id}-${k}"><input type="checkbox" id="gs-${g.id}-${k}" ${g.done[k] ? 'checked' : ''} data-change="goalStep" data-id="${g.id}" data-i="${k}"><label class="ios-rt" for="gs-${g.id}-${k}"><b>${st}</b></label></div>`; })}
@@ -291,16 +293,16 @@
   /* ---------- Levels ---------- */
   function levels() {
     var p = me(), L = sel.level(p.level), nx = p.level < 10 ? sel.level(p.level + 1) : null, own = sel.ownCount(p), li = '', mode = F.Plant ? F.Plant.mode() : 'bar';
-    var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; }), done = F.SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; });
+    var todo = sel.currentSkills(p).filter(function (s) { return p.skills[s.id] !== 'own'; }), done = sel.currentSkills(p).filter(function (s) { return p.skills[s.id] === 'own'; });
     for (var i = 1; i <= 10; i++) li += '<li class="' + (i < p.level ? 'done' : i === p.level ? 'cur' : '') + '" style="--h:' + (30 + i * 14) + 'px;--n:' + i + '"><span>' + i + '</span>' + (i === p.level ? U.star(20).s : '') + '</li>';
-    var skillRow = function (s) { var st = p.skills[s.id], k = F.SKILLS.indexOf(s); return st !== 'own' ? h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[st]}. Learn how">${tile(ic(SKILL_ICON[s.id], 22), (k % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span>${CHEV}</a>` : h`<div class="ios-row has-tile" data-key="sk-${s.id}">${tile(ic(SKILL_ICON[s.id], 22), (k % 5) + 1)}<span class="ios-rt"><b>${s.name}</b>${status(st)}</span></div>`; };
+    var skillRow = function (s) { var st = p.skills[s.id], k = sel.currentSkills(p).indexOf(s); return st !== 'own' ? h`<a class="ios-row has-tile" href="#/resources/${(s.guide || SKILL_RES[s.area || s.id])}" data-key="sk-${s.id}" aria-label="${s.name}, ${F.SKILL_STATUS[st]}. Learn how">${tile(ic(SKILL_ICON[s.area || s.id], 22), (k % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${s.sub}</small>${status(st)}</span>${stkChip(s, true)}${CHEV}</a>` : h`<div class="ios-row has-tile" data-key="sk-${s.id}">${tile(ic(SKILL_ICON[s.area || s.id], 22), (k % 5) + 1)}<span class="ios-rt"><b>${s.name}</b>${status(st)}</span>${stkChip(s)}</div>`; };
     /* Priority order: the skills still to do, Run my care, what the next level unlocks, then progress art and the full list */
     return { title: 'Levels', navTitle: 'Level ' + p.level, html: h`
       ${large(h`Level ${p.level}: <em>${L.name}</em>`, nx ? 'Here is what gets you to Level ' + nx.n + '.' : 'You are at the top level.')}
       <div class="ios-body">
         <section class="ios-sec" data-rise style="--d:1" aria-labelledby="sk"><h2 class="ios-gh" id="sk">${tile(ic('check', 18), 4, true)}<span>${nx ? 'To reach Level ' + nx.n : 'Your skills'}</span></h2>
           <div class="ios-meter" role="img" aria-label="${own} of 5 skills on your own">${[1, 2, 3, 4, 5].map(function (k) { return h`<i class="${k <= own ? 'on' : ''}"></i>`; })}</div>
-          ${todo.length ? h`<div class="ios-list" style="margin-top:12px">${todo.map(skillRow)}</div>` : h`<div class="ios-list" style="margin-top:12px"><div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div>`}
+          ${todo.length ? h`<div class="ios-list" style="margin-top:12px">${todo.map(skillRow)}</div>` : h`<div class="ios-list" style="margin-top:12px"><div class="ios-row has-tile">${tile(ic('check', 22), 4)}<span class="ios-rt"><b>All skills at this level on your own</b><small>Your care team signs off at your next visit.</small></span></div></div>`}
           ${done.length && todo.length ? h`<h3 class="ios-gh" style="margin:16px 4px 8px"><span>Already on your own</span></h3><div class="ios-list">${done.map(skillRow)}</div>` : ''}
           <p class="ios-gf">${own} of 5 on your own. Your care team signs skills off in person.</p>${legendApp()}</section>
         ${checkRow(p)}
@@ -333,7 +335,7 @@
       ${large(h`Where you are <em>now</em>`, 'From your check on ' + U.fmtFull(last.date) + '. Your care team talks it through with you at your next visit.')}
       <div class="ios-body">
         <section class="ios-sec" data-rise style="--d:1" aria-labelledby="ckr-h"><h2 class="ios-gh" id="ckr-h">${tile(ic('levels', 18), 3, true)}<span>Your five skills</span></h2>
-          <div class="ck-skills">${F.SKILLS.filter(function (k) { return last.skills[k.id]; }).map(function (k) { var i = F.SKILLS.indexOf(k); return h`<details class="ios-list ck-skill"><summary class="ios-row has-tile">${tile(ic(SKILL_ICON[k.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${k.name}</b>${chg(k.id) ? h`<small>${chg(k.id)}</small>` : ''}</span>${chip(last.skills[k.id])}</summary>
+          <div class="ck-skills">${F.AREAS.filter(function (k) { return last.skills[k.id]; }).map(function (k) { var i = F.AREAS.indexOf(k); return h`<details class="ios-list ck-skill"><summary class="ios-row has-tile">${tile(ic(SKILL_ICON[k.area || k.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${k.name}</b>${chg(k.id) ? h`<small>${chg(k.id)}</small>` : ''}</span>${chip(last.skills[k.id])}</summary>
             ${F.CHECK.filter(function (q) { return q.skill === k.id; }).map(function (q) { var a = last.answers[q.id]; return h`<div class="ios-row ck-ans"><span class="ios-rt"><b>${q.q}</b><small>${a ? 'You said ' + word(a).toLowerCase() : 'Skipped'}</small></span></div>`; })}</details>`; })}</div>
           <p class="ios-gf">Each skill shows the middle of your three answers. Tap a skill to see them.</p>
           <button type="button" class="ios-btn" data-action="openCheck" style="margin-top:14px">Retake the check</button></section>
@@ -341,7 +343,7 @@
           ${(p.goals || []).length ? h`<div class="ios-list">${p.goals.map(function (g) { var q = F.checkItem(g.id); return q ? h`<div class="ios-row"><span class="ios-rt"><b>${q.goal}</b><small>${g.done.filter(Boolean).length} of 3 steps done</small></span></div>` : ''; })}</div>` : h`<p class="ios-gf">No goals picked yet.</p>`}
           <button type="button" class="ios-btn sec" data-action="openGoals" style="margin-top:12px">${(p.goals || []).length ? 'Change my goals' : 'Pick up to 3 goals'}</button></section>
         ${c.length > 1 ? h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="ckh-h"><h2 class="ios-gh" id="ckh-h">${tile(xi('calendar', 18), 1, true)}<span>Past checks</span></h2>
-          <div class="ios-list">${c.slice().reverse().map(function (x) { var n = F.SKILLS.filter(function (k) { return x.skills[k.id] === 'own'; }).length; return h`<div class="ios-row"><span class="ios-rt"><b>${U.fmtFull(x.date)}</b><small>${n} of 5 skills on your own, in your view</small></span></div>`; })}</div></section>` : ''}
+          <div class="ios-list">${c.slice().reverse().map(function (x) { var n = F.AREAS.filter(function (k) { return x.skills[k.id] === 'own'; }).length; return h`<div class="ios-row"><span class="ios-rt"><b>${U.fmtFull(x.date)}</b><small>${n} of 5 areas on your own, in your view</small></span></div>`; })}</div></section>` : ''}
         <section class="ios-sec" data-rise style="--d:4"><p class="ios-gf">Folio's own questions, written for type 1 diabetes. They and the goal steps are drafts for a diabetes educator to review.</p></section>
       </div>` };
   }
@@ -371,10 +373,11 @@
     var term = (ui.rq || '').trim().toLowerCase();
     var list = S.get().resources.filter(function (r) { return r.published && (ui.rt === 'All' || r.tags.indexOf(ui.rt) >= 0) && (!term || (r.title + ' ' + r.kind + ' ' + r.body).toLowerCase().indexOf(term) >= 0); });
     /* Priority: guides for the skills still being learned come first, in skill order */
-    var rank = function (r) { var st = r.skill ? p.skills[r.skill] : null; return st === 'learning' ? 0 : st === 'help' ? 1 : 2; };
+    /* Level system v2: a guide ranks by the current level's skills that link to it (or share its area) */
+    var rank = function (r) { var sts = sel.currentSkills(p).filter(function (k) { return k.guide === r.id || (r.skill && k.area === r.skill); }).map(function (k) { return p.skills[k.id]; }); return sts.indexOf('learning') >= 0 ? 0 : sts.indexOf('help') >= 0 ? 1 : 2; };
     list = list.map(function (r, i) { return { r: r, i: i }; }).sort(function (a, b) { return rank(a.r) - rank(b.r) || a.i - b.i; }).map(function (x) { return x.r; });
     var forYou = list.filter(function (r) { return rank(r) < 2; }), more = list.filter(function (r) { return rank(r) === 2; });
-    var row = function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}" data-ctx="resource:${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}${r.skill ? ' · ' + F.SKILLS.filter(function (k) { return k.id === r.skill; })[0].name : ''}</small></span>${F.fx ? raw(F.fx.readDot(r.id)) : ''}${CHEV}</a>`; };
+    var row = function (r) { return h`<a class="ios-row has-tile" href="#/resources/${r.id}" data-ctx="resource:${r.id}">${kindTile(r)}<span class="ios-rt"><b>${r.title}</b><small>${r.kind} · ${r.mins}${r.skill ? ' · ' + F.AREAS.filter(function (k) { return k.id === r.skill; })[0].name : ''}</small></span>${F.fx ? raw(F.fx.readDot(r.id)) : ''}${CHEV}</a>`; };
     return { title: 'Resources', html: h`
       ${large('Resources', 'Learn it, then link what your doctor may need.')}
       <div class="ios-body">
@@ -394,7 +397,7 @@
     if (!r) return { title: 'Not found', back: { href: '#/resources', label: 'Resources' }, html: h`${large('Not found', 'This resource was removed or is not published.')}<div class="ios-body"><div class="ios-sec"><a class="ios-btn sec" href="#/resources">Back to resources</a></div></div>` };
     var paras = r.body.split('. ').map(function (t, i, a) { return i < a.length - 1 ? t + '.' : t; }); var mid = Math.ceil(paras.length / 2);
     var two = [paras.slice(0, mid).join(' '), paras.slice(mid).join(' ')].filter(Boolean);
-    var skill = F.SKILLS.filter(function (s) { return r.skill ? s.id === r.skill : SKILL_RES[s.id] === r.id; })[0];
+    var skill = F.AREAS.filter(function (s) { return r.skill ? s.id === r.skill : (s.guide || SKILL_RES[s.area || s.id]) === r.id; })[0];
     return { title: r.title, navTitle: r.title, back: { href: '#/resources', label: 'Resources' }, html: h`
       <header class="ios-large" data-rise><h1 tabindex="-1">${r.title}</h1></header>
       <div class="ios-body">
@@ -641,7 +644,7 @@
       <p class="lv-sub">Level ${transfer ? 10 : L.n} of 10</p>
       <p>${transfer ? 'Your adult team has what they need, and you decide who sees what.' : 'You and your care team now: ' + L.leads.toLowerCase() + '.'}</p>
       <div class="stamp" role="img" aria-label="Signed off by ${so.by}">${U.star(22)}<span>Signed off</span></div>
-      <div class="ios-changed"><div class="ios-eyebrow">What changed</div><ul><li>${so.by} signed off, ${U.monthYear(so.date)}</li>${plantOn() ? h`<li>Your new plant: ${F.Plant.stageName(transfer ? 10 : L.n).toLowerCase()}</li>` : ''}<li>Unlocked: ${L.unlocks}</li></ul></div>
+      <div class="ios-changed"><div class="ios-eyebrow">What changed</div><ul><li>${so.by} signed off, ${U.monthYear(so.date)}</li>${plantOn() ? h`<li>Your new plant: ${F.PlantPal ? F.PlantPal.plantOf(transfer ? 10 : L.n).nick + ', the ' + F.PlantPal.plantOf(transfer ? 10 : L.n).name.toLowerCase() : F.Plant.stageName(transfer ? 10 : L.n).toLowerCase()}</li>` : ''}<li>Unlocked: ${L.unlocks}</li></ul></div>
       <div class="ios-lv-btns"><button type="button" class="ios-btn light" data-action="closeCelebrate">Continue</button><button type="button" class="ios-btn ghost" data-action="shareLevel" data-id="${L.n}">${shareSvg} Share this level</button></div></div>`;
   }
   F.actions.closeCelebrate = function () {
@@ -845,31 +848,31 @@
     var n = sel.leaves(p), ev = F.Plant.recent(p, 1)[0];
     return h`<section class="ios-index" data-rise style="--d:1" aria-labelledby="pl-h"><span class="ios-tape" aria-hidden="true"></span>
       <div class="ios-eyebrow">Your plant</div>
-      <div class="pl-card"><div class="pl-art">${raw(F.Plant.svg(p.level, n, 130, F.Plant.describe(p)))}</div>
+      ${F.PlantPal ? h`<h2 id="pl-h" class="ios-sr">${F.PlantPal.nick(p)}, your plant</h2>${raw(F.PlantPal.mini(p))}<p class="ios-cap" style="margin-top:10px">${ev && ev.type !== 'signOff' ? 'Last growth: ' + ev.label.charAt(0).toLowerCase() + ev.label.slice(1) + '.' : 'Practise a skill, read a guide or tick off a care task to grow a leaf.'}</p>` : h`<div class="pl-card"><div class="pl-art">${raw(F.Plant.svg(p.level, n, 130, F.Plant.describe(p)))}</div>
         <div><h2 id="pl-h">${F.Plant.stageName(p.level)}</h2><p class="ios-cap">Level ${p.level} of 10 · ${L.name}</p>
-          <p>${ev && ev.type !== 'signOff' ? 'Last growth: ' + ev.label.charAt(0).toLowerCase() + ev.label.slice(1) + '.' : 'Practise a skill, read a guide or tick off a care task to grow a leaf.'}</p></div></div>
+          <p>${ev && ev.type !== 'signOff' ? 'Last growth: ' + ev.label.charAt(0).toLowerCase() + ev.label.slice(1) + '.' : 'Practise a skill, read a guide or tick off a care task to grow a leaf.'}</p></div></div>`}
       <a class="pl-link" href="#/levels/plant">See my plant ${CHEV}</a>
       <p class="ios-cap">${youLine(p, L, own)}</p></section>`;
   }
   /* v3: one plain, strength-first sentence in the teen's voice (no "0 of 5" on a first visit) */
-  function youLine(p, L, own) { return p.transferred ? 'You have moved to adult care.' : (L.you || L.leads + '.') + (own ? ' ' + own + ' of 5 skills on your own.' : ''); }
+  function youLine(p, L, own) { return p.transferred ? 'You have moved to adult care.' : (L.you || L.leads + '.') + (own ? ' ' + own + ' of ' + sel.currentSkills(p).length + ' skills at this level on your own.' : ''); }
   function plantPage() {
     var p = me(), n = sel.leaves(p), nx = p.level < 10 ? sel.level(p.level + 1) : null, ev = F.Plant.recent(p, 5), v = visitDate(p.nextVisit);
-    var todo = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
+    var todo = sel.currentSkills(p).filter(function (s) { return p.skills[s.id] !== 'own'; });
     return { title: 'My plant', navTitle: 'My plant', back: { href: '#/levels', label: 'Levels' }, html: h`
       ${large(h`My <em>plant</em>`, 'It grows when you practise, learn and take care of things yourself.')}
       <div class="ios-body">
-        <section class="ios-index pl-hero" data-rise style="--d:1"><span class="ios-tape" aria-hidden="true"></span>
+        ${F.PlantPal ? h`<section class="ios-sec pp-sec" data-rise style="--d:1" aria-label="Your plant">${raw(F.PlantPal.render(p))}<p class="ios-cap" style="text-align:center">${n} new ${n === 1 ? 'leaf' : 'leaves'} since your last sign-off. It never shrinks. A hard stretch just pauses it.</p></section>` : h`        <section class="ios-index pl-hero" data-rise style="--d:1"><span class="ios-tape" aria-hidden="true"></span>
           <div class="pl-art">${raw(F.Plant.svg(p.level, n, 200, F.Plant.describe(p)))}</div>
           <h2>${F.Plant.stageName(p.level)}</h2><p class="ios-cap">Level ${p.level} of 10 · ${n} new ${n === 1 ? 'leaf' : 'leaves'} since your last sign-off</p>
           <p class="ios-cap">It never shrinks. A hard stretch just pauses it.</p></section>
         <section class="ios-sec" data-rise style="--d:2" aria-labelledby="pa-h"><h2 class="ios-gh" id="pa-h">${tile(ic('levels', 18), 3, true)}<span>A new plant every level</span></h2>
           <div class="pl-row" role="list">${F.LEVELS.map(function (l) { var st = l.n < p.level ? 'earned' : l.n === p.level ? 'current' : 'upcoming'; return h`<div class="pl-item ${st}" role="listitem" aria-label="Level ${l.n}, ${F.Plant.stageName(l.n)}, ${st === 'current' ? 'your plant now' : st}">${raw(F.Plant.svg(l.n, 0, 56, ''))}<b>Level ${l.n}</b><small>${F.Plant.stageName(l.n)}</small></div>`; })}</div>
-          <p class="ios-gf">Earned plants are in full colour. The next ones are faded so you can see what is ahead.</p></section>
+          <p class="ios-gf">Earned plants are in full colour. The next ones are faded so you can see what is ahead.</p></section>`}
         <section class="ios-sec" data-rise style="--d:2" aria-labelledby="pw-h"><h2 class="ios-gh" id="pw-h">${tile(xi('sparkle', 18), 4, true)}<span>What helped it grow</span></h2>
           <div class="ios-list">${ev.length ? ev.map(function (e) { var ei = EV_ICON[e.type] || ['check', 4]; return h`<div class="ios-row has-tile">${tile(ic(ei[0], 22), ei[1])}<span class="ios-rt"><b>${e.label}</b><small>${U.fmt(e.date)}</small></span></div>`; }) : h`<div class="ios-row"><span class="ios-rt"><b>Nothing yet</b><small>Practise a skill, read a guide or tick off a Run my care task.</small></span></div>`}</div></section>
         ${nx ? h`<section class="ios-sec" data-rise style="--d:3" aria-labelledby="pn-h"><h2 class="ios-gh" id="pn-h">${tile(ic('levels', 18), 3, true)}<span>Next: Level ${nx.n}, ${nx.name}</span></h2>
-          ${todo.length ? h`<div class="ios-list">${todo.map(function (s, i) { return h`<a class="ios-row has-tile" href="#/resources/${SKILL_RES[s.id]}">${tile(ic(SKILL_ICON[s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${F.SKILL_STATUS_HELP[p.skills[s.id]]}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row"><span class="ios-rt"><b>All five skills on your own</b><small>Your care team signs off at your next visit.</small></span></div></div>`}
+          ${todo.length ? h`<div class="ios-list">${todo.map(function (s, i) { return h`<a class="ios-row has-tile" href="#/resources/${(s.guide || SKILL_RES[s.area || s.id])}">${tile(ic(SKILL_ICON[s.area || s.id], 22), (i % 5) + 1)}<span class="ios-rt"><b>${s.name}</b><small>${F.SKILL_STATUS_HELP[p.skills[s.id]]}</small>${status(p.skills[s.id])}</span>${CHEV}</a>`; })}</div>` : h`<div class="ios-list"><div class="ios-row"><span class="ios-rt"><b>All skills at this level on your own</b><small>Your care team signs off at your next visit.</small></span></div></div>`}
           <p class="ios-gf">${v ? 'At your visit on ' + MON3[v.getMonth()] + ' ' + v.getDate() + ', show your care team to reach Level ' + nx.n + '.' : 'Show your care team at your next visit to reach Level ' + nx.n + '.'}</p></section>` : ''}
         <section class="ios-sec" data-rise style="--d:4"><p class="ios-gf">Your plant is private. Your care team and adult doctors never see it.</p></section>
       </div>` };

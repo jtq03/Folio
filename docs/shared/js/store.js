@@ -63,6 +63,15 @@
       if (Array.isArray(st.access) && Array.isArray(F.SEED.access)) F.SEED.access.forEach(function (a) { if (a.pid && /^p(8|9|10|11)$/.test(a.pid) && !st.access.some(function (x) { return x.id === a.id; })) st.access.push(JSON.parse(JSON.stringify(a))); });
       st.mig.v6 = true;
     }
+    /* Level system v2: requiredSkills used to mean "of 5 areas" (default 4 of 5). It now means "of the 4 skills in the
+       current level" (default 3 of 4). program.rule marks the converted record, so this runs once even across devices.
+       Patient skill maps are upgraded per patient in F.defaults (F.upgradeSkills). */
+    if (st.program && st.program.rule !== 2) {
+      var oldReq = +st.program.requiredSkills || 4;
+      st.program.requiredSkills = Math.max(2, Math.min(4, oldReq - 1));
+      st.program.rule = 2;
+    }
+    st.mig.lv2 = true;
     if (Array.isArray(st.resources)) {
       st.resources = st.resources.map(function (r) {
         var fresh = F.SEED.resources.filter(function (x) { return x.id === r.id; })[0];
@@ -130,13 +139,25 @@
       return state.patients.filter(function (p) { return p.cardId && String(p.cardId).replace(/\D/g, '') === code; })[0];
     },
     level: function (n) { return F.LEVELS[Math.min(Math.max(n, 1), 10) - 1]; },
-    ownCount: function (p) { return F.SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; }).length; },
+    /* Level system v2: a level's own 4 skills. ownCount counts the CURRENT level only. */
+    currentSkills: function (p) { return F.skillsOfLevel(p.level); },
+    ownCount: function (p) { return F.skillsOfLevel(p.level).filter(function (s) { return p.skills[s.id] === 'own'; }).length; },
+    /* Skills needed to advance from the current level (program setting, default 3 of 4) */
+    need: function (p) { return F.needToAdvance(state.program.requiredSkills, p ? p.level : 1); },
+    skillStatus: function (p, sid) { return (p.skills && p.skills[sid]) || 'learning'; },
+    /* Everything done on their own, newest first (adult view, profile) */
+    ownSkills: function (p) {
+      var e = p.earned || {};
+      return F.ALL_SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; }).sort(function (a, b) { var x = e[a.id] || '', y = e[b.id] || ''; return x < y ? 1 : x > y ? -1 : b.level - a.level; });
+    },
+    /* Skills at or below the current level that are not on their own yet */
+    stillBuilding: function (p) { return F.ALL_SKILLS.filter(function (s) { return s.level <= p.level && p.skills[s.id] !== 'own'; }); },
     me: function () { return state.team.filter(function (u) { return u.id === state.me; })[0]; },
     status: function (p) {
       if (p.transferred) return 'transferred';
       if (p.attention) return 'attention';
-      if (p.level < 10 && sel.ownCount(p) >= state.program.requiredSkills) return 'ready';
-      if (p.level === 10 && sel.ownCount(p) === 5) return 'ready';
+      if (p.level < 10 && sel.ownCount(p) >= sel.need(p)) return 'ready';
+      if (p.level === 10 && sel.ownCount(p) === F.skillsOfLevel(10).length) return 'ready';
       return 'track';
     },
     /* Medication list is "May be out of date" when never confirmed or confirmed over 90 days ago (TODO open question: threshold) */
@@ -165,20 +186,44 @@
   };
 
   var act = {
-    setSkill: function (pid, sid, status) { commit(function (s) { var p = sel.patient(pid); p.skills[sid] = status; }); },
-    /* sid is optional: Home's "Your next step" card names the skill, older callers move the first Learning one */
+    /* sid is a skill id (L3-02). An On my own status stamps p.earned the first time; earned dates are never removed,
+       so a sticker never peels off. */
+    setSkill: function (pid, sid, status) {
+      commit(function () {
+        var p = sel.patient(pid); if (!p || !F.isSkillId(sid) || !F.SKILL_STATUS[status]) return;
+        p.skills[sid] = status;
+        if (status === 'own') { if (!p.earned) p.earned = {}; if (!p.earned[sid]) p.earned[sid] = today(); }
+      });
+    },
+    /* Learning to With help, for a skill in the current level. sid is optional: with none (or an old area id) the first
+       Learning skill of the current level (in that area) moves. Returns the skill or null. */
     practise: function (pid, sid) {
       return commit(function () {
-        var p = sel.patient(pid), skill = F.SKILLS.filter(function (k) { return sid ? k.id === sid && p.skills[k.id] === 'learning' : p.skills[k.id] === 'learning'; })[0];
+        var p = sel.patient(pid), cur = F.skillsOfLevel(p.level);
+        var skill = cur.filter(function (k) { return p.skills[k.id] === 'learning' && (!sid || k.id === sid || k.area === sid); })[0];
         if (!skill) return null;
-        p.skills[skill.id] = 'help'; grow(p, 'practice', 'You practised ' + skill.name.toLowerCase()); return skill;
+        p.skills[skill.id] = 'help'; grow(p, 'practice', 'You practised ' + skill.name.charAt(0).toLowerCase() + skill.name.slice(1)); return skill;
+      });
+    },
+    /* A clinician applies the readiness check's suggested starting place (only offered before a first sign-off in Folio) */
+    placeFromCheck: function (pid) {
+      return commit(function () {
+        var p = sel.patient(pid), c = p && (p.checks || [])[p.checks.length - 1]; if (!c) return null;
+        var pl = F.checkPlace(c.answers);
+        p.level = pl.level; p.skills = F.skillMap(pl.level, pl.skills); p.earned = {}; F.upgradeSkills(p);
+        p.levelSignoff = { level: pl.level, by: sel.me().name, date: today() };
+        return pl;
       });
     },
     advance: function (pid, o) {
       return commit(function (s) {
         var p = sel.patient(pid); o = o || {};
         if (p.level >= 10) { p.transferred = true; p.celebrate = 'transfer'; }
-        else { p.level += 1; F.SKILLS.forEach(function (k) { p.skills[k.id] = 'learning'; }); p.celebrate = p.level; }
+        else {
+          if (!p.earned) p.earned = {};
+          F.skillsOfLevel(p.level).forEach(function (k) { if (p.skills[k.id] === 'own' && !p.earned[k.id]) p.earned[k.id] = today(); });
+          p.level += 1; F.skillsOfLevel(p.level).forEach(function (k) { p.skills[k.id] = 'learning'; }); p.celebrate = p.level;
+        }
         p.attention = false; p.attentionReason = ''; p.lastNote = today();
         p.levelSignoff = { level: p.level, by: sel.me().name, date: today() };
         grow(p, 'signOff', p.transferred ? 'Your final sign-off' : 'Signed off to Level ' + p.level);
@@ -208,7 +253,7 @@
       return commit(function (s) {
         var p = {
           id: uid('p'), avatar: 'a' + (1 + Math.floor(Math.random() * 8)), photo: '', first: d.first, last: d.last, age: +d.age, folioId: randFolioId(), condition: d.condition, level: +d.level || 1,
-          skills: { know: 'learning', manage: 'learning', speak: 'learning', run: 'learning', support: 'learning' },
+          skills: F.skillMap(Math.min(Math.max(+d.level || 1, 1), 10)), earned: {},
           lastNote: today(), attention: false, attentionReason: '', optedIn: true, transferred: false, celebrate: null,
           levelSignoff: { level: +d.level || 1, by: sel.me().name, date: today() }, shareNotes: true,
           wantDoctorKnow: 'Nothing added yet.', questions: [], howToWork: [],
@@ -217,6 +262,7 @@
           consent: { patient: true, guardian: true, recorded: today(), by: sel.me().name },
           card: { status: d.shape ? 'active' : 'unassigned', shape: d.shape || 'rounded', token: d.shape ? randToken() : '', issued: d.shape ? today() : '', lastTap: '' }
         };
+        if (F.defaults) F.defaults(p);
         s.patients.unshift(p); return p;
       });
     },

@@ -174,3 +174,27 @@ We compared Folio with MyTransition (McMaster Children's Hospital and CanChild),
 The questions, goal steps and new guides are drafts for a diabetes educator to review.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how the four of us work in it, and [CLAUDE.md](CLAUDE.md) for the technical map.
+
+## Level system v2 (each level has its own goal and skills)
+Before, all 10 levels scored the same five skill areas, so every level felt the same. Now each level has its own goal and 4 skills of its own, 40 in all, so a teen always knows what this level is about and what "done" looks like.
+
+| Level | Goal |
+|---|---|
+| 1 Observer | Learn your condition |
+| 2 Learner | Know your daily routine |
+| 3 Participant | Use your insulin and devices |
+| 4 Contributor | Balance food and activity |
+| 5 Partner | Handle highs, lows and sick days |
+| 6 Manager | Speak up and book your visits |
+| 7 Leader | Fit diabetes into your life |
+| 8 Navigator | Run your supplies, records and coverage |
+| 9 Planner | Take charge of privacy and consent |
+| 10 Owner | Move to adult care and own it |
+
+- **Why:** a level should feel like a chapter with its own goal. Each skill says what the teen can do ("I can ..."), three things to try, and what the clinic sees to sign it off.
+- **Rule:** move up when 3 of the 4 skills are On my own (programs can pick 2 to 4 on Levels and skills), plus the in-person sign-off and the teen's confirmation. The override with a note is still there.
+- **The five areas** (Know my health, Manage my care, Speak up, Run my care, Own my support) stay as theme tags for colour and reporting.
+- **Stickers and plants:** every skill has its own sticker and every level its own plant with a name and a personality, so the rewards match what the teen learned.
+- **Readiness check:** the same 15 questions now sample skills across the levels and suggest a starting level. A clinician applies it in Visit mode.
+- **Adult view:** "What Maya can do on their own" grouped by area, newest first, and "Still building". No level numbers.
+- **Review document:** `notes/level-curriculum.md`, made from data.js by `node tools/make-curriculum-doc.js`. The curriculum is a proposal and needs review by a diabetes educator.

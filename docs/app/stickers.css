@@ -1,0 +1,119 @@
+/* Folio patient app: skill stickers (book, chips, inspector). Motion is transform and opacity only. */
+.fs-art { display: block; overflow: visible; }
+.fs-art.fs-ghost { opacity: .5; filter: grayscale(.85); }
+
+/* ---------- Book ---------- */
+.fs-book { display: flex; flex-direction: column; gap: 14px; }
+.fs-book .ios-gh { align-items: center; }
+.fs-prog { height: 8px; border-radius: 99px; background: var(--bg-sunken, #F0E3CE); overflow: hidden; margin: 0 4px; }
+.fs-prog i { display: block; height: 100%; border-radius: inherit; background: var(--green-500, #395B50); }
+.fs-filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 4px 6px; margin: 0 -4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.fs-filters::-webkit-scrollbar { display: none; }
+.fs-chip { flex: none; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--line-strong, #8E876B); background: var(--bg-surface, #FCF8F1); color: var(--fg-1, #1F2F16); font: 600 .9rem/1 var(--font-ui); }
+.fs-chip[aria-pressed="true"] { background: var(--action, #1F2F16); color: var(--on-action, #FCF8F1); border-color: var(--action, #1F2F16); }
+.fs-chip:focus-visible, .fs-st:focus-visible, .fs-chipst:focus-visible, .fs-cmpb:focus-visible { outline: 3px solid var(--focus-ring, #3F64A8); outline-offset: 2px; }
+.fs-lv { background: var(--bg-surface, #FCF8F1); border-radius: 22px; padding: 14px 12px 10px; border: 1px solid var(--line, #E9DCC3); }
+.fs-lv.cur { border-color: var(--green-500, #395B50); box-shadow: inset 0 0 0 1px var(--green-500, #395B50); }
+.fs-lv h3 { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font: 600 1.05rem/1.25 var(--font-display); color: var(--fg-1); margin: 0 4px; }
+.fs-lvn { font: 700 .72rem/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-2); }
+.fs-lvc { margin-left: auto; font: 600 .78rem/1 var(--font-ui); color: var(--fg-2); }
+.fs-goal { margin: 4px 4px 0; font-size: .88rem; line-height: 1.4; color: var(--fg-2); }
+.fs-grid { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.fs-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.fs-nm { font: 600 .7rem/1.2 var(--font-ui); color: var(--fg-2); text-align: center; overflow-wrap: anywhere; hyphens: auto; max-width: 100%; }
+.fs-st { position: relative; display: grid; place-items: center; width: 100%; max-width: 84px; aspect-ratio: 1; min-height: 44px; padding: 0; border: 0; background: none; color: var(--fg-1); border-radius: 18px; -webkit-tap-highlight-color: transparent; transform: rotate(var(--rot, 0deg)); transition: transform .25s var(--ease-celebrate, ease); }
+.fs-st .fs-art { width: 100%; height: auto; max-width: none; }
+.fs-st.z-S .fs-art { width: 78%; } .fs-st.z-M .fs-art { width: 90%; }
+.fs-st.got:active { transform: rotate(var(--rot, 0deg)) scale(.94); }
+.fs-st.lock { color: var(--fg-2); }
+.fs-st.pend { opacity: 0; }
+/* fun-home.css rules for the old book must not shrink these */
+.fs-book .fa-st svg { max-width: none; filter: none; }
+.fs-book .fa-st.got svg { filter: none; }
+
+/* Small sticker next to a skill row */
+.fs-chipst { flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--fg-2); border-radius: 12px; }
+
+/* Glitter twinkle and holo drift (book and chips). Inspector drives holo with the finger instead. */
+.fs-tw { transform-box: fill-box; transform-origin: center; animation: fsTw 2.6s ease-in-out infinite; }
+@keyframes fsTw { 0%, 70%, 100% { opacity: 0; transform: scale(.2); } 82% { opacity: 1; transform: scale(1.15); } }
+.fs-book .fs-holo, .fs-chipst .fs-holo, .fs-cmpb .fs-holo { animation: fsHolo 5s ease-in-out infinite alternate; }
+@keyframes fsHolo { from { transform: translateX(-26px); } to { transform: translateX(26px); } }
+
+/* ---------- Inspector sheet ---------- */
+.fs-insp { display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
+.fs-stage { position: relative; align-self: center; width: 260px; max-width: 100%; aspect-ratio: 1; perspective: 900px; display: grid; place-items: center; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.fs-stage.fs-hold { cursor: grabbing; }
+.fs-card { position: relative; width: 236px; height: 236px; transform-style: preserve-3d; transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s cubic-bezier(.34, 1.56, .64, 1); will-change: transform; }
+.fs-stage.fs-live .fs-card { transition: transform .08s linear; }
+.fs-card.flipped { transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(180deg + var(--rx, 0) * 1deg)); transition: transform .6s cubic-bezier(.34, 1.4, .64, 1); }
+.fs-face { position: absolute; inset: 0; display: grid; place-items: center; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.fs-face .fs-art { width: 220px; height: 220px; }
+.fs-back { transform: rotateY(180deg); }
+.fs-wm { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); padding: 4px 10px; border-radius: 999px; background: var(--bg-surface); color: var(--fg-1); font: 700 .72rem/1 var(--font-ui); letter-spacing: .04em; border: 1px solid var(--line-strong); }
+.fs-spec { transition: opacity .2s; }
+.fs-stage.fs-live .fs-spec { opacity: .95 !important; }
+.fs-shadow { position: absolute; left: 22%; right: 22%; bottom: 2px; height: 14px; border-radius: 50%; background: radial-gradient(closest-side, rgba(31, 47, 22, .22), transparent); transform: translateX(calc(var(--sx, 0) * -10px)); pointer-events: none; }
+/* Backing paper (the liner) */
+.fs-liner { position: relative; width: 224px; height: 224px; border-radius: 18px; background: repeating-linear-gradient(135deg, #FBF6EC 0 10px, #F4ECDC 10px 11px); color: #1F2F16; box-shadow: 0 6px 18px rgba(31, 47, 22, .2); display: flex; flex-direction: column; align-items: center; padding: 10px 12px; text-align: center; overflow: hidden; }
+.fs-imp { position: absolute; inset: 0; display: grid; place-items: center; color: #8E876B; opacity: .5; }
+.fs-imp .fs-art text { display: none; }
+.fs-bk-line { position: relative; margin: 4px 0 0; font: italic 600 .95rem/1.3 var(--font-display); }
+.fs-bk-meta { position: relative; margin: auto 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; width: 100%; text-align: left; }
+.fs-bk-meta dt { font: 700 .58rem/1.2 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: #395B50; }
+.fs-bk-meta dd { margin: 0; font: 600 .74rem/1.25 var(--font-ui); overflow-wrap: anywhere; }
+.fs-slit { position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1.5px dashed rgba(31, 47, 22, .18); }
+.fs-hint { text-align: center; margin-top: -8px; }
+.fs-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.fs-actions .ios-btn { flex: 1 1 140px; min-height: 48px; }
+.fs-head { text-align: center; }
+.fs-head h2 { font: 600 1.5rem/1.2 var(--font-display); margin: 0; }
+.fs-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+.fs-tag { padding: 5px 10px; border-radius: 999px; background: var(--tint-beige, #F0E3CE); color: var(--on-tint, #1F2F16); font: 600 .78rem/1.2 var(--font-ui); }
+.fs-tag.s-got { background: var(--tint-lime, #EFF6C6); }
+.fs-tag.s-next { background: var(--tint-blue, #C5D1EB); }
+.fs-story { margin: 10px 0 0; font-size: .98rem; line-height: 1.45; color: var(--fg-1); }
+.fs-sec { background: var(--bg-surface); border-radius: 18px; padding: 14px 16px; border: 1px solid var(--line); }
+.fs-sec h3 { margin: 0 0 8px; font: 700 .78rem/1.2 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-2); }
+.fs-dl { margin: 0; display: grid; gap: 8px; }
+.fs-dl > div { display: grid; grid-template-columns: minmax(70px, 30%) 1fr; gap: 10px; align-items: baseline; }
+.fs-dl dt { font-weight: 600; color: var(--fg-2); font-size: .9rem; }
+.fs-dl dd { margin: 0; color: var(--fg-1); font-size: .95rem; line-height: 1.35; }
+.fs-can { margin: 0; font: 600 1.05rem/1.35 var(--font-display); }
+.fs-how { margin: 8px 0 0; padding-left: 1.3em; display: grid; gap: 4px; line-height: 1.4; }
+.fs-ev { margin: 8px 0 0; font-size: .92rem; line-height: 1.4; color: var(--fg-1); }
+.fs-guide { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; color: var(--fg-1); text-decoration: underline; text-underline-offset: 3px; }
+.fs-cmp { list-style: none; margin: 10px -16px 0; padding: 4px 16px 8px; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.fs-cmp::-webkit-scrollbar { display: none; }
+.fs-cmp li { flex: none; scroll-snap-align: start; }
+.fs-cmpb { width: 112px; min-height: 44px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--bg-page); color: var(--fg-1); text-align: center; }
+.fs-cmpb b { font: 600 .8rem/1.2 var(--font-ui); }
+.fs-cmpb small { font-size: .7rem; color: var(--fg-2); }
+.fs-mini { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
+.fs-mini i { font: 600 .64rem/1 var(--font-ui); font-style: normal; padding: 3px 6px; border-radius: 99px; background: var(--bg-sunken); color: var(--fg-1); }
+.fs-mini i.d { background: var(--tint-blue, #C5D1EB); color: var(--on-tint, #1F2F16); box-shadow: inset 0 0 0 1px var(--fg-2); }
+
+/* Dark mode: stickers keep their own paper colours, only the surroundings change */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fs-shadow { background: radial-gradient(closest-side, rgba(0, 0, 0, .45), transparent); }
+  :root:not([data-theme="light"]) .fs-st.lock, :root:not([data-theme="light"]) .fs-chipst.lock { color: #C9D3CB; }
+}
+:root[data-theme="dark"] .fs-st.lock { color: #C9D3CB; }
+
+/* Reduced motion: no tilt, no twinkle, no drift; the flip becomes a fade */
+@media (prefers-reduced-motion: reduce) {
+  .fs-tw, .fs-book .fs-holo, .fs-chipst .fs-holo, .fs-cmpb .fs-holo { animation: none !important; }
+  .fs-tw { opacity: .8; }
+  .fs-card, .fs-card.flipped { transform: none !important; transition: none !important; }
+  .fs-card .fs-face { transition: opacity .2s; backface-visibility: visible; -webkit-backface-visibility: visible; }
+  .fs-card .fs-back { transform: none; opacity: 0; }
+  .fs-card.flipped .fs-back { opacity: 1; } .fs-card.flipped .fs-front { opacity: 0; }
+  .fs-st { transition: none; }
+}
+html[data-motion="reduce"] .fs-tw, html[data-motion="reduce"] .fs-book .fs-holo, html[data-motion="reduce"] .fs-chipst .fs-holo, html[data-motion="reduce"] .fs-cmpb .fs-holo { animation: none !important; }
+html[data-motion="reduce"] .fs-tw { opacity: .8; }
+html[data-motion="reduce"] .fs-card, html[data-motion="reduce"] .fs-card.flipped { transform: none !important; transition: none !important; }
+html[data-motion="reduce"] .fs-card .fs-face { transition: opacity .2s; backface-visibility: visible; -webkit-backface-visibility: visible; }
+html[data-motion="reduce"] .fs-card .fs-back { transform: none; opacity: 0; }
+html[data-motion="reduce"] .fs-card.flipped .fs-back { opacity: 1; }
+html[data-motion="reduce"] .fs-card.flipped .fs-front { opacity: 0; }
