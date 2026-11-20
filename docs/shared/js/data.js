@@ -124,7 +124,7 @@ window.Folio = window.Folio || {};
           ['Game day', 'star', 'lime', 'bolt', 'glossy', 'M', 'Full energy, full plan. This star shows up to practice early with snacks in its pocket.', 'Glossy star, 40 mm, sports-bag tough', 'Play hard. Plan first.']),
         SK('L4-03', 'know', 'My allergies and history', 'I can name my allergies, my devices and when I was diagnosed.',
           ['Check your allergies and medications in About me.', 'Ask a parent when and where you were diagnosed.', 'Fill in a history form at your visit with a little help.'],
-          'Fills in the history form with help.', null,
+          'Fills in the history form at a visit.', null,
           ['My story so far', 'shield', 'beige', 'log', 'matte', 'M', 'A tiny file of the important stuff. This shield keeps your story straight so nobody has to guess.', 'Matte shield, 38 mm, paper texture', 'Allergies, devices, diagnosis day. Got it.']),
         SK('L4-04', 'support', 'Time on my own', 'I can spend part of my visit alone with my clinician.',
           ['Tell your parent before the visit that you want some time alone.', 'Ask for it at the start of the visit.', 'Use the time for a question you would not ask in front of family.'],

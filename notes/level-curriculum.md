@@ -251,7 +251,7 @@ How:
 2. Ask a parent when and where you were diagnosed.
 3. Fill in a history form at your visit with a little help.
 
-- **What the clinic sees:** Fills in the history form with help.
+- **What the clinic sees:** Fills in the history form at a visit.
 - **Guide:** none yet
 - **Sticker:** My story so far. shield, beige, log icon, matte, size M. A tiny file of the important stuff. This shield keeps your story straight so nobody has to guess. *Matte shield, 38 mm, paper texture.* Back: "Allergies, devices, diagnosis day. Got it."
 
