@@ -149,7 +149,8 @@
      Below the fold: what they can do on their own, contacts, records, and adding a note. */
   function view(p, how) {
     var notes = sel.notesFor(p, 'adult'), vis = p.contacts.filter(function (c) { return c.visible; });
-    var own = F.SKILLS.filter(function (s) { return p.skills[s.id] === 'own'; }), still = F.SKILLS.filter(function (s) { return p.skills[s.id] !== 'own'; });
+    /* Level system v2: own skills grouped by area, newest first; still building = skills up to the current level not yet own. No level numbers. */
+    var own = sel.ownSkills(p), still = sel.stillBuilding(p), earned = p.earned || {};
     var L = sel.level(p.level);
     var contact = function (c, role) { return h`<div class="who"><span class="rl">${role}</span><div><b>${c.name}</b></div>${c.phone ? h`<div class="muted">${c.phone}</div><div class="acts"><a class="btn btn-sm btn-primary key" href="tel:${c.phone.replace(/[^\d+]/g, '')}">${ic('phone', 16)} Call</a><a class="btn btn-sm key" href="sms:${c.phone.replace(/[^\d+]/g, '')}">${ic('message', 16)} Message</a></div>` : h`<div class="muted">No phone on file</div>`}</div>`; };
     return h`${bar(p, how)}<main id="main" class="wrap">
@@ -164,9 +165,14 @@
         ${notes.length ? notes.map(function (n) { return h`<div class="work"><div class="by">${n.kind}<span>${n.author} · ${U.fmt(n.date)}</span></div><div><p>${n.text}</p>${n.fields ? handoff(n.fields) : ''}</div></div>`; }) : h`<p class="muted">No shared notes.</p>`}</section>
       ${medsSection(p)}
       ${demo ? h`<div class="fold">Fold: below this line is context, reached by scrolling</div>` : h`<div class="fold" aria-hidden="true"></div>`}
-      <section class="sheetc" style="--d:5"><h2>Skills ${p.first} has and is building</h2><div class="sk2" style="margin-top:.75rem">
-        <div><div class="eyebrow">Does on their own</div>${own.length ? own.map(function (s) { return h`<div class="it2"><b>${s.name}</b><span>${s.sub}</span></div>`; }) : h`<p class="muted">None yet at this level.</p>`}</div>
-        <div><div class="eyebrow">Still working on</div>${still.length ? still.map(function (s) { return h`<div class="it2"><b>${s.name} ${U.skillPill(p.skills[s.id])}</b><span>${s.sub}</span></div>`; }) : h`<p class="muted">Everything at this level.</p>`}
+      <section class="sheetc" style="--d:5"><h2>What ${p.first} can do on their own</h2><p class="small muted">Signed off in person by the paediatric team. Newest first in each area.</p>
+        ${own.length ? h`<div class="sk2 own-areas" style="margin-top:.75rem">${F.AREAS.map(function (a) { var list = own.filter(function (s) { return s.area === a.id; }); if (!list.length) return '';
+          var row = function (s) { return h`<div class="it2"><b>${s.name}</b><span>${s.evidence}${earned[s.id] ? ' · since ' + U.monthYear(earned[s.id]) : ''}</span></div>`; };
+          return h`<div class="own-area"><div class="eyebrow">${a.name}</div>${list.slice(0, 3).map(row)}${list.length > 3 ? h`<details class="more"><summary>${list.length - 3} more</summary>${list.slice(3).map(row)}</details>` : ''}</div>`; })}</div>` : h`<p class="muted">Nothing signed off yet.</p>`}
+      </section>
+      <section class="sheetc" style="--d:5"><h2>Still building</h2><div class="sk2" style="margin-top:.75rem">
+        <div>${still.length ? still.map(function (s) { return h`<div class="it2"><b>${s.name} ${U.skillPill(p.skills[s.id])}</b><span>${s.evidence}</span></div>`; }) : h`<p class="muted">Nothing in progress right now.</p>`}</div>
+        <div>
           ${p.decisionSupport ? h`<div class="it2"><b>Make big decisions ${U.pill('With help', 'help')}</b><span>${p.decisionSupport.name}${p.decisionSupport.rel ? ', ' + p.decisionSupport.rel.toLowerCase() : ''}, helps with major decisions.</span></div>` : ''}</div></div>
         ${legend()}</section>
       <div class="cols" style="margin-bottom:1.1rem">

@@ -75,3 +75,6 @@ textarea[aria-invalid="true"], input[aria-invalid="true"] { border-color: var(--
 .gl-words .by { font: 700 .75rem/1rem var(--font-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-1); display: flex; flex-wrap: wrap; gap: .25rem .75rem; }
 .gl-words .by span { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--fg-2); }
 .gl-words p { margin: .35rem 0 0; font-size: 1.0625rem; line-height: 1.5; color: var(--fg-1); }
+/* Level system v2: own skills grouped by area */
+.own-area .more summary { cursor: pointer; font-size: .9rem; color: var(--text-muted); padding: .25rem 0 .5rem; min-height: 44px; display: flex; align-items: center; }
+.own-area .more[open] summary { padding-bottom: .5rem; }

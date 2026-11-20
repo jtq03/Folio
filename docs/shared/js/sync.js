@@ -15,7 +15,9 @@
 (function (F) {
   'use strict';
   var S = F.Store, CFG = F.SYNC || { url: '', ws: '' };
-  var SCHEMA = 1, KEYS = ['team', 'resources', 'program', 'clinic'], ACCESS_CAP = 500;
+  /* Schema 2 = level system v2 (patient skills keyed by skill id, program.requiredSkills per level). A device on an
+     older schema sees meta.schema go up and pauses instead of writing old-model data over new. */
+  var SCHEMA = 2, KEYS = ['team', 'resources', 'program', 'clinic'], ACCESS_CAP = 500;
   var listeners = [];
   var MIN_WS = 20, SHORT = 'Workspace name is too short. Use at least 20 characters.', BLOCKED = 'Sync is blocked. Check the database rules.';
   var tooShort = !!(CFG.url && CFG.ws && CFG.ws.length < MIN_WS);
@@ -178,7 +180,7 @@
       return req('PUT', '', fullBody(), keepalive).then(function () { inflight = false; retryN = 0; book.pr = 0; book.d = {}; saveBook(); return flush(keepalive); }, fail);
     }
     var paths = Object.keys(book.d);
-    if (!paths.length) { if (connected) setStatus('synced'); return Promise.resolve(); }
+    if (!paths.length && !book.sm) { if (connected) setStatus('synced'); return Promise.resolve(); }
     var body = {}, size = 0, sent = {};
     for (var i = 0; i < paths.length; i++) {
       var path = paths[i], val;
@@ -197,7 +199,7 @@
       size += (val.j || '').length;
       if (size > 400000) break; /* keep each request small; the rest goes in the next one */
     }
-    if (!Object.keys(body).length) { saveBook(); if (connected) setStatus('synced'); return Promise.resolve(); }
+    if (!Object.keys(body).length && !book.sm) { saveBook(); if (connected) setStatus('synced'); return Promise.resolve(); }
     if (book.sm) body.meta = { schema: SCHEMA, reset: book.reset, by: cid };
     inflight = true; setStatus('syncing');
     return req('PATCH', '', body, keepalive).then(function () {
@@ -271,6 +273,8 @@
     gotSnapshot = true; connected = true; loadBook();
     var meta = mirrorMeta(), hasData = mirror && typeof mirror === 'object' && (mirror.patients || meta);
     if (meta && +meta.schema > SCHEMA) { readOnly = true; setStatus('error', 'Sync paused. Another device runs a newer Folio. Reload to update.'); return; }
+    /* An older workspace: raise its schema so older devices pause (they only check meta.schema) */
+    if (meta && +meta.schema < SCHEMA) book.sm = 1;
     if (!hasData) {
       /* Empty workspace: this device seeds it (first device wins). A populated workspace is never wiped by an empty device. */
       if (!book.reset) book.reset = stamp();
@@ -314,7 +318,7 @@
       }
       var lv = book.v[path] || [0, ''], rv = [r.u, r.c], c = cmp(rv, lv);
       var exists = localValue(path) !== undefined;
-      if (c > 0 || !exists) { apply.push({ path: path, val: r.val, v: rv }); }
+      if (c > 0 || !exists) { apply.push({ path: path, val: r.val, v: rv, s: r.s }); }
       else if (c < 0 && hash(r.j) !== book.h[path]) {
         /* This device has the newer copy and the server holds an older write. The device that made the newer copy
            sends it again now; any other device waits a moment and only steps in if it is still stale. */
@@ -336,11 +340,15 @@
         }
       });
       /* What the device holds now (after migrations) counts as received, so it is not sent back */
-      apply.forEach(function (x) { book.h[x.path] = hash(localJson(x.path)); book.v[x.path] = x.v; delete book.d[x.path]; });
+      apply.forEach(function (x) {
+        book.h[x.path] = hash(localJson(x.path)); book.v[x.path] = x.v; delete book.d[x.path];
+        /* A record written by an older schema was upgraded here by migrate(): send the upgraded copy back up */
+        if (x.s < SCHEMA && x.path.indexOf('patients/') === 0) { book.v[x.path] = [stamp(), cid]; book.d[x.path] = 1; }
+      });
       (st().access || []).forEach(function (a) { if (a && a.id) book.a[a.id] = 1; });
     }
     saveBook();
-    if (Object.keys(book.d).length || dirty || book.pr) flush(); else if (!inflight) setStatus('synced');
+    if (Object.keys(book.d).length || dirty || book.pr || book.sm) flush(); else if (!inflight) setStatus('synced');
   }
 
   /* ---------- Stream, with polling as the fallback ---------- */

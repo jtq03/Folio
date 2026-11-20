@@ -4,6 +4,7 @@
   function fresh(pid) { F.ui.v = { pid: pid, step: 1, mode: 'advance', inPerson: false, confirmed: false, override: false, kind: 'Visit takeaway', text: '', shared: true, done: null }; }
 
   F.actions.vskill = function (el) { A.setSkill(el.dataset.pid, el.dataset.sid, el.dataset.v); };
+  F.actions.vplace = function (el) { var r = A.placeFromCheck(el.dataset.pid); if (r) U.toast('Starting at Level ' + r.level + '. Check each skill with them.'); };
   F.actions.vstep = function (el) { F.ui.v.step = +el.dataset.v; F.rerender(true); };
   F.actions.vmode = function (el) { F.ui.v.mode = el.dataset.v; F.rerender(false); };
   F.actions.vfinish = function (el) {
@@ -21,15 +22,15 @@
     var pts = S.get().patients.slice().sort(function (a, b) { var r = { ready: 0, attention: 1, track: 2, transferred: 3 }; return r[sel.status(a)] - r[sel.status(b)]; });
     return { title: 'Visit mode', html: h`
       ${F.Pages.head('Visit mode', h`Who is in <em class="it">today</em>?`, 'A focused view for the visit itself: review skills, decide, write one note. No extra forms.')}
-      <div class="table-wrap sec plain" style="padding:.5rem"><table class="data"><caption class="sr">Choose a patient to start a visit</caption><thead><tr><th scope="col">Patient</th><th scope="col">Level</th><th scope="col">Skills on their own</th><th scope="col">Status</th><th scope="col"><span class="sr">Start</span></th></tr></thead>
-      <tbody>${pts.map(function (p) { return h`<tr><td><div class="row">${U.avatar(p, 36)}<b>${sel.full(p)}</b></div></td><td>${p.level} · ${sel.level(p.level).name}</td><td>${sel.ownCount(p)} of 5</td><td>${U.statusPill(p)}</td><td style="text-align:right"><a class="btn btn-sm ${sel.status(p) === 'ready' ? 'btn-primary' : ''}" href="#/visit/${p.id}">Start visit</a></td></tr>`; })}</tbody></table></div>` };
+      <div class="table-wrap sec plain" style="padding:.5rem"><table class="data"><caption class="sr">Choose a patient to start a visit</caption><thead><tr><th scope="col">Patient</th><th scope="col">Level</th><th scope="col">Level goal</th><th scope="col">Skills on their own</th><th scope="col">Status</th><th scope="col"><span class="sr">Start</span></th></tr></thead>
+      <tbody>${pts.map(function (p) { return h`<tr><td><div class="row">${U.avatar(p, 36)}<b>${sel.full(p)}</b></div></td><td>${p.level} · ${sel.level(p.level).name}</td><td>${sel.level(p.level).goal}</td><td>${sel.ownCount(p)} of ${sel.currentSkills(p).length} <span class="small muted">(${sel.need(p)} needed)</span></td><td>${U.statusPill(p)}</td><td style="text-align:right"><a class="btn btn-sm ${sel.status(p) === 'ready' ? 'btn-primary' : ''}" href="#/visit/${p.id}">Start visit</a></td></tr>`; })}</tbody></table></div>` };
   };
 
   F.Pages.visit = function (params) {
     var p = sel.patient(params.id);
     if (!p) return { title: 'Visit', html: h`<h1>Patient not found</h1><p><a href="#/visit">Back</a></p>` };
     if (!F.ui.v || F.ui.v.pid !== p.id) fresh(p.id);
-    var v = F.ui.v, req = S.get().program.requiredSkills, own = sel.ownCount(p), top = p.level === 10, nx = sel.level(Math.min(p.level + 1, 10));
+    var v = F.ui.v, req = sel.need(p), own = sel.ownCount(p), cs = sel.currentSkills(p), L = sel.level(p.level), top = p.level === 10, nx = sel.level(Math.min(p.level + 1, 10));
 
     if (v.done) {
       var d = v.done, nextReady = S.get().patients.filter(function (x) { return x.id !== p.id && sel.status(x) === 'ready'; })[0];
@@ -47,22 +48,27 @@
     if (v.step === 1) {
       /* v3: the teen's self-check from app setup, shown as their view. It never sets a status (teen and clinician ratings only weakly agree). */
       /* v5: the readiness check. Each skill shows the teen's view (the middle of 3 answers) and the answers behind it. */
+      /* Level system v2: the current level's own 4 skills, each with what the teen can do and what the clinic sees */
       var sc = p.selfCheck && p.selfCheck.skills ? p.selfCheck : null, VIEW = F.CHECK_WORD, chk = (p.checks || []).length ? p.checks[p.checks.length - 1] : null;
-      body = h`<h2>Review skills at Level ${p.level}</h2><p class="muted">Ask ${p.first} to show you, then set where each skill is today. Changes save as you go. On my own means ${p.first} does it without being reminded.</p>
+      var view = function (s) { return (chk && F.checkSkillView(chk.answers, s.id)) || (sc && sc.skills[s.area]) || ''; };
+      var place = chk ? F.checkPlace(chk.answers) : null, firstPlace = place && p.level === 1 && !((p.plant && p.plant.events) || []).some(function (e) { return e.type === 'signOff'; }) && place.level > 1;
+      body = h`<h2>Level ${p.level} goal: ${L.goal}</h2><p class="muted">${L.intro}</p><p class="muted">Ask ${p.first} to show you each skill, then set where it is today. Changes save as you go. On my own means ${p.first} does it without being reminded.</p>
+        ${firstPlace ? h`<div class="notice">${ic('info')}<span>${p.first}'s readiness check suggests starting at Level ${place.level}: ${sel.level(place.level).goal}. Use it only as a starting point you agree with ${p.first}. <button class="btn btn-sm" data-action="vplace" data-pid="${p.id}">Start at Level ${place.level}</button></span></div>` : ''}
         ${p.questions.length ? h`<div class="vq"><div class="eyebrow">${p.first}'s questions for this visit</div><ul>${p.questions.map(function (x) { return h`<li>${x}</li>`; })}</ul></div>` : ''}
         ${(p.goals || []).length ? h`<div class="vq"><div class="eyebrow">${p.first}'s goals</div><ul>${p.goals.map(function (g) { var q = F.checkItem(g.id); return q ? h`<li>${q.goal} <span class="muted small">· ${g.done.filter(Boolean).length} of 3 steps done</span></li>` : ''; })}</ul></div>` : ''}
         ${sc ? h`<div class="notice">${ic('info')}<span>${p.first} did ${chk ? 'the readiness check' : 'a self-check'} on ${U.fmtFull(sc.date)}. Their view is under each skill as a starting point for the conversation. It does not set a status.</span></div>` : h`<div class="notice">${ic('info')}<span>${p.first} has not done the readiness check yet. It takes about 3 minutes in the app.</span></div>`}
-        ${F.SKILLS.map(function (s) { return h`<div class="visit-skill"><div><b>${s.name}</b><div class="small muted">${s.sub}</div>${sc && sc.skills[s.id] ? h`<div class="selfview small">${p.first}'s view: <b>${VIEW[sc.skills[s.id]]}</b></div>` : ''}
-          ${chk ? h`<details class="ck-detail small"><summary>${p.first}'s answers</summary><ul>${F.CHECK.filter(function (q) { return q.skill === s.id; }).map(function (q) { return h`<li>${q.q} <b>${chk.answers[q.id] ? VIEW[chk.answers[q.id]] : 'Skipped'}</b></li>`; })}</ul></details>` : ''}</div>
+        ${cs.map(function (s) { var qs = chk ? F.CHECK.filter(function (q) { return q.skills.indexOf(s.id) >= 0; }) : [];
+          return h`<div class="visit-skill" data-skill="${s.id}"><div><div class="eyebrow">${F.AREA_BY_ID[s.area].name}</div><b>${s.name}</b><div class="small">${s.can}</div><div class="small muted"><b>What the clinic sees:</b> ${s.evidence}</div>${view(s) ? h`<div class="selfview small">${p.first}'s view: <b>${VIEW[view(s)]}</b></div>` : ''}
+          ${qs.length ? h`<details class="ck-detail small"><summary>${p.first}'s answers</summary><ul>${qs.map(function (q) { return h`<li>${q.q} <b>${chk.answers[q.id] ? VIEW[chk.answers[q.id]] : 'Skipped'}</b></li>`; })}</ul></details>` : ''}</div>
           <div class="seg" role="group" aria-label="${s.name} status">${['learning', 'help', 'own'].map(function (k) { return h`<button data-action="vskill" data-pid="${p.id}" data-sid="${s.id}" data-v="${k}" aria-pressed="${String(p.skills[s.id] === k)}">${F.SKILL_STATUS[k]}</button>`; })}</div></div>`; })}
         <div class="vmeds"><div><b>Medications and allergies</b><div class="small muted">${p.medsConfirmed ? 'Last confirmed ' + U.fmtFull(p.medsConfirmed.date) + ' by ' + p.medsConfirmed.by : 'Not confirmed yet'}${sel.medsStale(p) ? '. Adult doctors see a "may be out of date" note until it is confirmed.' : '.'}</div></div><button class="btn btn-sm ${sel.medsStale(p) ? 'btn-primary' : ''}" data-action="confirmMeds" data-pid="${p.id}">${ic('check', 16)} ${sel.medsStale(p) ? 'Confirm with ' + p.first : 'Confirm again'}</button></div>
-        <div class="row between" style="margin-top:1.25rem"><span class="muted">${own} of 5 on their own · ${req} needed to advance</span><button class="btn btn-primary" data-action="vstep" data-v="2">Next: decide ${ic('arrow', 16)}</button></div>`;
+        <div class="row between" style="margin-top:1.25rem"><span class="muted">${own} of ${cs.length} on their own · ${req} needed to advance</span><button class="btn btn-primary" data-action="vstep" data-v="2">Next: decide ${ic('arrow', 16)}</button></div>`;
     } else if (v.step === 2) {
       var meets = own >= req, needOverride = v.mode === 'advance' && !meets;
       var cfg = S.get().program, ok = v.mode === 'hold' || ((!cfg.inPerson || v.inPerson) && v.confirmed && (!needOverride || v.override));
       body = h`<h2>Decide</h2>
-        <div class="notice">${ic('info')}<span>${meets ? own + ' of 5 skills are on their own. That meets the ' + req + ' needed.' : 'Only ' + own + ' of 5 skills are on their own. ' + req + ' are needed. You can still advance and leave a note.'}</span></div>
-        <label class="choice"><input type="radio" name="vm" ${v.mode === 'advance' ? 'checked' : ''} data-action="vmode" data-v="advance"><span><b>${top ? 'Complete final sign-off and transfer' : 'Advance to Level ' + nx.n + ': ' + nx.name}</b><br><span class="muted small">${top ? 'Marks the transfer complete.' : nx.leads + '. ' + nx.unlocks + ' unlock.'}</span></span></label>
+        <div class="notice">${ic('info')}<span>${meets ? own + ' of ' + cs.length + ' Level ' + p.level + ' skills are on their own. That meets the ' + req + ' needed.' : 'Only ' + own + ' of ' + cs.length + ' Level ' + p.level + ' skills are on their own. ' + req + ' are needed. You can still advance and leave a note.'}</span></div>
+        <label class="choice"><input type="radio" name="vm" ${v.mode === 'advance' ? 'checked' : ''} data-action="vmode" data-v="advance"><span><b>${top ? 'Complete final sign-off and transfer' : 'Advance to Level ' + nx.n + ': ' + nx.name}</b><br><span class="muted small">${top ? 'Marks the transfer complete.' : 'Next goal: ' + nx.goal + '. ' + nx.leads + '. ' + nx.unlocks + ' unlock.'}</span></span></label>
         <label class="choice"><input type="radio" name="vm" ${v.mode === 'hold' ? 'checked' : ''} data-action="vmode" data-v="hold"><span><b>Hold at Level ${p.level}</b><br><span class="muted small">Keep practising. Progress pauses, it never costs a level.</span></span></label>
         ${v.mode === 'advance' ? h`<div class="divider-label"><span class="eyebrow">Before you sign off</span></div>
           ${cfg.inPerson ? h`<label class="check"><input type="checkbox" ${v.inPerson ? 'checked' : ''} data-bind="vi"><span>I reviewed these skills in person at a routine visit</span></label>` : ''}

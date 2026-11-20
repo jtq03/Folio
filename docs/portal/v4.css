@@ -202,3 +202,20 @@ table.data .shape-tile { width: 38px; height: 38px; }
 .shape-opt .shape-tile .shape-ic { color: inherit; }
 /* Night: the green card shapes sit on a green sheet, so the preview gets a thin cream outline that follows each cut shape */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fcards { filter: drop-shadow(0 0 .6px rgba(243,237,224,.9)) drop-shadow(0 0 .6px rgba(243,237,224,.6)); } }
+/* Level system v2: level roadmap (profile) and curriculum list (Levels and skills) */
+.rm-list { list-style: none; margin: .75rem 0 0; padding: 0; display: grid; gap: .5rem; }
+.rm-lv > details { background: var(--bg-inset); border-radius: var(--radius-clinical); padding: .25rem .9rem; }
+.rm-lv > details > summary { display: flex; align-items: center; gap: .8rem; cursor: pointer; min-height: 48px; padding: .4rem 0; list-style: none; }
+.rm-lv > details > summary::-webkit-details-marker { display: none; }
+.rm-n { flex: none; width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--bg-surface); border: 2px solid currentColor; }
+.rm-done .rm-n { background: var(--green-500); color: var(--beige-50); border-color: transparent; }
+.rm-current .rm-n { border-color: var(--accent); }
+.rm-upcoming .rm-t b { font-weight: 600; }
+.rm-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rm-skills { list-style: none; margin: 0 0 .6rem; padding: 0; display: grid; gap: .4rem; }
+.rm-skills li { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .55rem .7rem; background: var(--bg-surface); border-radius: 10px; }
+.rm-skills li > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+.lv-curr .rm-lv table.data td { vertical-align: top; }
+.lv-curr .rm-lv ul.small { margin: 0; padding-left: 1.1rem; }
+.stuck { margin: .5rem 0 0; padding-left: 1.2rem; } .stuck li { margin-bottom: .45rem; }
+.visit-skill .eyebrow { margin-bottom: .15rem; }

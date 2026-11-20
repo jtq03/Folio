@@ -84,7 +84,7 @@
   var PV_WORDS = { level: 'your level and skills', tasks: 'your Run my care tasks', visit: 'your next visit' };
   function shareWords(p) { return F.PARENT_SHARE.filter(function (x) { return p.parentShare && p.parentShare[x.k]; }).map(function (x) { return PV_WORDS[x.k]; }); }
   var SKILL_ICON = { know: 'book', manage: 'clock', speak: 'message', run: 'visit', support: 'users' }, ST_ICON = { own: 'circlecheck', help: 'hand', learning: 'sprout' };
-  function skillOf(id) { return F.SKILLS.filter(function (k) { return k.id === id; })[0]; }
+  function skillOf(id) { return F.AREAS.filter(function (k) { return k.id === id; })[0]; }
   function chip(v) { return h`<span class="ios-st s-${v}">${ic(ST_ICON[v], 16)}${F.CHECK_WORD[v]}</span>`; }
   function chevL() { return raw('<svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg>'); }
   function closeBtn() { return h`<button type="button" class="fw-link fw-close" data-action="fwCancel">Close</button>`; }
@@ -199,7 +199,7 @@
         <div class="fw-qtop">${i ? h`<button type="button" class="fw-back" data-action="fwCheckGo" data-i="${i - 1}">${chevL()}<span>Back</span></button>` : back('check')}${st.retake ? closeBtn() : ''}</div>
         <p class="fw-step">Question ${i + 1} of ${n}</p>
         <div class="fw-prog" role="progressbar" aria-label="Readiness check" aria-valuemin="1" aria-valuemax="${n}" aria-valuenow="${i + 1}" aria-valuetext="Question ${i + 1} of ${n}"><i style="width:${Math.round((i + 1) / n * 100)}%"></i></div>
-        <p class="fw-qskill"><span class="ios-tile t${F.SKILLS.indexOf(skill) % 5 + 1} sm" aria-hidden="true">${ic(SKILL_ICON[q.skill], 16)}</span>${skill.name}</p>
+        <p class="fw-qskill"><span class="ios-tile t${F.AREAS.indexOf(skill) % 5 + 1} sm" aria-hidden="true">${ic(SKILL_ICON[q.skill], 16)}</span>${skill.name}</p>
         <h1 id="fw-h" class="fw-qh" tabindex="-1">${q.q}</h1>
         <div class="fw-ans" role="group" aria-labelledby="fw-h">${F.CHECK_ANS.map(function (a) { return h`<button type="button" class="fw-an a-${a.v}" data-action="fwAns" data-v="${a.v}" aria-pressed="${String(cur === a.v)}"><b>${a.label}</b><small>${a.sub}</small></button>`; })}</div>
         ${wasA ? h`<p class="fw-note">Last time you said: ${F.CHECK_WORD[wasA]}</p>` : ''}
@@ -212,7 +212,9 @@
         <div class="fw-qtop"><button type="button" class="fw-back" data-action="fwCheckGo" data-i="${F.CHECK.length - 1}">${chevL()}<span>Back</span></button>${st.retake ? closeBtn() : ''}</div>
         <h1 id="fw-h" tabindex="-1">Here is where you are</h1>
         <p class="fw-lead">${any ? 'Each skill shows the middle of your three answers. Your care team talks it through with you at your next visit. It does not change your level.' : 'You skipped every question, so there is nothing to show yet. You can take the check any time from Levels.'}</p>
-        ${any ? h`<div class="ios-list fw-res">${F.SKILLS.filter(function (k) { return res[k.id]; }).map(function (k) { return h`<div class="ios-row has-tile"><span class="ios-tile t${F.SKILLS.indexOf(k) % 5 + 1}" aria-hidden="true">${ic(SKILL_ICON[k.id], 22)}</span><span class="ios-rt"><b>${k.name}</b>${prevC && prevC.skills[k.id] ? h`<small>${change(prevC.skills[k.id], res[k.id])}</small>` : ''}</span>${chip(res[k.id])}</div>`; })}</div>` : ''}
+        ${any ? h`<div class="ios-list fw-res">${F.AREAS.filter(function (k) { return res[k.id]; }).map(function (k) { return h`<div class="ios-row has-tile"><span class="ios-tile t${F.AREAS.indexOf(k) % 5 + 1}" aria-hidden="true">${ic(SKILL_ICON[k.id], 22)}</span><span class="ios-rt"><b>${k.name}</b>${prevC && prevC.skills[k.id] ? h`<small>${change(prevC.skills[k.id], res[k.id])}</small>` : ''}</span>${chip(res[k.id])}</div>`; })}</div>` : ''}
+        ${any ? (function () { var pl = F.checkPlace(st.ans), PL = sel.level(pl.level); /* Level system v2: a suggested starting place for the care team to check */
+          return h`<p class="fw-note fw-place">Your answers fit best around Level ${pl.level}: ${PL.goal.charAt(0).toLowerCase() + PL.goal.slice(1)}. Your care team checks this with you.</p>`; })() : ''}
         <div class="fw-acts">${any && goalOptions(st.ans).length ? h`<button type="button" class="ios-btn" data-action="fwGo" data-to="cgoals">Pick my goals</button>` : ''}<button type="button" class="ios-btn ${any && goalOptions(st.ans).length ? 'sec' : ''}" data-action="fwCheckSave">${st.retake ? 'Save and finish' : 'Save and continue'}</button></div></div>`;
     }
 
@@ -264,8 +266,8 @@
       <div class="fw-who">${U.avatar(p, 64)}<div><h1 id="fw-h" tabindex="-1">${first}'s progress</h1><p>${first} chooses what you see here.</p></div></div>
       ${!any ? h`<div class="ios-list"><div class="ios-row has-tile"><span class="ios-tile t2" aria-hidden="true">${ic('lock', 22)}</span><span class="ios-rt"><b>${first} has not shared anything yet</b><small>Ask ${first} to open About me, then What my parent can see. Folio never shares notes or glucose numbers.</small></span></div></div>` : ''}
       ${share.level ? h`<section class="fw-sec" aria-labelledby="pv-l"><h2 id="pv-l" class="ios-gh">Where ${first} is</h2>
-        <div class="ios-list"><div class="ios-row"><span class="ios-rt"><b>Level ${p.level} of 10 · ${L.name}</b><small>${p.levelSignoff ? 'Signed off by ' + p.levelSignoff.by + ', ' + U.monthYear(p.levelSignoff.date) + '.' : 'Not signed off yet.'}</small></span></div>
-          ${F.SKILLS.map(function (k) { return h`<div class="ios-row"><span class="ios-rt"><b>${k.name}</b><small>${k.sub}</small></span><span class="ios-st s-${p.skills[k.id]}">${ic({ own: 'circlecheck', help: 'hand', learning: 'sprout' }[p.skills[k.id]] || 'sprout', 16)}${F.SKILL_STATUS[p.skills[k.id]]}</span></div>`; })}</div>
+        <div class="ios-list"><div class="ios-row"><span class="ios-rt"><b>Level ${p.level} of 10 · ${L.name}</b><small>Goal: ${L.goal}</small><small>${p.levelSignoff ? 'Signed off by ' + p.levelSignoff.by + ', ' + U.monthYear(p.levelSignoff.date) + '.' : 'Not signed off yet.'}</small></span></div>
+          ${sel.currentSkills(p).map(function (k) { return h`<div class="ios-row"><span class="ios-rt"><b>${k.name}</b><small>${k.can}</small></span><span class="ios-st s-${p.skills[k.id]}">${ic({ own: 'circlecheck', help: 'hand', learning: 'sprout' }[p.skills[k.id]] || 'sprout', 16)}${F.SKILL_STATUS[p.skills[k.id]]}</span></div>`; })}</div>
         <p class="ios-gf">On my own: does it without being reminded. With help: does it with a reminder or a hand. Learning: still practising with the care team.</p></section>` : ''}
       ${share.tasks ? h`<section class="fw-sec" aria-labelledby="pv-t"><h2 id="pv-t" class="ios-gh">Who does what</h2>
         <div class="ios-list">${tasks.map(function (t) { return h`<div class="ios-row fw-task"><span class="ios-rt"><b>${t.label}</b>${t.done ? h`<small>${first} did this${t.doneDate ? ', ' + U.fmt(t.doneDate) : ''}</small>` : ''}</span>
